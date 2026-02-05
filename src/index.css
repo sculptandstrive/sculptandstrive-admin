@@ -1,0 +1,234 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap');
+
+@layer base {
+  :root {
+    /* Nautical-inspired palette - Deep ocean blues with teal accents */
+    --background: 210 25% 97%;
+    --foreground: 215 35% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 35% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 35% 15%;
+
+    /* Deep navy primary */
+    --primary: 215 70% 20%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Soft gray-blue secondary */
+    --secondary: 210 20% 94%;
+    --secondary-foreground: 215 35% 25%;
+
+    --muted: 210 15% 92%;
+    --muted-foreground: 215 15% 45%;
+
+    /* Ocean teal accent */
+    --accent: 190 75% 42%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Success green */
+    --success: 160 60% 40%;
+    --success-foreground: 0 0% 100%;
+
+    /* Warning amber */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 214 20% 88%;
+    --input: 214 20% 88%;
+    --ring: 190 75% 42%;
+
+    --radius: 0.625rem;
+
+    /* Sidebar - Deep navy theme */
+    --sidebar-background: 215 70% 12%;
+    --sidebar-foreground: 210 20% 85%;
+    --sidebar-primary: 190 75% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 60% 18%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 215 50% 20%;
+    --sidebar-ring: 190 75% 50%;
+
+    /* Custom gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(215 70% 20%) 0%, hsl(215 70% 30%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(190 75% 42%) 0%, hsl(180 60% 50%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 25% 98%) 100%);
+    --gradient-ocean: linear-gradient(135deg, hsl(215 70% 15%) 0%, hsl(200 60% 25%) 50%, hsl(190 75% 35%) 100%);
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(215 35% 15% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(215 35% 15% / 0.08), 0 2px 4px -2px hsl(215 35% 15% / 0.06);
+    --shadow-lg: 0 10px 15px -3px hsl(215 35% 15% / 0.1), 0 4px 6px -4px hsl(215 35% 15% / 0.08);
+    --shadow-card: 0 1px 3px hsl(215 35% 15% / 0.06), 0 1px 2px hsl(215 35% 15% / 0.04);
+    --shadow-card-hover: 0 10px 25px hsl(215 35% 15% / 0.12), 0 4px 10px hsl(215 35% 15% / 0.08);
+  }
+
+  .dark {
+    --background: 215 35% 8%;
+    --foreground: 210 20% 95%;
+
+    --card: 215 35% 12%;
+    --card-foreground: 210 20% 95%;
+
+    --popover: 215 35% 12%;
+    --popover-foreground: 210 20% 95%;
+
+    --primary: 190 75% 50%;
+    --primary-foreground: 215 70% 10%;
+
+    --secondary: 215 30% 18%;
+    --secondary-foreground: 210 20% 90%;
+
+    --muted: 215 30% 15%;
+    --muted-foreground: 215 15% 60%;
+
+    --accent: 190 75% 45%;
+    --accent-foreground: 215 70% 10%;
+
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 160 60% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 80% 55%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 215 30% 20%;
+    --input: 215 30% 20%;
+    --ring: 190 75% 50%;
+
+    --sidebar-background: 215 40% 6%;
+    --sidebar-foreground: 210 20% 80%;
+    --sidebar-primary: 190 75% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 40% 12%;
+    --sidebar-accent-foreground: 210 20% 95%;
+    --sidebar-border: 215 30% 15%;
+    --sidebar-ring: 190 75% 50%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(190 75% 45%) 0%, hsl(180 60% 55%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(190 75% 42%) 0%, hsl(180 60% 50%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(215 35% 12%) 0%, hsl(215 35% 10%) 100%);
+    --gradient-ocean: linear-gradient(135deg, hsl(215 40% 10%) 0%, hsl(200 50% 18%) 50%, hsl(190 60% 30%) 100%);
+
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.2);
+    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.3), 0 2px 4px -2px hsl(0 0% 0% / 0.2);
+    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.3), 0 4px 6px -4px hsl(0 0% 0% / 0.2);
+    --shadow-card: 0 1px 3px hsl(0 0% 0% / 0.2), 0 1px 2px hsl(0 0% 0% / 0.15);
+    --shadow-card-hover: 0 10px 25px hsl(0 0% 0% / 0.3), 0 4px 10px hsl(0 0% 0% / 0.2);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display font-bold tracking-tight;
+  }
+}
+
+@layer utilities {
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+  
+  .gradient-accent {
+    background: var(--gradient-accent);
+  }
+  
+  .gradient-card {
+    background: var(--gradient-card);
+  }
+  
+  .gradient-ocean {
+    background: var(--gradient-ocean);
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  .shadow-card-hover {
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background: var(--gradient-accent);
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.4s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out;
+  }
+
+  .animate-slide-in-left {
+    animation: slideInLeft 0.3s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
