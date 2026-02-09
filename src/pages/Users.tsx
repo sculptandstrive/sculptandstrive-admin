@@ -37,7 +37,7 @@ import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 
-type AppRole = "admin" | "moderator" | "user";
+type AppRole = "admin" | "user";
 
 interface UserWithRole {
   id: string;
@@ -51,7 +51,6 @@ interface UserWithRole {
 
 const roleConfig: Record<AppRole, { label: string; color: string; icon: typeof Shield }> = {
   admin: { label: "Admin", color: "bg-destructive/10 text-destructive border-destructive/20", icon: ShieldAlert },
-  moderator: { label: "Moderator", color: "bg-accent/10 text-accent border-accent/20", icon: Shield },
   user: { label: "User", color: "bg-muted text-muted-foreground border-border", icon: UserCog },
 };
 
@@ -258,7 +257,6 @@ export default function Users() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="admin">Admin</SelectItem>
-                            <SelectItem value="moderator">Moderator</SelectItem>
                             <SelectItem value="user">User</SelectItem>
                           </SelectContent>
                         </Select>
