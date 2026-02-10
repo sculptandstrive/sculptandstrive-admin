@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Dumbbell, Flame, Timer, Trophy, Filter, Loader2, Trash2, ChevronDown } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -15,44 +15,54 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function Fitness() {
-  const [workouts, setWorkouts] = useState<any[]>([]);
+  const [exercises, setExercises] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState("All"); // Track the filter state
+  const [activeFilter, setActiveFilter] = useState("All");
   const { toast } = useToast();
 
   const [stats, setStats] = useState({
     totalCount: 0,
-    activePrograms: 24, 
-    avgDuration: 0,
-    totalCalories: "0",
+    uniqueMovements: 0, 
+    avgSets: 0,
+    totalRepVolume: "0",
   });
 
   const fetchFitnessData = async () => {
     try {
       setLoading(true);
+      
+      // Fetching From 'exercises' 
       const { data, error } = await supabase
-        .from("workouts")
+        .from("exercises")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("name", { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase Connection Error:", error.message);
+        throw error;
+      }
+
+      console.log("Fetched Data:", data);
 
       if (data) {
-        setWorkouts(data);
+        setExercises(data);
         const total = data.length;
-        const avgDur = total > 0 
-          ? data.reduce((acc, curr) => acc + (Number(curr.duration_min) || 0), 0) / total 
+
+        // Stats calculation based on actual column name, sets, reps
+        const uniqueMovements = new Set(data.map(ex => ex.name)).size;
+        
+        const avgSets = total > 0 
+          ? data.reduce((acc, curr) => acc + (Number(curr.sets) || 0), 0) / total 
           : 0;
-        const totalCalsRaw = data.reduce((acc, curr) => 
-          acc + ((Number(curr.calories) || 0) * (Number(curr.completions_count) || 0)), 0);
+
+        const totalVol = data.reduce((acc, curr) => 
+          acc + ((Number(curr.sets) || 0) * (Number(curr.reps) || 0)), 0);
 
         setStats({
           totalCount: total,
-          activePrograms: 24,
-          avgDuration: Math.round(avgDur),
-          totalCalories: totalCalsRaw >= 1000000 
-            ? `${(totalCalsRaw / 1000000).toFixed(1)}M` 
-            : totalCalsRaw.toLocaleString(),
+          uniqueMovements: uniqueMovements,
+          avgSets: Math.round(avgSets * 10) / 10,
+          totalRepVolume: totalVol.toLocaleString(),
         });
       }
     } catch (error: any) {
@@ -66,34 +76,40 @@ export default function Fitness() {
     fetchFitnessData();
   }, []);
 
-  // Filter 
-  const filteredWorkouts = activeFilter === "All" 
-    ? workouts 
-    : workouts.filter(w => w.category === activeFilter);
+  const filteredExercises = useMemo(() => {
+    return activeFilter === "All" 
+      ? exercises 
+      : exercises.filter(ex => ex.category === activeFilter);
+  }, [exercises, activeFilter]);
 
   const handleDelete = async (id: string) => {
     if (!window.confirm("Are you sure?")) return;
-    const { error } = await supabase.from("workouts").delete().eq("id", id);
+    const { error } = await supabase.from("exercises").delete().eq("id", id);
     if (!error) {
-      setWorkouts(prev => prev.filter(w => w.id !== id));
+      setExercises(prev => prev.filter(ex => ex.id !== id));
       toast({ title: "Deleted" });
     }
   };
 
   const categories = ["Strength", "Cardio", "HIIT", "Yoga", "Pilates"].map(cat => ({
     name: cat,
-    count: workouts.filter(w => w.category === cat).length
+    count: exercises.filter(ex => ex.category === cat).length
   }));
 
-  if (loading) return <DashboardLayout><div className="flex h-[70vh] items-center justify-center"><Loader2 className="animate-spin" /></div></DashboardLayout>;
+  if (loading) return (
+    <DashboardLayout>
+      <div className="flex h-[70vh] items-center justify-center">
+        <Loader2 className="animate-spin" />
+      </div>
+    </DashboardLayout>
+  );
 
   return (
     <DashboardLayout>
       <PageHeader 
         title="Fitness Overview" 
-        description="Monitor system-wide workout statistics."
+        description="Monitor system-wide exercise statistics."
       >
-        {/* FILTER BUTTON --- */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="min-w-[120px]">
@@ -104,21 +120,20 @@ export default function Fitness() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem onClick={() => setActiveFilter("All")}>All Categories</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setActiveFilter("Strength")}>Strength</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setActiveFilter("Cardio")}>Cardio</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setActiveFilter("HIIT")}>HIIT</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setActiveFilter("Yoga")}>Yoga</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setActiveFilter("Pilates")}>Pilates</DropdownMenuItem>
+            {["Strength", "Cardio", "HIIT", "Yoga", "Pilates"].map(cat => (
+              <DropdownMenuItem key={cat} onClick={() => setActiveFilter(cat)}>
+                {cat}
+              </DropdownMenuItem>
+            ))}
           </DropdownMenuContent>
         </DropdownMenu>
       </PageHeader>
 
-      {/* --- STATS GRID --- */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 mb-8">
-        <StatCard title="Total Workouts" value={stats.totalCount} icon={Dumbbell} color="gradient-accent" />
-        <StatCard title="Active Programs" value={stats.activePrograms} icon={Trophy} color="bg-success/10" iconColor="text-success" />
-        <StatCard title="Avg. Duration" value={`${stats.avgDuration}min`} icon={Timer} color="bg-primary/10" iconColor="text-primary" />
-        <StatCard title="Global Burn" value={stats.totalCalories} icon={Flame} color="bg-warning/10" iconColor="text-warning" />
+        <StatCard title="Total Exercises" value={stats.totalCount} icon={Dumbbell} color="gradient-accent" />
+        <StatCard title="Unique Moves" value={stats.uniqueMovements} icon={Trophy} color="bg-success/10" iconColor="text-success" />
+        <StatCard title="Avg. Sets" value={stats.avgSets} icon={Timer} color="bg-primary/10" iconColor="text-primary" />
+        <StatCard title="Rep Volume" value={stats.totalRepVolume} icon={Flame} color="bg-warning/10" iconColor="text-warning" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -131,7 +146,7 @@ export default function Fitness() {
                   <span className="font-medium">{category.name}</span>
                   <span className="text-muted-foreground">{category.count} items</span>
                 </div>
-                <Progress value={(category.count / (workouts.length || 1)) * 100} className="h-2" />
+                <Progress value={(category.count / (exercises.length || 1)) * 100} className="h-2" />
               </div>
             ))}
           </CardContent>
@@ -141,36 +156,37 @@ export default function Fitness() {
           <CardHeader>
             <div className="flex justify-between items-center">
               <CardTitle className="font-display text-xl text-primary">
-                {activeFilter} Workouts
+                {activeFilter} Exercises
               </CardTitle>
               <span className="text-xs text-muted-foreground uppercase tracking-widest">
-                Showing {filteredWorkouts.length} results
+                Showing {filteredExercises.length} results
               </span>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {filteredWorkouts.length > 0 ? (
-              filteredWorkouts.map((workout) => (
-                <div key={workout.id} className="flex items-center justify-between p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all group">
+            {filteredExercises.length > 0 ? (
+              filteredExercises.map((ex) => (
+                <div key={ex.id} className="flex items-center justify-between p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all group">
                   <div className="flex items-center gap-4 min-w-0">
                     <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center flex-shrink-0">
                       <Dumbbell className="w-6 h-6 text-primary-foreground" />
                     </div>
                     <div className="min-w-0">
-                      <p className="font-bold text-foreground truncate">{workout.name}</p>
-                      <p className="text-xs text-muted-foreground uppercase tracking-widest">{workout.category} • {workout.duration_min} min</p>
+                      <p className="font-bold text-foreground truncate">{ex.name}</p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-widest">
+                        {ex.category || 'General'} • {ex.sets} Sets
+                      </p>
                     </div>
                   </div>
-                  
                   <div className="flex items-center gap-6">
                     <div className="text-right">
-                      <p className="font-bold text-accent">{workout.calories} kcal</p>
-                      <p className="text-xs text-muted-foreground">{workout.completions_count.toLocaleString()} uses</p>
+                      <p className="font-bold text-accent">{ex.reps} reps</p>
+                      <p className="text-xs text-muted-foreground">Total: {ex.sets * ex.reps}</p>
                     </div>
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      onClick={() => handleDelete(workout.id)}
+                      onClick={() => handleDelete(ex.id)}
                       className="text-muted-foreground hover:text-destructive"
                     >
                       <Trash2 className="w-5 h-5" />
@@ -179,7 +195,9 @@ export default function Fitness() {
                 </div>
               ))
             ) : (
-              <div className="text-center py-10 text-muted-foreground">No {activeFilter} workouts found.</div>
+              <div className="text-center py-10 text-muted-foreground">
+                No data found.
+              </div>
             )}
           </CardContent>
         </Card>

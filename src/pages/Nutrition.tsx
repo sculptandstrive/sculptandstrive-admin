@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Apple, Utensils, Droplets, Flame, Filter, Loader2, Search, Check, UserPlus, Users, UserCheck } from "lucide-react";
+import { Apple, Utensils, Droplets, Flame, Loader2, Search, Check, UserPlus, Users, Plus } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
+// --- Interfaces ---
 interface MealPlan {
   id: string;
   name: string;
@@ -39,34 +48,34 @@ export default function NutritionAdmin() {
   const [filteredPlans, setFilteredPlans] = useState<MealPlan[]>([]);
   const [users, setUsers] = useState<UserAssignment[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<string>("newest");
   const [recipeCount, setRecipeCount] = useState<number>(0);
   const [globalAvgCals, setGlobalAvgCals] = useState<number>(0);
   const [globalWaterAvg, setGlobalWaterAvg] = useState<number>(0);
   const [loading, setLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  //  manual creation plan 
+  const [newPlan, setNewPlan] = useState({ name: "", calories: 2000, protein: 150, meals: 4 });
+  
   const { toast } = useToast();
 
+  //  Data Fetching 
   useEffect(() => {
     fetchAdminDashboardData();
   }, []);
 
+  //  Client-side Search Filtering 
   useEffect(() => {
-    let result = [...mealPlans];
-    if (searchQuery) {
-      result = result.filter(plan => 
-        plan.name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-    if (sortBy === "calories-high") result.sort((a, b) => b.calories - a.calories);
-    else if (sortBy === "protein-high") result.sort((a, b) => b.protein - a.protein);
-    else if (sortBy === "members") result.sort((a, b) => b.members - a.members);
-    
+    const result = mealPlans.filter(plan => 
+      plan.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
     setFilteredPlans(result);
-  }, [searchQuery, mealPlans, sortBy]);
+  }, [searchQuery, mealPlans]);
 
   const fetchAdminDashboardData = async () => {
     try {
       setLoading(true);
+      
       const [plansRes, profilesRes, assignmentsRes, logsRes, waterRes, recipeRes] = await Promise.all([
         (supabase as any).from('meal_plans').select('*').order('created_at', { ascending: false }),
         (supabase as any).from('profiles').select('id, full_name, email'),
@@ -79,19 +88,18 @@ export default function NutritionAdmin() {
       const rawPlans = (plansRes.data as any[]) || [];
       const assignments = (assignmentsRes.data as any[]) || [];
 
-      // Count users assigned to each plan
+      // Calculate active members per plan dynamically
       const dynamicPlans: MealPlan[] = rawPlans.map(plan => ({
         ...plan,
         members: assignments.filter(a => a.plan_id === plan.id).length
       }));
       setMealPlans(dynamicPlans);
 
-      // Join Profiles & Active Plan Names for the Roster
+      // Map users to their active meal plans
       if (profilesRes.data) {
         const formattedUsers = (profilesRes.data as any[]).map((profile) => {
           const userAssignment = assignments.find(a => a.user_id === profile.id);
           const activePlan = dynamicPlans.find(p => p.id === userAssignment?.plan_id);
-
           return {
             id: profile.id,
             full_name: profile.full_name || "Unknown User",
@@ -102,13 +110,14 @@ export default function NutritionAdmin() {
         setUsers(formattedUsers);
       }
 
-      // 3. Calculate Global Averages
+      // Aggregate global stats
       const totalCals = (logsRes.data as any[])?.reduce((sum, log) => sum + (log.calories || 0), 0) || 0;
       const avgCals = (logsRes.data as any[])?.length ? Math.round(totalCals / (logsRes.data as any[]).length) : 0;
       
-      const totalWater = (waterRes.data as any[])?.reduce((sum, log) => sum + (log.amount_ml || 0), 0) || 0;
-      const waterAvgPct = (waterRes.data as any[])?.length 
-        ? Math.min(Math.round((totalWater / (waterRes.data as any[]).length / 3000) * 100), 100) 
+      const waterData = (waterRes.data as any[]) || [];
+      const totalWater = waterData.reduce((sum, log) => sum + (Number(log.amount_ml) || 0), 0);
+      const waterAvgPct = waterData.length 
+        ? Math.min(Math.round(((totalWater / waterData.length) / 3000) * 100), 100) 
         : 0;
 
       setGlobalAvgCals(avgCals);
@@ -123,6 +132,29 @@ export default function NutritionAdmin() {
     }
   };
 
+  //Admin Actions 
+  const handleCreatePlan = async () => {
+    try {
+      if (!newPlan.name.trim()) {
+        toast({ title: "Validation Error", description: "Plan name is required", variant: "destructive" });
+        return;
+      }
+      
+      const { error } = await (supabase as any)
+        .from('meal_plans')
+        .insert([newPlan]);
+
+      if (error) throw error;
+      
+      toast({ title: "Plan Created", description: `${newPlan.name} is now live.` });
+      setIsDialogOpen(false);
+      setNewPlan({ name: "", calories: 2000, protein: 150, meals: 4 }); // Reset form
+      fetchAdminDashboardData(); 
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
   const handleAssignPlan = async (userId: string, planId: string) => {
     try {
       const { error } = await (supabase as any)
@@ -130,34 +162,82 @@ export default function NutritionAdmin() {
         .upsert({ user_id: userId, plan_id: planId }, { onConflict: 'user_id' });
 
       if (error) throw error;
-
-      toast({ title: "Updated", description: "Assignment refreshed successfully." });
+      
+      toast({ title: "Plan Assigned", description: "User has been moved to the new plan." });
       fetchAdminDashboardData(); 
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: "Assignment Error", description: error.message, variant: "destructive" });
     }
   };
 
   return (
     <DashboardLayout>
-      <PageHeader title="Nutrition Admin" description="Live system monitoring and assignment.">
+      <PageHeader title="Nutrition Admin" description="System monitoring and assignment.">
         <div className="flex gap-2">
+          {/* Create Plan Dialog */}
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700">
+                <Plus className="w-4 h-4" /> Create New Plan
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Meal Plan</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Plan Title</p>
+                  <Input 
+                    placeholder="e.g., Vegan Shred" 
+                    value={newPlan.name}
+                    onChange={(e) => setNewPlan({...newPlan, name: e.target.value})} 
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Daily Calories</p>
+                    <Input 
+                      type="number" 
+                      placeholder="2000" 
+                      onChange={(e) => setNewPlan({...newPlan, calories: Number(e.target.value)})} 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Protein (g)</p>
+                    <Input 
+                      type="number" 
+                      placeholder="150" 
+                      onChange={(e) => setNewPlan({...newPlan, protein: Number(e.target.value)})} 
+                    />
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleCreatePlan} className="bg-emerald-600">Save Plan</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Search Bar */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input 
               placeholder="Search plans..." 
-              className="w-[250px] pl-9" 
+              className="w-[200px] pl-9" 
               value={searchQuery} 
               onChange={(e) => setSearchQuery(e.target.value)} 
             />
           </div>
+          
           <Button variant="outline" onClick={fetchAdminDashboardData} disabled={loading}>
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sync Data"}
           </Button>
         </div>
       </PageHeader>
 
-      {/* Dynamic Stats Row */}
+      {/* Stats Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard label="Live Meal Plans" value={mealPlans.length} icon={Utensils} color="bg-primary/10" />
         <StatCard label="Total Recipes" value={recipeCount} icon={Apple} color="bg-emerald-500/10" />
@@ -166,7 +246,7 @@ export default function NutritionAdmin() {
       </div>
 
       <div className="grid grid-cols-1 gap-8">
-        {/* Global Meal Plans */}
+        {/* Meal Plans Grid */}
         <Card className="shadow-sm border-none bg-slate-50/50">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -176,11 +256,11 @@ export default function NutritionAdmin() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredPlans.map((plan) => (
-                <div key={plan.id} className="p-6 rounded-xl border bg-white hover:border-primary/50 hover:shadow-md transition-all">
+                <div key={plan.id} className="p-6 rounded-xl border bg-white hover:border-primary/50 transition-all shadow-sm">
                   <div className="flex justify-between mb-4">
                     <div>
                       <h4 className="font-semibold text-lg">{plan.name}</h4>
-                      <Badge variant="secondary" className="font-mono text-[10px] uppercase mt-1">ID: {plan.id.slice(0,8)}</Badge>
+                      <Badge variant="secondary" className="font-mono text-[10px] mt-1">ID: {plan.id.slice(0,8)}</Badge>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -201,11 +281,11 @@ export default function NutritionAdmin() {
                   <div className="grid grid-cols-3 gap-3 text-center">
                     <div className="bg-slate-50 p-2 rounded-lg border border-slate-100">
                       <p className="text-[10px] text-muted-foreground uppercase font-bold">Calories</p>
-                      <p className="font-bold text-slate-700">{plan.calories}</p>
+                      <p className="font-bold">{plan.calories}</p>
                     </div>
                     <div className="bg-slate-50 p-2 rounded-lg border border-slate-100">
                       <p className="text-[10px] text-muted-foreground uppercase font-bold">Protein</p>
-                      <p className="font-bold text-slate-700">{plan.protein}g</p>
+                      <p className="font-bold">{plan.protein}g</p>
                     </div>
                     <div className="bg-primary/5 p-2 rounded-lg text-primary border border-primary/10">
                       <p className="text-[10px] uppercase font-bold">Active Users</p>
@@ -216,7 +296,7 @@ export default function NutritionAdmin() {
               ))}
               {filteredPlans.length === 0 && (
                 <div className="col-span-full py-12 text-center bg-white rounded-xl border border-dashed">
-                  <p className="text-muted-foreground italic">No meal plans found. Add one in Supabase to see it here.</p>
+                  <p className="text-muted-foreground italic">No meal plans found.</p>
                 </div>
               )}
             </div>
@@ -224,44 +304,42 @@ export default function NutritionAdmin() {
         </Card>
 
         {/* User Roster Table */}
-        <Card className="shadow-sm overflow-hidden border-none">
+        <Card className="shadow-sm border-none overflow-hidden">
           <CardHeader className="bg-white border-b">
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-slate-700 text-lg">
-                <Users className="w-5 h-5 text-primary"/> Live Customer Roster
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Users className="w-5 h-5 text-primary"/> Customer Roster
               </CardTitle>
-              <Badge variant="outline" className="bg-slate-50">{users.length} Users Tracked</Badge>
+              <Badge variant="outline">{users.length} Users Tracked</Badge>
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader className="bg-slate-50/50">
-                  <TableRow>
-                    <TableHead className="pl-6">Customer</TableHead>
-                    <TableHead>Contact Email</TableHead>
-                    <TableHead className="text-right pr-6">Current Assignment</TableHead>
+            <Table>
+              <TableHeader className="bg-slate-50/50">
+                <TableRow>
+                  <TableHead className="pl-6">Customer</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead className="text-right pr-6">Current Assignment</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.map((user) => (
+                  <TableRow key={user.id} className="hover:bg-slate-50/50 transition-colors">
+                    <TableCell className="pl-6 font-medium">{user.full_name}</TableCell>
+                    <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                    <TableCell className="text-right pr-6">
+                      {user.active_plan_name ? (
+                        <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-50">
+                          {user.active_plan_name}
+                        </Badge>
+                      ) : (
+                        <span className="text-xs text-slate-400 italic">No plan active</span>
+                      )}
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users.map((user) => (
-                    <TableRow key={user.id} className="hover:bg-slate-50/50 transition-colors">
-                      <TableCell className="pl-6 font-medium">{user.full_name}</TableCell>
-                      <TableCell className="text-muted-foreground">{user.email}</TableCell>
-                      <TableCell className="text-right pr-6">
-                        {user.active_plan_name ? (
-                          <Badge className="bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-50">
-                            {user.active_plan_name}
-                          </Badge>
-                        ) : (
-                          <span className="text-xs text-slate-400 italic">No plan active</span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       </div>
@@ -269,6 +347,7 @@ export default function NutritionAdmin() {
   );
 }
 
+//  StatCard Helper Component 
 function StatCard({ label, value, icon: Icon, color }: any) {
   return (
     <Card className="shadow-sm border-none">
