@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
-import { 
-  Palette, 
-  Globe, 
-  DollarSign, 
-  Users, 
-  Bell, 
+import { useEffect, useState, useRef } from "react";
+import {
+  Palette,
+  Globe,
+  DollarSign,
+  Users,
+  Bell,
   ToggleLeft,
   Languages,
   Sun,
@@ -12,27 +12,50 @@ import {
   Monitor,
   Type,
   Contrast,
-  Save
+  Save,
+  Trash2,
+  Loader2,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
 import hexToHsl from "@/lib/hextohsl";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const featureToggles = [
-  { id: "live_sessions", name: "Live Sessions", description: "Enable live streaming workout sessions", enabled: true },
-  { id: "nutrition_tracking", name: "Nutrition Tracking", description: "Allow members to log meals and track macros", enabled: true },
-  // { id: "ai_recommendations", name: "AI Recommendations", description: "AI-powered workout and diet suggestions", enabled: false },
-  { id: "social_features", name: "Social Features", description: "Member forums and community posts", enabled: true },
-  { id: "leaderboards", name: "Leaderboards", description: "Weekly and monthly fitness challenges", enabled: true },
+  {
+    id: "live_sessions",
+    name: "Live Sessions",
+    description: "Enable live streaming workout sessions",
+    enabled: true,
+  },
+  {
+    id: "nutrition_tracking",
+    name: "Nutrition Tracking",
+    description: "Allow members to log meals and track macros",
+    enabled: true,
+  },
 ];
 
 export default function Settings() {
@@ -54,6 +77,13 @@ export default function Settings() {
   const [accentColor, setAccentColor] = useState(
     () => localStorage.getItem("app-accent") || "#1c9ebe",
   );
+
+  // Logo state
+  const [currentLogoUrl, setCurrentLogoUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { toast } = useToast();
 
   useEffect(() => {
     const root = document.documentElement;
@@ -82,24 +112,241 @@ export default function Settings() {
     localStorage.setItem("app-accent", accentColor);
   }, [theme, fontSize, contrast, primaryColor, accentColor]);
 
+  // Fetch logo on mount
+  useEffect(() => {
+    const fetchLogo = async () => {
+      try {
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+        if (userError || !user) {
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("avatar_url")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error("Fetch logo error:", error);
+          return;
+        }
+
+        if (data?.avatar_url) {
+          setCurrentLogoUrl(data.avatar_url);
+        }
+      } catch (err) {
+        console.error("Error fetching logo:", err);
+      }
+    };
+
+    fetchLogo();
+  }, []);
+
+  // Handle file selection and upload
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file (PNG, JPG, SVG, etc.)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      // Get current user
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error("User not authenticated");
+      }
+
+      // Generate unique filename
+      const fileExt = file.name.split(".").pop();
+      const filePath = `logos/${user.id}-${Date.now()}.${fileExt}`;
+
+      // Check if admin profile exists and get old logo
+      const { data: existingProfile } = await supabase
+        .from("profiles")
+        .select("avatar_url")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      // Delete old logo from storage if it exists
+      if (existingProfile?.avatar_url) {
+        const oldFilePath = extractFilePathFromUrl(
+          existingProfile.avatar_url,
+        );
+        if (oldFilePath) {
+          await supabase.storage.from("admin-logo").remove([oldFilePath]);
+        }
+      }
+
+      // Upload new file to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from("admin-logo")
+        .upload(filePath, file, {
+          upsert: true,
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data } = supabase.storage
+        .from("admin-logo")
+        .getPublicUrl(filePath);
+
+      const publicUrl = data.publicUrl;
+
+      // Update or insert admin profile
+      await supabase.from("profiles").upsert(
+        {
+          user_id: user.id,
+          avatar_url: publicUrl,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" },
+      );
+
+      const { error: authUpdateError } = await supabase.auth.updateUser({
+        data: { avatar_url: publicUrl },
+      });
+
+      setCurrentLogoUrl(publicUrl);
+
+      toast({
+        title: "Logo uploaded",
+        description: "Your logo has been successfully uploaded",
+      });
+    } catch (err) {
+      console.error("Upload error:", err);
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to upload logo";
+      toast({
+        title: "Upload failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  // Handle logo deletion
+  const handleDeleteLogo = async () => {
+    setUploading(true);
+
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error("User not authenticated");
+      }
+
+      // Get current profile
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("avatar_url")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      // Delete file from storage
+      if (profile?.avatar_url) {
+        const filePath = extractFilePathFromUrl(profile.avatar_url);
+        if (filePath) {
+          await supabase.storage.from("admin-logo").remove([filePath]);
+        }
+      }
+
+      // Update profile to remove logo URL
+      await supabase
+        .from("profiles")
+        .update({
+          avatar_url: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", user.id);
+
+        const { error: authUpdateError } = await supabase.auth.updateUser({
+          data: { avatar_url: "" },
+        });
+
+      setCurrentLogoUrl(null);
+
+      toast({
+        title: "Logo deleted",
+        description: "Your custom logo has been removed",
+      });
+    } catch (err) {
+      console.error("Delete error:", err);
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to delete logo";
+      toast({
+        title: "Delete failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Extract file path from Supabase storage URL
+  const extractFilePathFromUrl = (url: string): string | null => {
+    try {
+      const urlObj = new URL(url);
+      const pathParts = urlObj.pathname.split("/admin-logo/");
+      return pathParts[1] || null;
+    } catch {
+      return null;
+    }
+  };
 
   const toggleFeature = (id: string) => {
-    setFeatures(features.map(f => 
-      f.id === id ? { ...f, enabled: !f.enabled } : f
-    ));
+    setFeatures(
+      features.map((f) => (f.id === id ? { ...f, enabled: !f.enabled } : f)),
+    );
   };
+
+  // Determine which logo to display
+  const displayLogo = currentLogoUrl || logo;
+  const isCustomLogo = currentLogoUrl !== null;
 
   return (
     <DashboardLayout>
       <PageHeader
         title="Settings"
         description="Configure your platform settings and preferences."
-      >
-        {/* <Button className="gradient-accent text-accent-foreground hover:opacity-90 transition-opacity">
-          <Save className="w-4 h-4 mr-2" />
-          Save Changes
-        </Button> */}
-      </PageHeader>
+      />
 
       <Tabs defaultValue="branding" className="space-y-6">
         <TabsList className="bg-muted/50 p-1">
@@ -109,20 +356,6 @@ export default function Settings() {
           >
             <Palette className="w-4 h-4 mr-2" />
             Branding
-          </TabsTrigger>
-          <TabsTrigger
-            value="pricing"
-            className="data-[state=active]:bg-card data-[state=active]:shadow-sm"
-          >
-            <DollarSign className="w-4 h-4 mr-2" />
-            Pricing
-          </TabsTrigger>
-          <TabsTrigger
-            value="trainers"
-            className="data-[state=active]:bg-card data-[state=active]:shadow-sm"
-          >
-            <Users className="w-4 h-4 mr-2" />
-            Trainers
           </TabsTrigger>
           <TabsTrigger
             value="features"
@@ -153,36 +386,63 @@ export default function Settings() {
               <div className="flex items-start gap-6">
                 <div className="space-y-2">
                   <Label>Current Logo</Label>
-                  <div className="w-24 h-24 rounded-xl bg-muted flex items-center justify-center border-2 border-dashed border-border overflow-hidden">
+                  <div className="relative w-24 h-24 rounded-xl bg-muted flex items-center justify-center border-2 border-dashed border-border overflow-hidden">
+                    {uploading && (
+                      <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10">
+                        <Loader2 className="w-6 h-6 animate-spin text-accent" />
+                      </div>
+                    )}
                     <img
-                      src={logo}
+                      src={displayLogo}
                       alt="Logo"
                       className="w-full h-full object-contain"
                     />
                   </div>
+                  {isCustomLogo && !uploading && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDeleteLogo}
+                      className="w-full"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Remove
+                    </Button>
+                  )}
                 </div>
                 <div className="flex-1 space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="logo-upload">Upload New Logo</Label>
                     <Input
+                      ref={fileInputRef}
                       id="logo-upload"
                       type="file"
                       accept="image/*"
+                      onChange={handleFileChange}
+                      disabled={uploading}
                       className="cursor-pointer"
                     />
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Recommended: SVG or PNG, minimum 512x512px
-                  </p>
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">
+                      Recommended: SVG or PNG, minimum 512x512px
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Maximum file size: 5MB
+                    </p>
+                    {isCustomLogo && (
+                      <p className="text-sm text-green-600 dark:text-green-400">
+                        ✓ Custom logo uploaded
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="primary-color">Primary Color</Label>
-
                   <div className="flex items-center gap-3">
-                    {/* Color Picker */}
                     <input
                       id="primary-color"
                       type="color"
@@ -190,8 +450,6 @@ export default function Settings() {
                       onChange={(e) => setPrimaryColor(e.target.value)}
                       className="w-12 h-10 rounded-md border border-border cursor-pointer bg-transparent"
                     />
-
-                    {/* Hex Code Display (readonly) */}
                     <Input
                       value={primaryColor}
                       readOnly
@@ -202,9 +460,7 @@ export default function Settings() {
 
                 <div className="space-y-2">
                   <Label htmlFor="accent-color">Accent Color</Label>
-
                   <div className="flex items-center gap-3">
-                    {/* Color Picker */}
                     <input
                       id="accent-color"
                       type="color"
@@ -212,166 +468,9 @@ export default function Settings() {
                       onChange={(e) => setAccentColor(e.target.value)}
                       className="w-12 h-10 rounded-md border border-border cursor-pointer bg-transparent"
                     />
-
-                    {/* Hex Code Display (readonly) */}
                     <Input value={accentColor} readOnly className="font-mono" />
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Pricing Tab */}
-        <TabsContent value="pricing" className="space-y-6 animate-fade-in">
-          <Card className="shadow-card">
-            <CardHeader>
-              <CardTitle className="font-display">Pricing Plans</CardTitle>
-              <CardDescription>
-                Manage subscription tiers and pricing
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {[
-                  {
-                    name: "Basic",
-                    price: "$9.99",
-                    features: [
-                      "Access to recorded sessions",
-                      "Basic nutrition tracking",
-                      "Community forums",
-                    ],
-                  },
-                  {
-                    name: "Premium",
-                    price: "$24.99",
-                    features: [
-                      "All Basic features",
-                      "Live sessions access",
-                      "1-on-1 coaching",
-                      "Advanced analytics",
-                    ],
-                  },
-                  {
-                    name: "Elite",
-                    price: "$49.99",
-                    features: [
-                      "All Premium features",
-                      "Priority support",
-                      "Custom meal plans",
-                      "Personal trainer",
-                    ],
-                  },
-                ].map((plan) => (
-                  <div
-                    key={plan.name}
-                    className="p-4 rounded-xl border border-border hover:border-accent transition-colors"
-                  >
-                    <h4 className="font-semibold text-foreground">
-                      {plan.name}
-                    </h4>
-                    <p className="text-2xl font-bold text-accent mt-1">
-                      {plan.price}
-                      <span className="text-sm text-muted-foreground font-normal">
-                        /mo
-                      </span>
-                    </p>
-                    <ul className="mt-3 space-y-1">
-                      {plan.features.map((feature) => (
-                        <li
-                          key={feature}
-                          className="text-sm text-muted-foreground"
-                        >
-                          • {feature}
-                        </li>
-                      ))}
-                    </ul>
-                    <Button variant="outline" size="sm" className="w-full mt-4">
-                      Edit Plan
-                    </Button>
-                  </div>
-                ))}
-              </div>
-
-              <div className="pt-4 border-t border-border">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-base font-medium">
-                      Coupon Codes
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Create and manage discount codes
-                    </p>
-                  </div>
-                  <Button variant="outline">Manage Coupons</Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Trainers Tab */}
-        <TabsContent value="trainers" className="space-y-6 animate-fade-in">
-          <Card className="shadow-card">
-            <CardHeader>
-              <CardTitle className="font-display">
-                Trainer Approval Workflow
-              </CardTitle>
-              <CardDescription>
-                Configure how trainers are onboarded to your platform
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
-                <div>
-                  <Label className="text-base font-medium">
-                    Require Admin Approval
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    New trainers must be approved before accessing the platform
-                  </p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Approval SLA (hours)</Label>
-                <Select defaultValue="24">
-                  <SelectTrigger className="w-full md:w-48">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="12">12 hours</SelectItem>
-                    <SelectItem value="24">24 hours</SelectItem>
-                    <SelectItem value="48">48 hours</SelectItem>
-                    <SelectItem value="72">72 hours</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
-                <div>
-                  <Label className="text-base font-medium">
-                    Background Check Required
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Require verification documents from trainers
-                  </p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-
-              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
-                <div>
-                  <Label className="text-base font-medium">
-                    Auto-assign New Trainers
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Automatically assign new trainers to available slots
-                  </p>
-                </div>
-                <Switch />
               </div>
             </CardContent>
           </Card>
@@ -414,63 +513,15 @@ export default function Settings() {
 
         {/* Display Tab */}
         <TabsContent value="display" className="space-y-6 animate-fade-in">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
             <Card className="shadow-card">
               <CardHeader>
                 <CardTitle className="font-display flex items-center gap-2">
-                  <Languages className="w-5 h-5 text-accent" />
-                  Language & Units
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Language</Label>
-                  <Select defaultValue="en">
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="es">Español</SelectItem>
-                      <SelectItem value="fr">Français</SelectItem>
-                      <SelectItem value="de">Deutsch</SelectItem>
-                      <SelectItem value="pt">Português</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Weight Units</Label>
-                  <Select defaultValue="kg">
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="kg">Kilograms (kg)</SelectItem>
-                      <SelectItem value="lbs">Pounds (lbs)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Energy Units</Label>
-                  <Select defaultValue="cal">
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="cal">Calories (kcal)</SelectItem>
-                      <SelectItem value="kj">Kilojoules (kJ)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle className="font-display flex items-center gap-2">
-                  <Sun className="w-5 h-5 text-accent" />
+                  {theme === "light" ? (
+                    <Sun className="w-7 h-7 text-accent" />
+                  ) : (
+                    <Moon className="w-7 h-7 text-accent" />
+                  )}
                   Appearance
                 </CardTitle>
               </CardHeader>
@@ -486,7 +537,7 @@ export default function Settings() {
                         key={option.value}
                         onClick={() => setTheme(option.value as typeof theme)}
                         className={cn(
-                          "flex-1 flex flex-col items-center gap-2 p-3 rounded-lg border transition-all",
+                          "flex-1 flex flex-col items-center gap-3 p-4 rounded-lg border transition-all",
                           theme === option.value
                             ? "border-accent bg-accent/10"
                             : "border-border hover:border-accent/50",
@@ -494,7 +545,7 @@ export default function Settings() {
                       >
                         <option.icon
                           className={cn(
-                            "w-5 h-5",
+                            "w-7 h-7",
                             theme === option.value
                               ? "text-accent"
                               : "text-muted-foreground",
