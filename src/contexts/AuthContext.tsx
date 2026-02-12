@@ -109,8 +109,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: RoleError };
     }
 
-    // console.log(profileData);
-
     if (!profileData || profileData.role !== "admin") {
       await supabase.auth.signOut();
       return {

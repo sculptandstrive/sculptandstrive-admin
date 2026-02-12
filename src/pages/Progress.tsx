@@ -404,7 +404,7 @@ export default function ProgressPage() {
                 </div>
 
                 {/* Growth Summary */}
-                <div className="grid grid-cols-3 gap-4 pt-4 border-t border-border">
+                {/* <div className="grid grid-cols-3 gap-4 pt-4 border-t border-border">
                   <div className="text-center">
                     <p className="text-sm text-muted-foreground mb-1">Total</p>
                     <p className="text-2xl font-bold text-accent">
@@ -427,7 +427,7 @@ export default function ProgressPage() {
                       +{memberGrowthStats.thisWeek}
                     </p>
                   </div>
-                </div>
+                </div> */}
               </div>
             )}
           </CardContent>

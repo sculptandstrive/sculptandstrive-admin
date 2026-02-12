@@ -132,7 +132,6 @@ export default function Auth() {
     const { error } = await signUp(signupEmail, signupPassword, signupName);
     
     if (error) {
-      console.log(error);
       let message = "An error occurred during signup";
       if (error.message.includes("already registered")) {
         message = "This email is already registered. Please login instead.";
