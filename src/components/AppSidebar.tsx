@@ -56,7 +56,10 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
       <div className="flex items-center h-20 px-4 border-b border-sidebar-border">
         <div className="flex items-center gap-3 overflow-hidden">
           <img
-            src={user?.user_metadata?.avatar_url !== "" ? user?.user_metadata?.avatar_url  : logo}
+            src={
+              user?.user_metadata?.avatar_url === "" ? logo :
+                user?.user_metadata?.avatar_url
+            }
             alt="Sculpt and Strive"
             className={cn(
               "object-contain transition-all duration-300",
@@ -75,7 +78,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-6 px-3">
+      <nav className="flex-1 no-scrollbar overflow-y-auto py-6 px-3 ">
         <ul className="space-y-1.5">
           {menuItems.map((item) => (
             <li key={item.title}>
