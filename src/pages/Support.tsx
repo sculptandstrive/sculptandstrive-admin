@@ -18,17 +18,14 @@ export default function Support() {
   const [loading, setLoading] = useState(true);
   const [newVideo, setNewVideo] = useState({ title: "", url: "", duration: "" });
 
- 
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch Tickets 
       const { data: ticketData } = await supabase
         .from("tickets")
         .select("*")
         .order("created_at", { ascending: false });
       
-      // Fetch Tutorials 
       const { data: tutorialData } = await supabase
         .from("tutorials")
         .select("*")
@@ -56,7 +53,7 @@ export default function Support() {
   };
 
   const openWhatsApp = (ticket: any) => {
-    const adminPhone = "8637261676"; // Admin Phone Number
+    const adminPhone = "8637261676";
     const text = encodeURIComponent(
       ` *Admin Live Support*\n\n` +
       `*From:* ${ticket.user_name}\n` +
@@ -71,13 +68,35 @@ export default function Support() {
     if (!error) fetchData();
   };
 
-  //  TUTORIAL 
+  // Validation Logic
   const handleAddTutorial = async () => {
-    if (!newVideo.title || !newVideo.url) return;
+    //  Basic empty check
+    if (!newVideo.title || !newVideo.url || !newVideo.duration) {
+      alert("Please fill in all fields.");
+      return;
+    }
+
+    //  URL Validation 
+    const urlPattern = new RegExp(/^(https?:\/\/)?([\w\d\-_]+\.+[A-Za-z]{2,}).*$/);
+    if (!urlPattern.test(newVideo.url)) {
+      alert("Please enter a valid URL (e.g., https://youtube.com/...).");
+      return;
+    }
+
+    //  Duration Validation 
+    const lowerDuration = newVideo.duration.toLowerCase();
+    const isValidDuration = lowerDuration.includes("min") || lowerDuration.includes("hour");
+    if (!isValidDuration) {
+      alert("Duration must specify 'min' or 'hour' (e.g., '15 min' or '1 hour').");
+      return;
+    }
+
     const { error } = await supabase.from("tutorials").insert([newVideo]);
     if (!error) {
       setNewVideo({ title: "", url: "", duration: "" });
       fetchData();
+    } else {
+      console.error("Error adding tutorial:", error);
     }
   };
 
@@ -85,29 +104,22 @@ export default function Support() {
     const { error } = await supabase.from("tutorials").delete().eq("id", id);
     if (!error) fetchData();
   };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "open":
-        return <Badge variant="destructive">Open</Badge>;
-      case "in_progress":
-        return <Badge className="bg-yellow-500 text-white border-none">Viewing</Badge>;
-      case "resolved":
-        return <Badge className="bg-green-500 text-white border-none">Closed</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
+      case "open": return <Badge variant="destructive">Open</Badge>;
+      case "in_progress": return <Badge className="bg-yellow-500 text-white border-none">Viewing</Badge>;
+      case "resolved": return <Badge className="bg-green-500 text-white border-none">Closed</Badge>;
+      default: return <Badge variant="secondary">{status}</Badge>;
     }
   };
 
   const getPriorityIcon = (priority: string) => {
     switch (priority) {
-      case "high":
-        return <AlertCircle className="w-5 h-5 text-destructive" />;
-      case "medium":
-        return <Clock className="w-5 h-5 text-yellow-500" />;
-      case "low":
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
-      default:
-        return <MessageCircle className="w-5 h-5 text-primary" />;
+      case "high": return <AlertCircle className="w-5 h-5 text-destructive" />;
+      case "medium": return <Clock className="w-5 h-5 text-yellow-500" />;
+      case "low": return <CheckCircle className="w-5 h-5 text-green-500" />;
+      default: return <MessageCircle className="w-5 h-5 text-primary" />;
     }
   };
 
@@ -118,7 +130,7 @@ export default function Support() {
         description="Monitor live user tickets and manage video tutorials."
       />
 
-      {/* --- DYNAMIC STATS SECTION --- */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
         <Card className="shadow-sm border-l-4 border-l-red-500">
           <CardContent className="pt-6 flex justify-between items-center">
@@ -150,8 +162,7 @@ export default function Support() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* --- DYNAMIC TICKETS SECTION (LEFT) --- */}
+        {/* Support Tickets Column */}
         <Card className="lg:col-span-2 shadow-card">
           <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
             <CardTitle className="font-display">Live Support Tickets</CardTitle>
@@ -171,20 +182,14 @@ export default function Support() {
                         {getPriorityIcon(ticket.priority || "high")}
                         <div>
                           <p className="font-bold text-foreground">{ticket.user_name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(ticket.created_at).toLocaleString()}
-                          </p>
+                          <p className="text-xs text-muted-foreground">{new Date(ticket.created_at).toLocaleString()}</p>
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        {getStatusBadge(ticket.status)}
-                      </div>
+                      <div className="flex gap-2">{getStatusBadge(ticket.status)}</div>
                     </div>
-                    
-                    <div className="p-3 bg-background rounded-lg border text-sm italic">
+                    <div className="p-3 bg-background rounded-lg border text-sm italic break-words overflow-hidden">
                       "{ticket.message}"
                     </div>
-
                     <div className="flex justify-between items-center pt-2">
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm" onClick={() => updateStatus(ticket.id, "in_progress")}>View</Button>
@@ -206,19 +211,35 @@ export default function Support() {
           </CardContent>
         </Card>
 
-        {/* --- TUTORIAL MANAGEMENT SECTION (RIGHT) --- */}
+        {/* Tutorial Management Column */}
         <div className="space-y-6">
           <Card className="shadow-card border-primary/20 bg-primary/5">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-semibold">Add New Tutorial</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Input placeholder="Title" value={newVideo.title} onChange={e => setNewVideo({...newVideo, title: e.target.value})} />
-              <Input placeholder="URL" value={newVideo.url} onChange={e => setNewVideo({...newVideo, url: e.target.value})} />
+              <Input 
+                placeholder="Title" 
+                value={newVideo.title} 
+                onChange={e => setNewVideo({...newVideo, title: e.target.value})} 
+              />
+              <Input 
+                type="url"
+                placeholder="URL (https://...)" 
+                value={newVideo.url} 
+                onChange={e => setNewVideo({...newVideo, url: e.target.value})} 
+              />
               <div className="flex gap-2">
-                <Input placeholder="Duration" value={newVideo.duration} onChange={e => setNewVideo({...newVideo, duration: e.target.value})} />
+                <Input 
+                  placeholder="Duration (e.g. 10 min)" 
+                  value={newVideo.duration} 
+                  onChange={e => setNewVideo({...newVideo, duration: e.target.value})} 
+                />
                 <Button onClick={handleAddTutorial} size="icon"><Plus className="w-4 h-4" /></Button>
               </div>
+              <p className="text-[10px] text-muted-foreground italic">
+                *Duration must include 'min' or 'hour'.
+              </p>
             </CardContent>
           </Card>
 
@@ -227,15 +248,24 @@ export default function Support() {
             <CardContent>
               <div className="space-y-3">
                 {tutorials.map((video) => (
-                  <div key={video.id} className="flex items-center justify-between p-3 rounded-lg border bg-muted/20 group">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <Book className="w-4 h-4 text-primary" />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{video.title}</p>
-                        <p className="text-xs text-muted-foreground">{video.duration} • {video.views || 0} views</p>
+                  <div key={video.id} className="flex items-start justify-between p-3 rounded-lg border bg-muted/20 group gap-2">
+                    <div className="flex items-start gap-3 min-w-0 flex-1">
+                      <Book className="w-4 h-4 text-primary mt-1 shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium break-words whitespace-normal leading-tight">
+                          {video.title}
+                        </p>
+                        <p className="text-xs text-muted-foreground break-all whitespace-normal mt-1">
+                          {video.duration} • {video.views || 0} views
+                        </p>
                       </div>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDeleteTutorial(video.id)}>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity shrink-0" 
+                      onClick={() => handleDeleteTutorial(video.id)}
+                    >
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
