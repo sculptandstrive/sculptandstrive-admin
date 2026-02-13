@@ -13,11 +13,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Fitness() {
   const [exercises, setExercises] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("All");
+  const [users, setUsers] = useState<any[]>([]);
   const { toast } = useToast();
   const stats = useMemo(() => {
     const total = exercises.length;
@@ -41,18 +43,29 @@ export default function Fitness() {
   const fetchFitnessData = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data:ExerciseData, error } = await supabase
         .from("exercises")
         .select("*")
         .order("name", { ascending: true });
-
       if (error) {
         console.error("Supabase Connection Error:", error.message);
         throw error;
       }
+      
+      const usersExercises = await Promise.all(
+        ExerciseData.map(async (data) =>
+          {
+          const {data: user, error: erroruser} = await supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("user_id", data.user_id).single()
+          return {...data, full_name : user?.full_name.split(' ')[0] || null}
+          }
+      ))
 
-      if (data) {
-        setExercises(data);
+      if (usersExercises) {
+        setExercises(usersExercises);
+
         
       }
     } catch (error: any) {
@@ -172,6 +185,9 @@ export default function Fitness() {
                         {ex.category || 'General'} • {ex.sets} Sets
                       </p>
                     </div>
+                  </div>
+                  <div className="flex items-center justify-center">
+                    <p className="text-primary font-semibold">{ex.full_name}</p>
                   </div>
                   <div className="flex items-center gap-6">
                     <div className="text-right">
