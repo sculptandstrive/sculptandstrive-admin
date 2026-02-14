@@ -31,6 +31,28 @@ export default function Sessions() {
   
   const today = new Date().toISOString().split('T')[0];
 
+  const sessionRegex = [ 
+    {
+      platform: "google_meet",
+      regex: /https?:\/\/meet\.google\.com\/[a-z]{3}-[a-z]{4}-[a-z]{3}/,
+    },
+    {
+      platform: "zoom",
+      regex: /^(https?:\/\/)?(www\.)?([a-z0-9-]+\.)?zoom\.us\/(j|wc)\/\d+$/i,
+    },
+    {
+      platform: "whatsapp",
+      regex: /^(https?:\/\/)?(www\.)?(wa\.me\/\d+|chat\.whatsapp\.com\/[A-Za-z0-9]+)$/i,
+    },
+    {
+      platform: "youtube",
+      regex:
+        /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+      regex2: /^(https?:\/\/)?(www\.)?youtube\.com\/shorts\/[\w-]+$/i
+    },
+  ];
+
+
   const [formData, setFormData] = useState({
     title: "",
     trainer: "",
@@ -55,7 +77,7 @@ export default function Sessions() {
           .order("scheduled_at", { ascending: false }),
         supabase
           .from("profiles")
-          .select("id, full_name, email")
+          .select("user_id, full_name, email")
       ]);
       
       if (sessRes.error) throw sessRes.error;
@@ -82,7 +104,7 @@ export default function Sessions() {
           const { data } = await supabase
             .from("profiles")
             .select("full_name")
-            .eq("id", user.id)
+            .eq("user_id", user.id)
             .maybeSingle();
             
           if (data?.full_name) {
@@ -169,6 +191,25 @@ export default function Sessions() {
 
     const scheduledDateTime = new Date(`${formData.date}T${formData.time}:00`);
     
+    if (formData.platform) {
+      const platformDetails = sessionRegex.find(
+        (p) => p.platform === formData.platform,
+      );
+
+      if (platformDetails) {
+        const isValid =
+          platformDetails.regex.test(formData.link) ||
+          (platformDetails.regex2 &&
+            platformDetails.regex2.test(formData.link));
+
+        if (!isValid) {
+          toast.error(`Please Give Correct ${formData.platform} Link`);
+          return;
+        }
+      }
+    }
+
+
     // 1. Insert the Session
     const { data: newSession, error: sessErr } = await supabase.from("sessions").insert([{
       title: formData.title,
@@ -183,7 +224,7 @@ export default function Sessions() {
 
     if (sessErr) return toast.error(sessErr.message);
 
-    // 2. Handle Assignments (Only if NOT Mass Session)
+    // Handle Assignments (Only if NOT Mass Session)
     if (!formData.isMass && formData.selectedClientIds.length > 0) {
       const assignments = formData.selectedClientIds.map(cid => ({ 
         session_id: newSession.id, 
@@ -193,7 +234,7 @@ export default function Sessions() {
       if (assignErr) toast.error("Session created, but user assignment failed.");
     }
 
-    // 3. Log Activity
+    // Log Activity
     await supabase.from("activities").insert([{
       admin_user_name: formData.trainer || "Coach",
       admin_action_detail: `Scheduled ${formData.type} session: ${formData.title}`,
@@ -224,6 +265,30 @@ export default function Sessions() {
       fetchData();
     }
   };
+
+  const handleTrainerName = (e) => {
+    if (e.target.value === "") {
+      setFormData({ ...formData, trainer: ""});
+      return;
+    }
+    else if (e.target.value.length > 40) {
+      toast.error('Trainer Name length should be less than 40');
+      return;
+    }
+    setFormData({ ...formData, trainer: e.target.value });
+  }
+
+  const handleSessionTitle = (e) => {
+    if (e.target.value === "") {
+      setFormData({ ...formData, title: "" });
+      return;
+    }
+    else if (e.target.value.length > 40) {
+      toast.error("Session Title length should be less than 40");
+      return;
+    }
+     setFormData({ ...formData, title: e.target.value });
+  }
 
   return (
     <DashboardLayout>
@@ -260,7 +325,8 @@ export default function Sessions() {
                         value={formData.trainer} 
                         className="border-slate-200" 
                         placeholder="Coach name"
-                        onChange={(e) => setFormData({...formData, trainer: e.target.value})} 
+                        onChange = {handleTrainerName}
+                        // onChange={(e) => setFormData({...formData, trainer: e.target.value})} 
                     />
                     </div>
                 </div>
@@ -271,7 +337,8 @@ export default function Sessions() {
                     value={formData.title} 
                     className="border-slate-200" 
                     placeholder="e.g. Morning Cardio"
-                    onChange={(e) => setFormData({...formData, title: e.target.value})} 
+                    onChange = {handleSessionTitle}
+                    // onChange={(e) => setFormData({...formData, title: e.target.value})} 
                     />
                 </div>
                 
@@ -311,14 +378,14 @@ export default function Sessions() {
                         {clients.length === 0 ? (
                             <p className="text-[10px] text-slate-400 text-center py-4">No users found in database.</p>
                         ) : clients.map(client => (
-                        <div key={client.id} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
+                        <div key={client.user_id} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
                             <div className="flex flex-col">
                                 <span className="text-xs font-medium text-slate-700">{client.full_name}</span>
-                                <span className="text-[9px] text-slate-400 uppercase font-mono">{client.id.slice(0,8)}...</span>
+                                <span className="text-[9px] text-slate-400 uppercase font-mono">{client.user_id.slice(0,8)}...</span>
                             </div>
                             <Checkbox 
-                            checked={formData.selectedClientIds.includes(client.id)}
-                            onCheckedChange={() => handleToggleClient(client.id)}
+                            checked={formData.selectedClientIds.includes(client.user_id)}
+                            onCheckedChange={() => handleToggleClient(client.user_id)}
                             />
                         </div>
                         ))}
