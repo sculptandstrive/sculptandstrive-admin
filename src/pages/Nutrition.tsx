@@ -76,10 +76,8 @@ export default function NutritionAdmin() {
         (supabase as any).from('recipes').select('*', { count: 'exact', head: true })
       ]);
 
-      // Calculate Total Recipes
       setRecipeCount(recipeRes.count || 0);
 
-      // Calculate Global Average Calories
       if (logsRes.data && logsRes.data.length > 0) {
         const totalCals = logsRes.data.reduce((sum: number, log: any) => sum + (Number(log.calories) || 0), 0);
         setGlobalAvgCals(Math.round(totalCals / logsRes.data.length));
@@ -87,11 +85,9 @@ export default function NutritionAdmin() {
         setGlobalAvgCals(0);
       }
 
-      // Calculate Water Intake Average (Percentage vs 2000ml goal)
       if (waterRes.data && waterRes.data.length > 0) {
         const totalWater = waterRes.data.reduce((sum: number, log: any) => sum + (Number(log.amount_ml) || 0), 0);
         const avgMl = totalWater / waterRes.data.length;
-        // Calculation: (Average intake / 2000ml goal) * 100
         setGlobalWaterAvg(Math.min(Math.round((avgMl / 2000) * 100), 100));
       } else {
         setGlobalWaterAvg(0);
@@ -252,7 +248,6 @@ export default function NutritionAdmin() {
         </div>
       </PageHeader>
 
-      {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 mt-6">
         <Card className="border-none shadow-sm">
           <CardContent className="p-6 flex justify-between items-center">
@@ -303,7 +298,6 @@ export default function NutritionAdmin() {
         </Card>
       </div>
 
-      {/* Active Meal Plans List */}
       <h3 className="flex items-center gap-2 text-xl font-bold mb-6 text-slate-800">
         <Utensils className="w-5 h-5 text-indigo-600" /> Active Meal Plans
       </h3>
@@ -343,11 +337,14 @@ export default function NutritionAdmin() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56">
                       <DropdownMenuLabel>Revoke User</DropdownMenuLabel>
-                      {users.filter(u => u.active_plan_name === plan.name).map(u => (
-                        <DropdownMenuItem key={u.id} onClick={() => handleRemovePlan(u.id, plan.id)}>
-                          {u.full_name}
-                        </DropdownMenuItem>
-                      ))}
+                      {/* Added scroll wrapper for Revoke */}
+                      <div className="max-h-[300px] overflow-y-auto overflow-x-hidden p-1">
+                        {users.filter(u => u.active_plan_name === plan.name).map(u => (
+                          <DropdownMenuItem key={u.id} onClick={() => handleRemovePlan(u.id, plan.id)}>
+                            <span className="truncate">{u.full_name}</span>
+                          </DropdownMenuItem>
+                        ))}
+                      </div>
                     </DropdownMenuContent>
                   </DropdownMenu>
 
@@ -359,11 +356,15 @@ export default function NutritionAdmin() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56">
                       <DropdownMenuLabel>Assign User</DropdownMenuLabel>
-                      {users.map(u => (
-                        <DropdownMenuItem key={u.id} onClick={() => handleAssignPlan(u.id, plan.id)}>
-                          {u.full_name} {u.active_plan_name === plan.name && "✓"}
-                        </DropdownMenuItem>
-                      ))}
+                      {/* Added scroll wrapper for Assign */}
+                      <div className="max-h-[300px] overflow-y-auto overflow-x-hidden p-1">
+                        {users.map(u => (
+                          <DropdownMenuItem key={u.id} onClick={() => handleAssignPlan(u.id, plan.id)}>
+                            <span className="truncate flex-1">{u.full_name}</span>
+                            {u.active_plan_name === plan.name && <Check className="ml-2 h-4 w-4 text-emerald-500" />}
+                          </DropdownMenuItem>
+                        ))}
+                      </div>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
