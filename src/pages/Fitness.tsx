@@ -146,7 +146,7 @@ export default function Fitness() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="shadow-card border-none bg-card/60 backdrop-blur-md">
-          <CardHeader><CardTitle className="font-display text-xl text-primary">Categories</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="font-display text-xl text-foreground">Categories</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             {categories.map((category) => (
               <div key={category.name} className="space-y-2">
@@ -163,7 +163,7 @@ export default function Fitness() {
         <Card className="lg:col-span-2 shadow-card border-none bg-card/60 backdrop-blur-md">
           <CardHeader>
             <div className="flex justify-between items-center">
-              <CardTitle className="font-display text-xl text-primary">
+              <CardTitle className="font-display text-xl text-foreground">
                 {activeFilter} Exercises
               </CardTitle>
               <span className="text-xs text-muted-foreground uppercase tracking-widest">

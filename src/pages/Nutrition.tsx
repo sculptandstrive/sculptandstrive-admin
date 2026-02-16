@@ -298,7 +298,7 @@ export default function NutritionAdmin() {
         </Card>
       </div>
 
-      <h3 className="flex items-center gap-2 text-xl font-bold mb-6 text-slate-800">
+      <h3 className="flex items-center gap-2 text-xl font-bold mb-6 text-foreground">
         <Utensils className="w-5 h-5 text-indigo-600" /> Active Meal Plans
       </h3>
 
@@ -313,7 +313,7 @@ export default function NutritionAdmin() {
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h4 className="text-2xl font-bold text-slate-900">{plan.name}</h4>
+                    <h4 className="text-2xl font-bold text-muted-foreground">{plan.name}</h4>
                     <Button 
                       variant="ghost" 
                       size="icon" 
