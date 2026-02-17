@@ -136,8 +136,8 @@ export default function Users() {
     }
   };
 
-  if (adminLoading) return <DashboardLayout><div className="p-4"><Skeleton className="h-64 w-full" /></div></DashboardLayout>;
-  if (!isAdmin) return <DashboardLayout><div className="p-20 text-center"><ShieldAlert className="mx-auto h-12 w-12 text-destructive/50" /></div></DashboardLayout>;
+  if (adminLoading) return <div className="p-4"><Skeleton className="h-64 w-full" /></div>;
+  if (!isAdmin) return <div className="p-20 text-center"><ShieldAlert className="mx-auto h-12 w-12 text-destructive/50" /></div>;
 
   return (
     <>
