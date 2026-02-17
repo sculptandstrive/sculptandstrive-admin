@@ -319,7 +319,7 @@ export default function Settings() {
   const isCustomLogo = currentLogoUrl !== null;
 
   return (
-    <DashboardLayout>
+    <>
       <PageHeader
         title="Settings"
         description="Configure your platform settings and preferences."
@@ -334,13 +334,13 @@ export default function Settings() {
             <Palette className="w-4 h-4 mr-2" />
             Branding
           </TabsTrigger>
-          <TabsTrigger
+          {/* <TabsTrigger
             value="features"
             className="data-[state=active]:bg-card data-[state=active]:shadow-sm"
           >
             <ToggleLeft className="w-4 h-4 mr-2" />
             Features
-          </TabsTrigger>
+          </TabsTrigger> */}
           <TabsTrigger
             value="display"
             className="data-[state=active]:bg-card data-[state=active]:shadow-sm"
@@ -454,7 +454,7 @@ export default function Settings() {
         </TabsContent>
 
         {/* Features Tab */}
-        <TabsContent value="features" className="space-y-6 animate-fade-in">
+        {/* <TabsContent value="features" className="space-y-6 animate-fade-in">
           <Card className="shadow-card">
             <CardHeader>
               <CardTitle className="font-display">Feature Toggles</CardTitle>
@@ -486,7 +486,7 @@ export default function Settings() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        </TabsContent> */}
 
         {/* Display Tab */}
         <TabsContent value="display" className="space-y-6 animate-fade-in">
@@ -581,6 +581,6 @@ export default function Settings() {
           </div>
         </TabsContent>
       </Tabs>
-    </DashboardLayout>
+    </>
   );
 }

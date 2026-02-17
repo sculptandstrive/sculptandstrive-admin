@@ -185,9 +185,9 @@ export default function NutritionAdmin() {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <PageHeader title="Nutrition Admin" description="System monitoring and assignment.">
-        <div className="flex gap-2">
+        <div className="flex flex-col md:flex-row gap-2">
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
@@ -248,10 +248,10 @@ export default function NutritionAdmin() {
         </div>
       </PageHeader>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 mt-6">
-        <Card className="border-none shadow-sm">
-          <CardContent className="p-6 flex justify-between items-center">
-            <div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 mt-6">
+        <Card className="border-none shadow-sm ">
+          <CardContent className="p-2 md:p-6 flex flex-col-reverse gap-3 md:flex-row justify-between items-center">
+            <div className="flex flex-col md:flex-col items-center md:items-start">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Live Meal Plans</p>
               <p className="text-3xl font-bold mt-1">{mealPlans.length}</p>
             </div>
@@ -262,8 +262,8 @@ export default function NutritionAdmin() {
         </Card>
 
         <Card className="border-none shadow-sm">
-          <CardContent className="p-6 flex justify-between items-center">
-            <div>
+          <CardContent className="p-2 md:p-6 flex flex-col-reverse gap-3 md:flex-row justify-between items-center">
+            <div className="flex flex-col items-center md:items-start">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total Recipes</p>
               <p className="text-3xl font-bold mt-1">{recipeCount}</p>
             </div>
@@ -274,8 +274,8 @@ export default function NutritionAdmin() {
         </Card>
 
         <Card className="border-none shadow-sm">
-          <CardContent className="p-6 flex justify-between items-center">
-            <div>
+          <CardContent className="p-2 md:p-6 flex flex-col-reverse gap-3 md:flex-row justify-between items-center">
+            <div className="flex flex-col items-center md:items-start">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Global Avg Cals</p>
               <p className="text-3xl font-bold mt-1">{globalAvgCals}</p>
             </div>
@@ -286,8 +286,8 @@ export default function NutritionAdmin() {
         </Card>
 
         <Card className="border-none shadow-sm">
-          <CardContent className="p-6 flex justify-between items-center">
-            <div>
+          <CardContent className="p-2 md:p-6 flex flex-col-reverse gap-3 md:flex-row justify-between items-center">
+            <div className="flex flex-col items-center md:items-start">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Water Intake Avg</p>
               <p className="text-3xl font-bold mt-1">{globalWaterAvg}%</p>
             </div>
@@ -309,8 +309,8 @@ export default function NutritionAdmin() {
           </div>
         ) : filteredPlans.map((plan) => (
           <Card key={plan.id} className="border-none shadow-md overflow-hidden">
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start mb-6">
+            <CardContent className="p-3 md:p-6">
+              <div className="flex justify-between items-start flex-col md:flex-row gap-2 mb-6">
                 <div>
                   <div className="flex items-center gap-2">
                     <h4 className="text-2xl font-bold text-muted-foreground">{plan.name}</h4>
@@ -388,6 +388,6 @@ export default function NutritionAdmin() {
           </Card>
         ))}
       </div>
-    </DashboardLayout>
+    </>
   );
 }

@@ -304,7 +304,7 @@ export default function Sessions() {
   }
 
   return (
-    <DashboardLayout>
+    <>
       <PageHeader title="Sessions" description="Manage your Live workouts and Recorded Library.">
         <div className="flex gap-2">
             <Button variant="outline" size="icon" onClick={fetchData} className="text-slate-400">
@@ -477,7 +477,7 @@ export default function Sessions() {
               });
 
               return (
-                <div key={session.id} className="group flex items-center gap-4 p-5 rounded-2xl border hover:border-sky-100 hover:bg-sky-50/30 transition-all">
+                <div key={session.id} className="group flex flex-col md:flex-row items-center gap-4 p-5 rounded-2xl border hover:border-sky-100 hover:bg-sky-50/30 transition-all">
                   <div className={`h-12 w-12 rounded-xl flex items-center justify-center text-white shadow-sm ${live ? 'bg-[#0ea5e9] animate-pulse' : 'bg-slate-200'}`}>
                     {session.type === 'recorded' ? <Film className="w-6 h-6" /> : <PlayCircle className="w-6 h-6 text-slate-400" />}
                   </div>
@@ -491,13 +491,13 @@ export default function Sessions() {
                     <p className="text-sm text-slate-400 font-medium capitalize">Coach {session.instructor}</p>
                   </div>
 
-                  <div className="hidden md:flex items-center gap-6 mr-4">
-                    <div className="flex items-center gap-2 text-slate-500 bg-white px-3 py-1.5 rounded-lg border border-slate-100">
+                  <div className="flex items-center justify-between gap-2 md:gap-6 mr-4">
+                    <div className="flex items-center gap-2 text-slate-500 bg-white px-1 md:px-3 py-1.5 rounded-lg border border-slate-100">
                       <Clock className="w-4 h-4 text-[#0ea5e9]" />
                       <span className="text-sm font-bold">{sessionTime}</span>
                     </div>
                     
-                    <div className="flex items-center gap-2 text-slate-500 bg-white px-3 py-1.5 rounded-lg border border-slate-100 min-w-[110px]">
+                    <div className="flex items-center gap-2 text-slate-500 bg-white px-3 py-1.5 rounded-lg border border-slate-100 md:min-w-[110px]">
                       <UsersIcon className="w-4 h-4 text-slate-400" />
                       <span className="text-sm font-semibold">{participantCount} {session.admin_is_mass ? '' : 'Clients'}</span>
                     </div>
@@ -515,7 +515,7 @@ export default function Sessions() {
           </div>
         </CardContent>
       </Card>
-    </DashboardLayout>
+    </>
   );
 }
 

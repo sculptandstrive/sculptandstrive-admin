@@ -164,11 +164,11 @@ export default function Users() {
     }
   };
 
-  if (adminLoading) return <DashboardLayout><div className="p-8 space-y-4"><Skeleton className="h-10 w-1/3" /><Skeleton className="h-64 w-full" /></div></DashboardLayout>;
-  if (!isAdmin) return <DashboardLayout><div className="flex flex-col items-center justify-center min-h-[50vh] text-center"><ShieldAlert className="w-16 h-16 text-destructive/50 mb-4" /><h2 className="text-2xl font-bold">Unauthorized Access</h2></div></DashboardLayout>;
+  if (adminLoading) return <><div className="p-8 space-y-4"><Skeleton className="h-10 w-1/3" /><Skeleton className="h-64 w-full" /></div></>;
+  if (!isAdmin) return <><div className="flex flex-col items-center justify-center min-h-[50vh] text-center"><ShieldAlert className="w-16 h-16 text-destructive/50 mb-4" /><h2 className="text-2xl font-bold">Unauthorized Access</h2></div></>;
 
   return (
-    <DashboardLayout>
+    <>
       <PageHeader title="User Management" description="Real-time access control.">
         <Button onClick={fetchUsers} variant="outline" size="sm" disabled={loading}>
           <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
@@ -286,6 +286,6 @@ export default function Users() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </DashboardLayout>
+    </>
   );
 }

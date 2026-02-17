@@ -55,11 +55,11 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <DashboardLayout>
+    <>
       <PageHeader
         title="Dashboard"
         description="Welcome back! Here's an overview of your platform."
-      >
+        >
         <Button
           onClick={() => navigate("/sessions")}
           className="gradient-accent text-accent-foreground hover:opacity-90 transition-opacity"
@@ -123,7 +123,7 @@ export default function Dashboard() {
                       <p className="text-sm font-medium text-foreground truncate">
                         {activity.admin_user_name}
                       </p>
-                      <p className="text-sm text-muted-foreground truncate">
+                      <p className="text-sm text-muted-foreground truncate text-wrap md:text-nowrap">
                         {activity.admin_action_detail}
                       </p>
                     </div>
@@ -167,6 +167,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
+      </>
+    // </>
   );
 }

@@ -124,7 +124,7 @@ export default function Support() {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <PageHeader 
         title="Admin Support Dashboard" 
         description="Monitor live user tickets and manage video tutorials."
@@ -275,6 +275,6 @@ export default function Support() {
           </Card>
         </div>
       </div>
-    </DashboardLayout>
+    </>
   );
 }

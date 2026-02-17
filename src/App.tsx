@@ -16,6 +16,7 @@ import Users from "./pages/Users";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { DashboardLayout } from "./components/DashboardLayout";
 
 const queryClient = new QueryClient();
 
@@ -26,25 +27,37 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          
             <Routes>
+
               <Route path="/auth" element={<Auth />} />
+
               <Route
-                path="/"
+                path="/*"
                 element={
                   <ProtectedRoute>
                     <ThemeProvider>
-                    <Dashboard />
+                      <DashboardLayout>
+                        <Routes>
+                          <Route path = "/" element = {<Dashboard/>}/>
+                          <Route path = "/sessions" element = {<Sessions/>}/>
+                          <Route path = "/fitness" element = {<Fitness/>}/>
+                          <Route path = "/nutrition" element = {<Nutrition/>}/>
+                          <Route path = "/progress" element = {<Progress/>}/>
+                          <Route path = "/support" element = {<Support/>}/>
+                          <Route path = "/settings" element = {<Settings/>}/>
+                          <Route path = "/users" element = {<Users/>}/>
+                        </Routes>
+                      </DashboardLayout>
                     </ThemeProvider>
                   </ProtectedRoute>
                 }
               />
-              <Route
+              {/* <Route
                 path="/sessions"
                 element={
                   <ProtectedRoute>
                     <ThemeProvider>
-                    <Sessions />
+                      <Sessions />
                     </ThemeProvider>
                   </ProtectedRoute>
                 }
@@ -54,7 +67,7 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <ThemeProvider>
-                    <Fitness />
+                      <Fitness />
                     </ThemeProvider>
                   </ProtectedRoute>
                 }
@@ -64,7 +77,7 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <ThemeProvider>
-                    <Nutrition />
+                      <Nutrition />
                     </ThemeProvider>
                   </ProtectedRoute>
                 }
@@ -74,7 +87,7 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <ThemeProvider>
-                    <Progress />
+                      <Progress />
                     </ThemeProvider>
                   </ProtectedRoute>
                 }
@@ -84,7 +97,7 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <ThemeProvider>
-                    <Support />
+                      <Support />
                     </ThemeProvider>
                   </ProtectedRoute>
                 }
@@ -94,7 +107,7 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <ThemeProvider>
-                    <Settings />
+                      <Settings />
                     </ThemeProvider>
                   </ProtectedRoute>
                 }
@@ -104,14 +117,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <ThemeProvider>
-                    <Users />
+                      <Users />
                     </ThemeProvider>
                   </ProtectedRoute>
                 }
-              />
+              /> */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-          {/* </ThemeProvider> */}
+          {/* </DashboardLayout> */}
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

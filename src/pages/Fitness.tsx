@@ -105,15 +105,15 @@ export default function Fitness() {
   }));
 
   if (loading) return (
-    <DashboardLayout>
+    <>
       <div className="flex h-[70vh] items-center justify-center">
         <Loader2 className="animate-spin" />
       </div>
-    </DashboardLayout>
+    </>
   );
 
   return (
-    <DashboardLayout>
+    <>
       <PageHeader
         title="Fitness Overview"
         description="Monitor system-wide exercise statistics."
@@ -162,7 +162,7 @@ export default function Fitness() {
 
         <Card className="lg:col-span-2 shadow-card border-none bg-card/60 backdrop-blur-md">
           <CardHeader>
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row gap-2 justify-between items-center">
               <CardTitle className="font-display text-xl text-foreground">
                 {activeFilter} Exercises
               </CardTitle>
@@ -174,12 +174,12 @@ export default function Fitness() {
           <CardContent className="space-y-4">
             {filteredExercises.length > 0 ? (
               filteredExercises.map((ex) => (
-                <div key={ex.id} className="flex items-center justify-between p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all group">
-                  <div className="flex items-center gap-4 min-w-0">
+                <div key={ex.id} className="flex flex-col md:flex-row items-center justify-between gap-2 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all group">
+                  <div className="flex flex-col md:flex-row items-center gap-4 min-w-0">
                     <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center flex-shrink-0">
                       <Dumbbell className="w-6 h-6 text-primary-foreground" />
                     </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex flex-col items-center md:block">
                       <p className="font-bold text-foreground truncate">{ex.name}</p>
                       <p className="text-xs text-muted-foreground uppercase tracking-widest">
                         {ex.category || 'General'} • {ex.sets} Sets
@@ -189,8 +189,8 @@ export default function Fitness() {
                   <div className="flex items-center justify-center">
                     <p className="text-primary font-semibold">{ex.full_name}</p>
                   </div>
-                  <div className="flex items-center gap-6">
-                    <div className="text-right">
+                  <div className="flex flex-col md:flex-row items-center gap-2 md:gap-6">
+                    <div className="flex justify-between gap-4 items-center md:block text-right">
                       <p className="font-bold text-accent">{ex.reps} reps</p>
                       <p className="text-xs text-muted-foreground">Total: {ex.sets * ex.reps}</p>
                     </div>
@@ -213,7 +213,7 @@ export default function Fitness() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
+    </>
   );
 }
 

@@ -109,51 +109,51 @@ export default function Auth() {
     setIsLoading(false);
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // const handleSignup = async (e: React.FormEvent) => {
+  //   e.preventDefault();
     
-    try {
-      nameSchema.parse(signupName);
-      emailSchema.parse(signupEmail);
-      passwordSchema.parse(signupPassword);
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        toast({
-          title: "Validation Error",
-          description: err.errors[0].message,
-          variant: "destructive",
-        });
-        return;
-      }
-    }
+  //   try {
+  //     nameSchema.parse(signupName);
+  //     emailSchema.parse(signupEmail);
+  //     passwordSchema.parse(signupPassword);
+  //   } catch (err) {
+  //     if (err instanceof z.ZodError) {
+  //       toast({
+  //         title: "Validation Error",
+  //         description: err.errors[0].message,
+  //         variant: "destructive",
+  //       });
+  //       return;
+  //     }
+  //   }
 
-    setIsLoading(true);
+  //   setIsLoading(true);
     
-    const { error } = await signUp(signupEmail, signupPassword, signupName);
+  //   const { error } = await signUp(signupEmail, signupPassword, signupName);
     
-    if (error) {
-      let message = "An error occurred during signup";
-      if (error.message.includes("already registered")) {
-        message = "This email is already registered. Please login instead.";
-      } else if (error.message.includes("password")) {
-        message = "Password is too weak. Please use a stronger password.";
-      }
+  //   if (error) {
+  //     let message = "An error occurred during signup";
+  //     if (error.message.includes("already registered")) {
+  //       message = "This email is already registered. Please login instead.";
+  //     } else if (error.message.includes("password")) {
+  //       message = "Password is too weak. Please use a stronger password.";
+  //     }
       
-      toast({
-        title: "Signup Failed",
-        description: message,
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Account Created!",
-        description: "Welcome to Sculpt & Strive! You're now logged in.",
-      });
-      navigate(from, { replace: true });
-    }
+  //     toast({
+  //       title: "Signup Failed",
+  //       description: message,
+  //       variant: "destructive",
+  //     });
+  //   } else {
+  //     toast({
+  //       title: "Account Created!",
+  //       description: "Welcome to Sculpt & Strive! You're now logged in.",
+  //     });
+  //     navigate(from, { replace: true });
+  //   }
     
-    setIsLoading(false);
-  };
+  //   setIsLoading(false);
+  // };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/30 to-background p-4">
@@ -179,9 +179,9 @@ export default function Auth() {
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsList className="grid w-full grid-cols-1 mb-6">
                 <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                {/* <TabsTrigger value="signup">Sign Up</TabsTrigger> */}
               </TabsList>
 
               <TabsContent value="login">
@@ -233,16 +233,16 @@ export default function Auth() {
                     )}
                   </Button>
 
-                  <div className="relative my-4">
+                  {/* <div className="relative my-4">
                     <div className="absolute inset-0 flex items-center">
                       <Separator className="w-full" />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
                       <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
                     </div>
-                  </div>
+                  </div> */}
 
-                  <Button
+                  {/* <Button
                     type="button"
                     variant="outline"
                     className="w-full"
@@ -268,11 +268,11 @@ export default function Auth() {
                       />
                     </svg>
                     Continue with Google
-                  </Button>
+                  </Button> */}
                 </form>
               </TabsContent>
 
-              <TabsContent value="signup">
+              {/* <TabsContent value="signup">
                 <form onSubmit={handleSignup} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signup-name">Full Name</Label>
@@ -377,7 +377,7 @@ export default function Auth() {
                     Continue with Google
                   </Button>
                 </form>
-              </TabsContent>
+              </TabsContent> */}
             </Tabs>
           </CardContent>
         </Card>

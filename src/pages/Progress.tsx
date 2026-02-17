@@ -266,16 +266,16 @@ export default function ProgressPage() {
 
   if (isLoading) {
     return (
-      <DashboardLayout>
+      <>
         <div className="flex h-[80vh] items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-accent" />
         </div>
-      </DashboardLayout>
+      </>
     );
   }
 
   return (
-    <DashboardLayout>
+    <>
       <PageHeader
         title="Progress"
         description="Global member analytics and growth tracking synced from Supabase."
@@ -624,6 +624,6 @@ export default function ProgressPage() {
 
       {/* Growth Rate Trends */}
       {/* </div> */}
-    </DashboardLayout>
+    </>
   );
 }
