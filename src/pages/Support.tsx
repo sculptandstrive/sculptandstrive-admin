@@ -84,9 +84,9 @@ export default function Support() {
     }
 
     //  Duration Validation 
-    const lowerDuration = newVideo.duration.toLowerCase();
-    const isValidDuration = lowerDuration.includes("min") || lowerDuration.includes("hour");
-    if (!isValidDuration) {
+      const lowerDuration = newVideo.duration.toLowerCase().trim(); // Added .trim() to ignore accidental spaces
+      const isValidDuration = lowerDuration.includes("min") || lowerDuration.includes("hour") || lowerDuration.includes("hr"); // Added 'hr' just in case
+      if (!isValidDuration) {
       alert("Duration must specify 'min' or 'hour' (e.g., '15 min' or '1 hour').");
       return;
     }
@@ -96,7 +96,7 @@ export default function Support() {
       setNewVideo({ title: "", url: "", duration: "" });
       fetchData();
     } else {
-      console.error("Error adding tutorial:", error);
+      alert("Database Error: " + error.message); 
     }
   };
 
