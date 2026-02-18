@@ -28,7 +28,7 @@ export default function Sessions() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isPublishing, setIsPublishing] = useState(false); // UI Lock state
+  const [isPublishing, setIsPublishing] = useState(false);
 
   const filteredClients = clients.filter(client => 
     client.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -187,18 +187,18 @@ export default function Sessions() {
     return now >= startTime && now <= (startTime + duration);
   };
 
- const isPastSession = (scheduledAt: string, type: string) => {
-  const startTime = new Date(scheduledAt).getTime();
-  const now = new Date().getTime();
+  const isPastSession = (scheduledAt: string, type: string) => {
+    const startTime = new Date(scheduledAt).getTime();
+    const now = new Date().getTime();
 
-  if (type === 'recorded') {
-    const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
-    return now > (startTime + SEVEN_DAYS); 
-  }
+    if (type === 'recorded') {
+      const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+      return now > (startTime + SEVEN_DAYS); 
+    }
 
-  const duration = 60 * 60 * 1000; // 1 hour for live
-  return now > (startTime + duration);
-};
+    const duration = 60 * 60 * 1000; 
+    return now > (startTime + duration);
+  };
 
   const handleToggleClient = (clientId: string) => {
     setFormData(prev => ({
@@ -211,8 +211,6 @@ export default function Sessions() {
 
   const handleAddSession = async () => {
     if (!formData.link || !formData.title) return toast.error("Title and Link are required");
-    
-    // Prevent overlapping executions
     if (isPublishing) return;
 
     const scheduledDateTime = new Date(`${formData.date}T${formData.time}:00`);
@@ -229,13 +227,11 @@ export default function Sessions() {
       }
     }
 
-   // Only block past times if it's a Live session
-if (formData.type === 'live' && scheduledDateTime <= now) {
-  toast.error("Please select a future time for live sessions");
-  return;
-}
+    if (formData.type === 'live' && scheduledDateTime <= now) {
+      toast.error("Please select a future time for live sessions");
+      return;
+    }
 
-    //  Lock the state
     setIsPublishing(true);
 
     try {
@@ -252,7 +248,7 @@ if (formData.type === 'live' && scheduledDateTime <= now) {
 
         if (sessErr) {
             toast.error(sessErr.message);
-            setIsPublishing(false); // Unlock on error
+            setIsPublishing(false); 
             return;
         }
 
@@ -283,7 +279,6 @@ if (formData.type === 'live' && scheduledDateTime <= now) {
     } catch (err: any) {
         toast.error("An unexpected error occurred");
     } finally {
-        //  Always unlock at the end
         setIsPublishing(false);
     }
   };
@@ -383,7 +378,7 @@ if (formData.type === 'live' && scheduledDateTime <= now) {
                 </div>
 
                 {!formData.isMass && (
-                  <div className="border rounded-xl p-3 sm:p-4 bg-slate-50/50 border-slate-200 max-w-full overflow-hidden">
+                  <div className="border rounded-xl p-3 sm:p-4 bg-slate-900/50 border-slate-700 max-w-full overflow-hidden">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-3">
                       <Label className="text-xs font-bold text-[#0ea5e9]">
                         Assign to Clients ({formData.selectedClientIds.length})
@@ -394,7 +389,7 @@ if (formData.type === 'live' && scheduledDateTime <= now) {
                           placeholder="Search name..." 
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
-                          className="h-8 text-[11px] pl-7 pr-2 border-slate-200 bg-white w-full"
+                          className="h-8 text-[11px] pl-7 pr-2 border-slate-700 bg-slate-800 text-white w-full placeholder:text-slate-500"
                         />
                       </div>
                     </div>
@@ -403,15 +398,15 @@ if (formData.type === 'live' && scheduledDateTime <= now) {
                         <p className="text-[10px] text-slate-400 text-center py-4">No matching clients found.</p>
                       ) : (
                         filteredClients.map(client => (
-                          <div key={client.user_id} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0 mr-1">
+                          <div key={client.user_id} className="flex items-center justify-between py-2 border-b border-slate-800 last:border-0 mr-1">
                             <div className="flex flex-col min-w-0 flex-1 mr-2">
-                              <span className="text-xs font-medium text-slate-700 truncate">{client.full_name}</span>
-                              <span className="text-[9px] text-slate-400 uppercase font-mono">{client.user_id.slice(0,8)}...</span>
+                              <span className="text-xs font-medium text-white truncate">{client.full_name}</span>
+                              <span className="text-[9px] text-slate-500 uppercase font-mono">{client.user_id.slice(0,8)}...</span>
                             </div>
                             <Checkbox 
                               checked={formData.selectedClientIds.includes(client.user_id)}
                               onCheckedChange={() => handleToggleClient(client.user_id)}
-                              className="shrink-0"
+                              className="shrink-0 border-slate-500 data-[state=checked]:bg-[#0ea5e9] data-[state=checked]:border-[#0ea5e9]"
                             />
                           </div>
                         ))
