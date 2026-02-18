@@ -187,15 +187,18 @@ export default function Sessions() {
     return now >= startTime && now <= (startTime + duration);
   };
 
-  const isPastSession = (scheduledAt: string, type: string) => {
+ const isPastSession = (scheduledAt: string, type: string) => {
   const startTime = new Date(scheduledAt).getTime();
   const now = new Date().getTime();
 
   if (type === 'recorded') {
     const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
-    // Returns true only if the video is older than 7 days
     return now > (startTime + SEVEN_DAYS); 
-  }}
+  }
+
+  const duration = 60 * 60 * 1000; // 1 hour for live
+  return now > (startTime + duration);
+};
 
   const handleToggleClient = (clientId: string) => {
     setFormData(prev => ({
@@ -226,10 +229,11 @@ export default function Sessions() {
       }
     }
 
-    if (scheduledDateTime <= now) {
-      toast.error("Please select a future time for session");
-      return;
-    }
+   // Only block past times if it's a Live session
+if (formData.type === 'live' && scheduledDateTime <= now) {
+  toast.error("Please select a future time for live sessions");
+  return;
+}
 
     //  Lock the state
     setIsPublishing(true);
