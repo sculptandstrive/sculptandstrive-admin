@@ -96,14 +96,20 @@ export default function Support() {
       setNewVideo({ title: "", url: "", duration: "" });
       fetchData();
     } else {
-      alert("Database Error: " + error.message); 
+      alert("Database Error: " + error.message); // This will pop up a message telling us exactly what's wrong
     }
   };
 
   const handleDeleteTutorial = async (id: string) => {
-    const { error } = await supabase.from("tutorials").delete().eq("id", id);
-    if (!error) fetchData();
-  };
+  const { error } = await supabase.from("tutorials").delete().eq("id", id);
+  if (!error) {
+    fetchData();
+  } else {
+    // YOU ARE MISSING THIS:
+    console.error("Delete failed:", error.message);
+    alert("Delete failed: " + error.message);
+  }
+};
 
   const getStatusBadge = (status: string) => {
     switch (status) {

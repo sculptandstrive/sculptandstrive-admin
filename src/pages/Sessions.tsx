@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { 
-  Calendar as CalendarIcon, Video, Users as UsersIcon, 
+  Calendar as CalendarIcon, Video, Users as UsersIcon,  
   Clock, Plus, Trash2, RefreshCw, Search
 } from "lucide-react";
 import { useGoogleLogin } from '@react-oauth/google'; 
@@ -28,6 +28,7 @@ export default function Sessions() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isPublishing, setIsPublishing] = useState(false); // UI Lock state
 
   const filteredClients = clients.filter(client => 
     client.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -179,20 +180,22 @@ export default function Sessions() {
   });
 
   const getLiveStatus = (scheduledAt: string, type: string) => {
-  if (type === 'recorded') return false; 
-  const startTime = new Date(scheduledAt).getTime();
-  const now = new Date().getTime();
-  const duration = 60 * 60 * 1000; 
-  return now >= startTime && now <= (startTime + duration);
-};
-
-  const isPastSession = (scheduledAt: string, type: string) => {
-    if (type === 'recorded') return false;
+    if (type === 'recorded') return false; 
     const startTime = new Date(scheduledAt).getTime();
     const now = new Date().getTime();
     const duration = 60 * 60 * 1000; 
-    return now > (startTime + duration);
+    return now >= startTime && now <= (startTime + duration);
   };
+
+  const isPastSession = (scheduledAt: string, type: string) => {
+  const startTime = new Date(scheduledAt).getTime();
+  const now = new Date().getTime();
+
+  if (type === 'recorded') {
+    const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+    // Returns true only if the video is older than 7 days
+    return now > (startTime + SEVEN_DAYS); 
+  }}
 
   const handleToggleClient = (clientId: string) => {
     setFormData(prev => ({
@@ -205,6 +208,9 @@ export default function Sessions() {
 
   const handleAddSession = async () => {
     if (!formData.link || !formData.title) return toast.error("Title and Link are required");
+    
+    // Prevent overlapping executions
+    if (isPublishing) return;
 
     const scheduledDateTime = new Date(`${formData.date}T${formData.time}:00`);
     const now = new Date();
@@ -225,43 +231,57 @@ export default function Sessions() {
       return;
     }
 
-    const { data: newSession, error: sessErr } = await supabase.from("sessions").insert([{
-      title: formData.title,
-      instructor: formData.trainer || "Coach",
-      platform: formData.platform,
-      type: formData.type, 
-      meeting_link: formData.link,
-      scheduled_at: scheduledDateTime.toISOString(),
-      admin_is_mass: formData.isMass,
-      admin_status: "upcoming"
-    }]).select().single();
+    //  Lock the state
+    setIsPublishing(true);
 
-    if (sessErr) return toast.error(sessErr.message);
+    try {
+        const { data: newSession, error: sessErr } = await supabase.from("sessions").insert([{
+          title: formData.title,
+          instructor: formData.trainer || "Coach",
+          platform: formData.platform,
+          type: formData.type, 
+          meeting_link: formData.link,
+          scheduled_at: scheduledDateTime.toISOString(),
+          admin_is_mass: formData.isMass,
+          admin_status: "upcoming"
+        }]).select().single();
 
-    if (!formData.isMass && formData.selectedClientIds.length > 0) {
-      const assignments = formData.selectedClientIds.map(cid => ({ 
-        session_id: newSession.id, 
-        client_id: cid 
-      }));
-      const { error: assignErr } = await supabase.from("session_assignments").insert(assignments);
-      if (assignErr) toast.error("Session created, but user assignment failed.");
+        if (sessErr) {
+            toast.error(sessErr.message);
+            setIsPublishing(false); // Unlock on error
+            return;
+        }
+
+        if (!formData.isMass && formData.selectedClientIds.length > 0) {
+          const assignments = formData.selectedClientIds.map(cid => ({ 
+            session_id: newSession.id, 
+            client_id: cid 
+          }));
+          const { error: assignErr } = await supabase.from("session_assignments").insert(assignments);
+          if (assignErr) toast.error("Session created, but user assignment failed.");
+        }
+
+        await supabase.from("activities").insert([{
+          admin_user_name: formData.trainer || "Coach",
+          admin_action_detail: `Scheduled ${formData.type} session: ${formData.title}`,
+          admin_activity_type: formData.type === 'recorded' ? 'video' : 'session',
+          admin_created_at: new Date().toISOString()
+        }]);
+
+        toast.success("Session published successfully!");
+        setIsModalOpen(false);
+        setSearchTerm("");
+        setFormData({
+          title: "", trainer: formData.trainer, platform: "zoom", type: "live", link: "",
+          date: today, time: getNearestHourTime(), isMass: true, selectedClientIds: []
+        });
+        fetchData();
+    } catch (err: any) {
+        toast.error("An unexpected error occurred");
+    } finally {
+        //  Always unlock at the end
+        setIsPublishing(false);
     }
-
-    await supabase.from("activities").insert([{
-      admin_user_name: formData.trainer || "Coach",
-      admin_action_detail: `Scheduled ${formData.type} session: ${formData.title}`,
-      admin_activity_type: formData.type === 'recorded' ? 'video' : 'session',
-      admin_created_at: new Date().toISOString()
-    }]);
-
-    toast.success("Session published successfully!");
-    setIsModalOpen(false);
-    setSearchTerm("");
-    setFormData({
-      title: "", trainer: formData.trainer, platform: "zoom", type: "live", link: "",
-      date: today, time: getNearestHourTime(), isMass: true, selectedClientIds: []
-    });
-    fetchData();
   };
 
   const handleDelete = async (id: string, title: string, trainer: string) => {
@@ -430,8 +450,12 @@ export default function Sessions() {
                 </div>
                 </div>
                 <DialogFooter className="mt-2">
-                <Button onClick={handleAddSession} className="w-full bg-[#0ea5e9] hover:bg-[#0ea5e9]/90 text-white font-bold">
-                    {formData.type === 'recorded' ? 'Add to Library' : 'Publish Live Session'}
+                <Button 
+                    onClick={handleAddSession} 
+                    disabled={isPublishing} 
+                    className="w-full bg-[#0ea5e9] hover:bg-[#0ea5e9]/90 text-white font-bold"
+                >
+                    {isPublishing ? 'Publishing...' : (formData.type === 'recorded' ? 'Add to Library' : 'Publish Live Session')}
                 </Button>
                 </DialogFooter>
             </DialogContent>
@@ -452,9 +476,7 @@ export default function Sessions() {
             {loading ? <p className="text-center py-4 text-slate-400">Syncing database...</p> : 
               sessions.length === 0 ? <p className="text-center py-4 text-slate-400">No sessions scheduled.</p> :
               sessions.map((session) => {
-              //const isLive = getLiveStatus(session.scheduled_at) && session.type !== 'recorded';
-             // const isPast = isPastSession(session.scheduled_at) && session.type !== 'recorded';
-             const isLive = getLiveStatus(session.scheduled_at, session.type);
+              const isLive = getLiveStatus(session.scheduled_at, session.type);
               const isPast = isPastSession(session.scheduled_at, session.type);
               const participantCount = session.admin_is_mass ? "ALL" : (session.session_assignments?.length || 0);
               const sessionTime = new Date(session.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -482,7 +504,7 @@ export default function Sessions() {
                     </div>
                     <div className="flex items-center gap-2 text-slate-500 bg-white px-2 py-1.5 rounded-lg border border-slate-100 min-w-[90px] sm:min-w-[110px]">
                       <UsersIcon className="w-3.5 h-3.5 text-slate-400" />
-                      <span className="text-xs sm:text-sm font-semibold">{participantCount} {session.admin_is_mass ? 'Clients' : 'Clients'}</span>
+                      <span className="text-xs sm:text-sm font-semibold">{participantCount} Clients</span>
                     </div>
                   </div>
 
