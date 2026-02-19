@@ -556,7 +556,7 @@ export default function Settings() {
                       <SelectItem value="small">Small</SelectItem>
                       <SelectItem value="medium">Medium (Default)</SelectItem>
                       <SelectItem value="large">Large</SelectItem>
-                      <SelectItem value="xlarge">Extra Large</SelectItem>
+                      {/* <SelectItem value="xlarge">Extra Large</SelectItem> */}
                     </SelectContent>
                   </Select>
                 </div>

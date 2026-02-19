@@ -132,13 +132,13 @@ export default function NutritionAdmin() {
         toast({ title: "Validation Error", description: "Plan name is required", variant: "destructive" });
         return;
       }
-      
+
       const { error } = await (supabase as any)
         .from('meal_plans')
         .insert([{ ...newPlan, calories: calVal, protein: proVal }]);
 
       if (error) throw error;
-      
+
       toast({ title: "Plan Created", description: "New plan is now live." });
       setIsDialogOpen(false);
       setNewPlan({ name: "", calories: "2000", protein: "150", meals: 4 });
@@ -312,12 +312,14 @@ export default function NutritionAdmin() {
             <CardContent className="p-3 md:p-6">
               <div className="flex justify-between items-start flex-col md:flex-row gap-2 mb-6">
                 <div>
-                  <div className="flex items-center gap-2">
-                    <h4 className="text-2xl font-bold text-muted-foreground">{plan.name}</h4>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                  <div className="flex items-start gap-2">
+                    <h4 className="text-2xl font-bold text-muted-foreground max-w-[150px] md:max-w-[250px] break-words leading-snug">
+                      {plan.name}
+                    </h4>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0"
                       onClick={() => handleDeletePlan(plan.id)}
                     >
                       <Trash2 className="w-4 h-4" />
