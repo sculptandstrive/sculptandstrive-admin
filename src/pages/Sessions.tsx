@@ -397,10 +397,11 @@ export default function Sessions() {
                       {filteredClients.length === 0 ? (
                         <p className="text-[10px] text-slate-400 text-center py-4">No matching clients found.</p>
                       ) : (
-                        filteredClients.map(client => (
+                        filteredClients.map(client => {
+                          return(
                           <div key={client.user_id} className="flex items-center justify-between py-2 border-b border-slate-800 last:border-0 mr-1">
                             <div className="flex flex-col min-w-0 flex-1 mr-2">
-                              <span className="text-xs font-medium text-white truncate">{client.full_name}</span>
+                              <span className="text-xs font-medium text-white truncate">{client.full_name.length > 40 ? client.full_name.slice(0, 40) + "..." : client.full_name}</span>
                               <span className="text-[9px] text-slate-500 uppercase font-mono">{client.user_id.slice(0,8)}...</span>
                             </div>
                             <Checkbox 
@@ -409,7 +410,7 @@ export default function Sessions() {
                               className="shrink-0 border-slate-500 data-[state=checked]:bg-[#0ea5e9] data-[state=checked]:border-[#0ea5e9]"
                             />
                           </div>
-                        ))
+                        )})
                       )}
                     </ScrollArea>
                   </div>
