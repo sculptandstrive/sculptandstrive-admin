@@ -378,7 +378,7 @@ export default function Sessions() {
                 </div>
 
                 {!formData.isMass && (
-                  <div className="border rounded-xl p-3 sm:p-4 bg-slate-900/50 border-slate-700 max-w-full overflow-hidden">
+                  <div className="border rounded-xl p-3 sm:p-4 bg-slate-900/90 border-slate-700 max-w-full overflow-hidden">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-3">
                       <Label className="text-xs font-bold text-[#0ea5e9]">
                         Assign to Clients ({formData.selectedClientIds.length})

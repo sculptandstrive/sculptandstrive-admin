@@ -32,6 +32,7 @@ export default function Support() {
         .order("created_at", { ascending: false });
 
       if (ticketData) setTickets(ticketData);
+      console.log(tutorialData);
       if (tutorialData) setTutorials(tutorialData);
     } catch (err) {
       console.error("Sync Error:", err);
@@ -262,7 +263,7 @@ export default function Support() {
                           {video.title}
                         </p>
                         <p className="text-xs text-muted-foreground break-all whitespace-normal mt-1">
-                          {video.duration} • {video.views || 0} views
+                          {video.duration} 
                         </p>
                       </div>
                     </div>
