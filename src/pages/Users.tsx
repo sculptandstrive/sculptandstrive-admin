@@ -37,7 +37,7 @@ import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 
-type AppRole = "admin" | "user";
+type AppRole = "admin" | "user" | 'trial_user';
 
 interface UserWithRole {
   id: string;
@@ -52,6 +52,7 @@ interface UserWithRole {
 const roleConfig: Record<AppRole, { label: string; color: string; icon: typeof Shield }> = {
   admin: { label: "Admin", color: "bg-destructive/10 text-destructive border-destructive/20", icon: ShieldAlert },
   user: { label: "User", color: "bg-muted text-muted-foreground border-border", icon: UserCog },
+  trial_user: {label: 'Trial User', color: "bg-muted text-muted-foreground border-border", icon: UserCog}
 };
 
 export default function Users() {
@@ -195,7 +196,7 @@ export default function Users() {
                     </TableCell>
                     <TableCell className="py-2 text-center">
                       <Badge variant="outline" className={`${roleConfig[user.role].color} text-[9px] px-2 py-0 h-4 border-none uppercase font-bold`}>
-                        {user.role}
+                        {user.role === 'trial_user' ? 'Trial User': user.role}
                       </Badge>
                     </TableCell>
                     <TableCell className="py-2 text-right pr-6">
@@ -206,6 +207,7 @@ export default function Users() {
                         <SelectContent>
                           <SelectItem value="admin" className="text-xs font-bold text-destructive">ADMIN</SelectItem>
                           <SelectItem value="user" className="text-xs font-medium">USER</SelectItem>
+                          <SelectItem value="trial_user" className="text-xs font-medium">TRIAL USER</SelectItem>
                         </SelectContent>
                       </Select>
                     </TableCell>
