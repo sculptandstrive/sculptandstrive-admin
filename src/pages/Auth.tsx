@@ -32,6 +32,7 @@ export default function Auth() {
   const [signupName, setSignupName] = useState("");
   
   const { signIn, signUp, user } = useAuth();
+  
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();

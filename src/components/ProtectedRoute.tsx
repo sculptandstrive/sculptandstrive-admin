@@ -7,6 +7,7 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
+  // console.log(user);
   const location = useLocation();
   if (loading) {
     return (
