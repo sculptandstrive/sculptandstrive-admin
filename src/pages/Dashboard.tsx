@@ -14,10 +14,15 @@ import { StatCard } from "@/components/StatCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+interface MemberCount {
+  user: number,
+  trial_user: number
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const [sessionCount, setSessionCount] = useState<number>(0);
-  const [memberCount, setMemberCount] = useState<number>(0);
+  const [memberCount, setMemberCount] = useState<MemberCount>({user: 0, trial_user: 0});
   const [activities, setActivities] = useState<any[]>([]);
   const [logAllActivity, setAllActivity] = useState<Boolean>(false);
   const [loading, setLoading] = useState(true);
@@ -27,14 +32,17 @@ export default function Dashboard() {
       try {
         setLoading(true);
 
-        const [sessionsRes, profilesRes] = await Promise.all([
+        const [sessionsRes, userCount, trialUserCount] = await Promise.all([
           supabase.from("sessions").select("*", { count: "exact", head: true }),
-          supabase.from('user_roles').select('*', {count: 'exact', head: true}).eq('role', 'user')
+          supabase.from('user_roles').select('*', {count: 'exact', head: true}).eq('role', 'user'),
+          supabase.from('user_roles').select('*', {count: 'exact', head: true}).eq('role', 'trial_user')
           // supabase.from("user_roles").select("*", { count: "exact", head: true })
         ]);
 
+        console.log(userCount.count, trialUserCount.count);
+
         setSessionCount(sessionsRes.count || 0);
-        setMemberCount(profilesRes.count || 0);
+        setMemberCount({user: userCount.count ?? 0, trial_user: trialUserCount.count ?? 0});
 
         const { data: activityData } = await supabase
           .from("activities")
@@ -43,6 +51,7 @@ export default function Dashboard() {
           .limit(8);
 
         setActivities(activityData || []);
+        console.log(memberCount)
 
       } catch (err) {
         console.error("Dashboard error:", err);
@@ -59,7 +68,7 @@ export default function Dashboard() {
       <PageHeader
         title="Dashboard"
         description="Welcome back! Here's an overview of your platform."
-        >
+      >
         <Button
           onClick={() => navigate("/sessions")}
           className="gradient-accent text-accent-foreground hover:opacity-90 transition-opacity"
@@ -69,17 +78,25 @@ export default function Dashboard() {
         </Button>
       </PageHeader>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
         <StatCard
-          title="Total Members"
-          value={loading ? "..." : memberCount.toLocaleString()}
-          change="Registered platform users"
+          title="Subscribed Members"
+          value={loading ? "..." : memberCount.user.toLocaleString()}
+          change="Active platform users"
           changeType="positive"
           icon={Users}
         />
 
         <StatCard
-          title="Active Sessions"
+          title="Trial Members"
+          value={loading ? "..." : memberCount.trial_user.toLocaleString()}
+          change="Trial platform users"
+          changeType="positive"
+          icon={Users}
+        />
+
+        <StatCard
+          title="Total Sessions"
           value={loading ? "..." : sessionCount.toLocaleString()}
           change="Total scheduled sessions"
           changeType="positive"
@@ -167,7 +184,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
-      </>
+    </>
     // </>
   );
 }

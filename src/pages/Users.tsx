@@ -89,7 +89,7 @@ export default function Users() {
         full_name: profile.full_name,
         avatar_url: profile.avatar_url,
         created_at: profile.created_at,
-        role: (rolesMap.get(profile.user_id) as AppRole) || "user",
+        role: (rolesMap.get(profile.user_id) as AppRole) || "trial_user",
       }));
 
       setUsers(formattedUsers);

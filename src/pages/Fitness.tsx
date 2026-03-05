@@ -65,7 +65,6 @@ export default function Fitness() {
 
       if (usersExercises) {
         setExercises(usersExercises);
-
         
       }
     } catch (error: any) {
@@ -90,8 +89,7 @@ export default function Fitness() {
 
     const { error } = await supabase.from("exercises").delete().eq("id", id);
 
-    if (!error) {
-      
+    if (!error) {  
       setExercises((prev) => prev.filter((ex) => ex.id !== id));
       toast({ title: "Deleted" });
     } else {
