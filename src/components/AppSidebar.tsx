@@ -36,6 +36,7 @@ const menuItems = [
 export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  console.log(user)
 
   const handleSignOut = async () => {
     await signOut();
@@ -57,8 +58,9 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
         <div className="flex items-center gap-3 overflow-hidden">
           <img
             src={
-              user?.user_metadata?.avatar_url === "" ? logo :
-                user?.user_metadata?.avatar_url
+              user?.user_metadata?.avatar_url
+                ? user?.user_metadata?.avatar_url
+                : logo
             }
             alt="Sculpt and Strive"
             className={cn(
