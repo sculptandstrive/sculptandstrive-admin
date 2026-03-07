@@ -165,6 +165,7 @@ export default function NutritionAdmin() {
   const handleAssignPlan = async (userId: string, planId: string) => {
     try {
       const { error } = await (supabase as any).from('user_meal_plans').upsert({ user_id: userId, plan_id: planId }, { onConflict: 'user_id' });
+      console.log(error)
       if (error) throw error;
       toast({ title: "Plan Assigned", description: "User moved to new plan." });
       fetchAdminDashboardData();

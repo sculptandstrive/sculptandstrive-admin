@@ -30,6 +30,8 @@ export default function Sessions() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isPublishing, setIsPublishing] = useState(false);
 
+
+  console.log(clients);
   const filteredClients = clients.filter(client => 
     client.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.email?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -79,16 +81,29 @@ export default function Sessions() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [sessRes, clientRes] = await Promise.all([
-        supabase
-          .from("sessions")
-          .select("*, session_assignments(client_id)")
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("profiles")
-          .select("user_id, full_name, email")
-          .order('created_at', {ascending: false})
-      ]);
+     const { data: roleData, error: roleErr } = await supabase
+       .from("user_roles")
+       .select("user_id")
+       .eq("role", "user");
+
+     if (roleErr) {
+       console.error("Role fetch error:", roleErr);
+       return;
+     }
+
+     const userIds = roleData.map((r) => r.user_id);
+
+     const [sessRes, clientRes] = await Promise.all([
+       supabase
+         .from("sessions")
+         .select("*, session_assignments(client_id)")
+         .order("created_at", { ascending: false }),
+       supabase
+         .from("profiles")
+         .select("user_id, full_name, email")
+         .in("user_id", userIds)
+         .order("created_at", { ascending: false }),
+     ]);
       
       if (sessRes.error) throw sessRes.error;
       setSessions(sessRes.data || []);
@@ -257,8 +272,51 @@ export default function Sessions() {
             session_id: newSession.id, 
             client_id: cid 
           }));
+
+          const notifications = formData.selectedClientIds.map((cid) => ({
+            user_id: cid,
+            title: `You have a new Session: ${formData.title}`,
+            description: `Join the session at ${scheduledDateTime.toLocaleTimeString(
+              [],
+              {
+                hour: "2-digit",
+                minute: "2-digit",
+              },
+            )}`,
+            notification_date: scheduledDateTime.toISOString().split("T")[0],
+            related_id: newSession.id,
+          }));
+
+          console.log(notifications);
+
+          const { error: notificationError, data: notificationData } = await supabase
+            .from("notifications")
+            .insert(notifications);
+          
+          console.log(notificationData);
           const { error: assignErr } = await supabase.from("session_assignments").insert(assignments);
           if (assignErr) toast.error("Session created, but user assignment failed.");
+        }
+        else if(formData.isMass){
+          const notifications = filteredClients.map((cid) => ({
+            user_id: cid.user_id,
+            title: `New Session: ${formData.title}`,
+            description: `Join the session at ${scheduledDateTime.toLocaleTimeString(
+              [],
+              {
+                hour: "2-digit",
+                minute: "2-digit",
+              },
+            )}`,
+            notification_date: scheduledDateTime.toISOString().split("T")[0], 
+            related_id: newSession.id
+          }));
+
+          console.log(notifications);
+          const { error: notificationError, data: notificationData } = await supabase
+            .from("notifications")
+            .insert(notifications);
+
         }
 
         await supabase.from("activities").insert([{
@@ -286,6 +344,7 @@ export default function Sessions() {
   const handleDelete = async (id: string, title: string, trainer: string) => {
     if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
     const { error } = await supabase.from("sessions").delete().eq("id", id);
+    const {error: notificatinDelError} = await supabase.from('notifications').delete().eq('related_id', id);
     if (!error) {
       await supabase.from("activities").insert([{
         admin_user_name: trainer || "Coach",
