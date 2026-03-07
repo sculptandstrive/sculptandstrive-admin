@@ -125,7 +125,18 @@ export default function Users() {
     if (!roleChangeDialog.user || !roleChangeDialog.newRole) return;
     setUpdating(true);
     try {
-      const { error } = await supabase.from("user_roles").update({ role: roleChangeDialog.newRole }).eq("user_id", roleChangeDialog.user.user_id);
+      let newExpiry = new Date();
+      if(roleChangeDialog.newRole === 'user'){
+        newExpiry.setDate(newExpiry.getDate() + 29);
+      }
+      else if(roleChangeDialog.newRole === 'trial_user'){
+        newExpiry.setDate(newExpiry.getDate() + 3);
+      }
+      const { error } = await supabase.from("user_roles").update({ 
+      role: roleChangeDialog.newRole,
+      expiry_time: newExpiry
+      }).eq("user_id", roleChangeDialog.user.user_id);
+
       if (error) throw error;
       setUsers(prev => prev.map(u => u.user_id === roleChangeDialog.user?.user_id ? { ...u, role: roleChangeDialog.newRole! } : u));
       toast({ title: "Success", description: "Role updated." });
