@@ -32,7 +32,6 @@ export default function Support() {
         .order("created_at", { ascending: false });
 
       if (ticketData) setTickets(ticketData);
-      // console.log(tutorialData);
       if (tutorialData) setTutorials(tutorialData);
     } catch (err) {
       console.error("Sync Error:", err);

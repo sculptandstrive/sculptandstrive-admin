@@ -30,8 +30,6 @@ export default function Sessions() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isPublishing, setIsPublishing] = useState(false);
 
-
-  console.log(clients);
   const filteredClients = clients.filter(client => 
     client.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.email?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -287,13 +285,10 @@ export default function Sessions() {
             related_id: newSession.id,
           }));
 
-          console.log(notifications);
-
           const { error: notificationError, data: notificationData } = await supabase
             .from("notifications")
             .insert(notifications);
-          
-          console.log(notificationData);
+        
           const { error: assignErr } = await supabase.from("session_assignments").insert(assignments);
           if (assignErr) toast.error("Session created, but user assignment failed.");
         }
@@ -312,7 +307,6 @@ export default function Sessions() {
             related_id: newSession.id
           }));
 
-          console.log(notifications);
           const { error: notificationError, data: notificationData } = await supabase
             .from("notifications")
             .insert(notifications);

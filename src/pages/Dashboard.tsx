@@ -36,10 +36,8 @@ export default function Dashboard() {
           supabase.from("sessions").select("*", { count: "exact", head: true }),
           supabase.from('user_roles').select('*', {count: 'exact', head: true}).eq('role', 'user'),
           supabase.from('user_roles').select('*', {count: 'exact', head: true}).eq('role', 'trial_user')
-          // supabase.from("user_roles").select("*", { count: "exact", head: true })
         ]);
 
-        // console.log(userCount.count, trialUserCount.count);
 
         setSessionCount(sessionsRes.count || 0);
         setMemberCount({user: userCount.count ?? 0, trial_user: trialUserCount.count ?? 0});
@@ -51,7 +49,6 @@ export default function Dashboard() {
           .limit(8);
 
         setActivities(activityData || []);
-        // console.log(memberCount)
 
       } catch (err) {
         console.error("Dashboard error:", err);

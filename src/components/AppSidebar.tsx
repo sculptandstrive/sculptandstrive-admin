@@ -36,7 +36,6 @@ const menuItems = [
 export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  console.log(user)
 
   const handleSignOut = async () => {
     await signOut();
