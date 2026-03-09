@@ -62,23 +62,6 @@ const featureToggles = [
 
 export default function Settings() {
   const [features, setFeatures] = useState(featureToggles);
-  // const [fontSize, setFontSize] = useState(
-  //   () => localStorage.getItem("app-fontSize") || "medium",
-  // );
-  // const [contrast, setContrast] = useState(
-  //   () => localStorage.getItem("app-contrast") || "normal",
-  // );
-  // const [theme, setTheme] = useState<"light" | "dark">(
-  //   () => (localStorage.getItem("app-theme") as "light" | "dark") || "light",
-  // );
-
-  // const [primaryColor, setPrimaryColor] = useState(
-  //   () => localStorage.getItem("app-primary") || "#1a365d",
-  // );
-
-  // const [accentColor, setAccentColor] = useState(
-  //   () => localStorage.getItem("app-accent") || "#1c9ebe",
-  // );
 
   // Logo state
   const [currentLogoUrl, setCurrentLogoUrl] = useState<string | null>(null);

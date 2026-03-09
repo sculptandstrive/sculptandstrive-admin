@@ -18,8 +18,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <main
         className={cn(
           "flex-1 ml-20 lg:ml-[250px] transition-all duration-300",
-          // " transition-all duration-300 ease-in-out min-h-screen",
-          // sidebarCollapsed ? "ml-20" : "ml-64",
         )}
       >
         <div className="p-6 lg:p-8">{children}</div>

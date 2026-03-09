@@ -45,21 +45,6 @@ export default function Auth() {
     return null;
   }
 
-  const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    const { error } = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    
-    if (error) {
-      toast({
-        title: "Google Sign-In Failed",
-        description: error.message || "An error occurred during Google sign-in",
-        variant: "destructive",
-      });
-      setIsLoading(false);
-    }
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,52 +94,6 @@ export default function Auth() {
     
     setIsLoading(false);
   };
-
-  // const handleSignup = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-    
-  //   try {
-  //     nameSchema.parse(signupName);
-  //     emailSchema.parse(signupEmail);
-  //     passwordSchema.parse(signupPassword);
-  //   } catch (err) {
-  //     if (err instanceof z.ZodError) {
-  //       toast({
-  //         title: "Validation Error",
-  //         description: err.errors[0].message,
-  //         variant: "destructive",
-  //       });
-  //       return;
-  //     }
-  //   }
-
-  //   setIsLoading(true);
-    
-  //   const { error } = await signUp(signupEmail, signupPassword, signupName);
-    
-  //   if (error) {
-  //     let message = "An error occurred during signup";
-  //     if (error.message.includes("already registered")) {
-  //       message = "This email is already registered. Please login instead.";
-  //     } else if (error.message.includes("password")) {
-  //       message = "Password is too weak. Please use a stronger password.";
-  //     }
-      
-  //     toast({
-  //       title: "Signup Failed",
-  //       description: message,
-  //       variant: "destructive",
-  //     });
-  //   } else {
-  //     toast({
-  //       title: "Account Created!",
-  //       description: "Welcome to Sculpt & Strive! You're now logged in.",
-  //     });
-  //     navigate(from, { replace: true });
-  //   }
-    
-  //   setIsLoading(false);
-  // };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/30 to-background p-4">
