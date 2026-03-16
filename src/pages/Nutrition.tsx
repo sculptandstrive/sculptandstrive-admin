@@ -23,6 +23,7 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface MealPlan {
   id: string;
@@ -30,6 +31,9 @@ interface MealPlan {
   meals: number;
   calories: number;
   protein: number;
+  fats: number;
+  carbs: number;
+  water: number;
   members: number;
 }
 
@@ -50,7 +54,7 @@ export default function NutritionAdmin() {
   const [globalWaterAvg, setGlobalWaterAvg] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newPlan, setNewPlan] = useState({ name: "", calories: "2000", protein: "150", meals: 4 });
+  const [newPlan, setNewPlan] = useState({ name: "", calories: "2000", protein: "150", meals: 4, fats: '40', carbs: '140', water: '3000' });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -69,12 +73,14 @@ export default function NutritionAdmin() {
       setLoading(true);
       const [plansRes, profilesRes, assignmentsRes, logsRes, waterRes, recipeRes] = await Promise.all([
         (supabase as any).from('meal_plans').select('*').order('created_at', { ascending: false }),
-        (supabase as any).from('profiles').select('id, full_name, email'),
+        (supabase as any).from('profiles').select('user_id, full_name, email'),
         (supabase as any).from('user_meal_plans').select('user_id, plan_id'),
         (supabase as any).from('nutrition_logs').select('calories'),
         (supabase as any).from('water_intake').select('amount_ml'),
         (supabase as any).from('recipes').select('*', { count: 'exact', head: true })
       ]);
+
+      console.log(plansRes)
 
       setRecipeCount(recipeRes.count || 0);
 
@@ -104,15 +110,16 @@ export default function NutritionAdmin() {
 
       if (profilesRes.data) {
         const formattedUsers = (profilesRes.data as any[]).map((profile) => {
-          const userAssignment = assignments.find(a => a.user_id === profile.id);
+          const userAssignment = assignments.find(a => a.user_id === profile.user_id);
           const activePlan = dynamicPlans.find(p => p.id === userAssignment?.plan_id);
           return {
-            id: profile.id,
+            id: profile.user_id,
             full_name: profile.full_name || "Unknown User",
             email: profile.email || "No Email",
             active_plan_name: activePlan ? activePlan.name : null
           };
         });
+        
         setUsers(formattedUsers);
       }
 
@@ -127,21 +134,74 @@ export default function NutritionAdmin() {
     try {
       const calVal = Number(newPlan.calories);
       const proVal = Number(newPlan.protein);
+      const fatsVal = Number(newPlan.fats);
+      const carbsVal = Number(newPlan.carbs);
+      const waterVal = Number(newPlan.water);
 
       if (!newPlan.name.trim()) {
         toast({ title: "Validation Error", description: "Plan name is required", variant: "destructive" });
         return;
       }
 
+      if(calVal > 6000 || calVal < 1200){
+        toast({
+          title: "Validation Error",
+          description: "Calories range is between 1200g to 6000g",
+          variant: "destructive",
+        });
+        return;
+      }
+      else if(proVal > 400 || proVal < 0){
+        toast({
+          title: "Validation Error",
+          description: "Protein range is between 0g to 400g",
+          variant: "destructive",
+        });
+        return;
+      }
+      else if(fatsVal > 400 || fatsVal < 0){
+        toast({
+          title: "Validation Error",
+          description: "Fats range is between 0 to 400",
+          variant: "destructive",
+        });
+        return;
+      }
+      else if (carbsVal > 600 || calVal < 100) {
+        toast({
+          title: "Validation Error",
+          description: "Carbs range is between 100g to 600g",
+          variant: "destructive",
+        });
+        return;
+      }
+      else if (waterVal > 12000 || waterVal < 1000) {
+        toast({
+          title: "Validation Error",
+          description: "Water range is between 1000ml to 12000ml",
+          variant: "destructive",
+        });
+        return;
+      }
+
+
       const { error } = await (supabase as any)
         .from('meal_plans')
-        .insert([{ ...newPlan, calories: calVal, protein: proVal }]);
-
+        .insert([{ ...newPlan, calories: calVal, protein: proVal, fats: fatsVal, carbs: carbsVal, water: waterVal }]);
+      console.log(error)
       if (error) throw error;
 
       toast({ title: "Plan Created", description: "New plan is now live." });
       setIsDialogOpen(false);
-      setNewPlan({ name: "", calories: "2000", protein: "150", meals: 4 });
+      setNewPlan({
+        name: "",
+        calories: "2000",
+        protein: "150",
+        meals: 4,
+        fats: "40",
+        carbs: "140",
+        water: "3000",
+      });
       fetchAdminDashboardData();
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -164,7 +224,13 @@ export default function NutritionAdmin() {
 
   const handleAssignPlan = async (userId: string, planId: string) => {
     try {
-      const { error } = await (supabase as any).from('user_meal_plans').upsert({ user_id: userId, plan_id: planId }, { onConflict: 'user_id' });
+      console.log(userId);
+      const { error } = await (supabase as any)
+        .from("user_meal_plans")
+        .upsert(
+          { user_id: userId, plan_id: planId },
+          { onConflict: "user_id" },
+        );
       if (error) throw error;
       toast({ title: "Plan Assigned", description: "User moved to new plan." });
       fetchAdminDashboardData();
@@ -186,7 +252,10 @@ export default function NutritionAdmin() {
 
   return (
     <>
-      <PageHeader title="Nutrition Admin" description="System monitoring and assignment.">
+      <PageHeader
+        title="Nutrition Admin"
+        description="System monitoring and assignment."
+      >
         <div className="flex flex-col md:flex-row gap-2">
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
@@ -200,12 +269,16 @@ export default function NutritionAdmin() {
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="space-y-2">
-                  <p className="text-sm font-medium">Plan Title (Max 20 chars)</p>
+                  <p className="text-sm font-medium">
+                    Plan Title (Max 20 chars)
+                  </p>
                   <Input
                     maxLength={20}
                     placeholder="e.g., Vegan Shred"
                     value={newPlan.name}
-                    onChange={(e) => setNewPlan({ ...newPlan, name: e.target.value })}
+                    onChange={(e) =>
+                      setNewPlan({ ...newPlan, name: e.target.value })
+                    }
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -214,7 +287,9 @@ export default function NutritionAdmin() {
                     <Input
                       type="number"
                       value={newPlan.calories}
-                      onChange={(e) => setNewPlan({ ...newPlan, calories: e.target.value })}
+                      onChange={(e) =>
+                        setNewPlan({ ...newPlan, calories: e.target.value })
+                      }
                     />
                   </div>
                   <div className="space-y-2">
@@ -222,14 +297,56 @@ export default function NutritionAdmin() {
                     <Input
                       type="number"
                       value={newPlan.protein}
-                      onChange={(e) => setNewPlan({ ...newPlan, protein: e.target.value })}
+                      onChange={(e) =>
+                        setNewPlan({ ...newPlan, protein: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Fats (g)</p>
+                    <Input
+                      type="number"
+                      value={newPlan.fats}
+                      onChange={(e) =>
+                        setNewPlan({ ...newPlan, fats: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Carbs (g)</p>
+                    <Input
+                      type="number"
+                      value={newPlan.carbs}
+                      onChange={(e) =>
+                        setNewPlan({ ...newPlan, carbs: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Water (ml)</p>
+                    <Input
+                      type="number"
+                      value={newPlan.water}
+                      onChange={(e) =>
+                        setNewPlan({ ...newPlan, water: e.target.value })
+                      }
                     />
                   </div>
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleCreatePlan} className="bg-emerald-600 text-white">Save Plan</Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleCreatePlan}
+                  className="bg-emerald-600 text-white"
+                >
+                  Save Plan
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -242,8 +359,13 @@ export default function NutritionAdmin() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button variant="outline" onClick={fetchAdminDashboardData} className="gap-2">
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Sync Data
+          <Button
+            variant="outline"
+            onClick={fetchAdminDashboardData}
+            className="gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />{" "}
+            Sync Data
           </Button>
         </div>
       </PageHeader>
@@ -252,7 +374,9 @@ export default function NutritionAdmin() {
         <Card className="border-none shadow-sm ">
           <CardContent className="p-2 md:p-6 flex flex-col-reverse gap-3 md:flex-row justify-between items-center">
             <div className="flex flex-col md:flex-col items-center md:items-start">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Live Meal Plans</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                Live Meal Plans
+              </p>
               <p className="text-3xl font-bold mt-1">{mealPlans.length}</p>
             </div>
             <div className="bg-purple-100 p-3 rounded-xl text-purple-600">
@@ -264,7 +388,9 @@ export default function NutritionAdmin() {
         <Card className="border-none shadow-sm">
           <CardContent className="p-2 md:p-6 flex flex-col-reverse gap-3 md:flex-row justify-between items-center">
             <div className="flex flex-col items-center md:items-start">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total Recipes</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                Total Recipes
+              </p>
               <p className="text-3xl font-bold mt-1">{recipeCount}</p>
             </div>
             <div className="bg-emerald-50 p-3 rounded-xl text-emerald-600">
@@ -276,7 +402,9 @@ export default function NutritionAdmin() {
         <Card className="border-none shadow-sm">
           <CardContent className="p-2 md:p-6 flex flex-col-reverse gap-3 md:flex-row justify-between items-center">
             <div className="flex flex-col items-center md:items-start">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Global Avg Cals</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                Global Avg Cals
+              </p>
               <p className="text-3xl font-bold mt-1">{globalAvgCals}</p>
             </div>
             <div className="bg-orange-50 p-3 rounded-xl text-orange-500">
@@ -288,7 +416,9 @@ export default function NutritionAdmin() {
         <Card className="border-none shadow-sm">
           <CardContent className="p-2 md:p-6 flex flex-col-reverse gap-3 md:flex-row justify-between items-center">
             <div className="flex flex-col items-center md:items-start">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Water Intake Avg</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                Water Intake Avg
+              </p>
               <p className="text-3xl font-bold mt-1">{globalWaterAvg}%</p>
             </div>
             <div className="bg-blue-50 p-3 rounded-xl text-blue-500">
@@ -307,88 +437,147 @@ export default function NutritionAdmin() {
           <div className="col-span-full flex justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
           </div>
-        ) : filteredPlans.map((plan) => (
-          <Card key={plan.id} className="border-none shadow-md overflow-hidden">
-            <CardContent className="p-3 md:p-6">
-              <div className="flex justify-between items-start flex-col md:flex-row gap-2 mb-6">
-                <div>
-                  <div className="flex items-start gap-2">
-                    <h4 className="text-2xl font-bold text-muted-foreground max-w-[150px] md:max-w-[250px] break-words leading-snug">
-                      {plan.name}
-                    </h4>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0"
-                      onClick={() => handleDeletePlan(plan.id)}
+        ) : (
+          filteredPlans.map((plan) => (
+            <Card
+              key={plan.id}
+              className="border-none shadow-md overflow-hidden"
+            >
+              <CardContent className="p-3 md:p-6">
+                <div className="flex justify-between items-start flex-col md:flex-row gap-2 mb-6">
+                  <div>
+                    <div className="flex items-start gap-2">
+                      <h4 className="text-2xl font-bold text-muted-foreground max-w-[150px] md:max-w-[250px] break-words leading-snug">
+                        {plan.name}
+                      </h4>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0"
+                        onClick={() => handleDeletePlan(plan.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <Badge
+                      variant="secondary"
+                      className="bg-slate-100 text-[10px] text-slate-500 mt-1"
                     >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                      ID: {plan.id.slice(0, 8)}
+                    </Badge>
                   </div>
-                  <Badge variant="secondary" className="bg-slate-100 text-[10px] text-slate-500 mt-1">
-                    ID: {plan.id.slice(0, 8)}
-                  </Badge>
+
+                  <div className="flex gap-2">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2 px-4 h-9">
+                          <UserMinus className="w-4 h-4" /> Revoke
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuLabel>Revoke User</DropdownMenuLabel>
+                        {/* Added scroll wrapper for Revoke */}
+                        <div className="max-h-[300px] overflow-y-auto overflow-x-hidden p-1">
+                          {users
+                            .filter((u) => u.active_plan_name === plan.name)
+                            .map((u) => (
+                              <DropdownMenuItem
+                                key={u.id}
+                                onClick={() => handleRemovePlan(u.id, plan.id)}
+                              >
+                                <span className="truncate">{u.full_name}</span>
+                              </DropdownMenuItem>
+                            ))}
+                        </div>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="gap-2 border-slate-200 px-4 h-9"
+                        >
+                          <UserPlus className="w-4 h-4" /> Assign
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuLabel>Assign User</DropdownMenuLabel>
+                        {/* Added scroll wrapper for Assign */}
+                        <div className="max-h-[300px] overflow-y-auto overflow-x-hidden p-1">
+                          {users.map((u) => (
+                            <DropdownMenuItem
+                              key={u.id}
+                              onClick={() => handleAssignPlan(u.id, plan.id)}
+                            >
+                              <span className="truncate flex-1">
+                                {u.full_name}
+                              </span>
+                              {u.active_plan_name === plan.name && (
+                                <Check className="ml-2 h-4 w-4 text-emerald-500" />
+                              )}
+                            </DropdownMenuItem>
+                          ))}
+                        </div>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
 
-                <div className="flex gap-2">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2 px-4 h-9">
-                        <UserMinus className="w-4 h-4" /> Revoke
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                      <DropdownMenuLabel>Revoke User</DropdownMenuLabel>
-                      {/* Added scroll wrapper for Revoke */}
-                      <div className="max-h-[300px] overflow-y-auto overflow-x-hidden p-1">
-                        {users.filter(u => u.active_plan_name === plan.name).map(u => (
-                          <DropdownMenuItem key={u.id} onClick={() => handleRemovePlan(u.id, plan.id)}>
-                            <span className="truncate">{u.full_name}</span>
-                          </DropdownMenuItem>
-                        ))}
-                      </div>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" className="gap-2 border-slate-200 px-4 h-9">
-                        <UserPlus className="w-4 h-4" /> Assign
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                      <DropdownMenuLabel>Assign User</DropdownMenuLabel>
-                      {/* Added scroll wrapper for Assign */}
-                      <div className="max-h-[300px] overflow-y-auto overflow-x-hidden p-1">
-                        {users.map(u => (
-                          <DropdownMenuItem key={u.id} onClick={() => handleAssignPlan(u.id, plan.id)}>
-                            <span className="truncate flex-1">{u.full_name}</span>
-                            {u.active_plan_name === plan.name && <Check className="ml-2 h-4 w-4 text-emerald-500" />}
-                          </DropdownMenuItem>
-                        ))}
-                      </div>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-slate-50 rounded-lg p-3 text-center">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
+                      Calories
+                    </p>
+                    <p className="text-xl font-bold text-slate-700">
+                      {plan.calories}
+                    </p>
+                  </div>
+                  <div className="bg-slate-50 rounded-lg p-3 text-center">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
+                      Protein
+                    </p>
+                    <p className="text-xl font-bold text-slate-700">
+                      {plan.protein}g
+                    </p>
+                  </div>
+                  <div className="bg-slate-50 rounded-lg p-3 text-center">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
+                      Fats
+                    </p>
+                    <p className="text-xl font-bold text-slate-700">
+                      {plan.fats}g
+                    </p>
+                  </div>
+                  <div className="bg-slate-50 rounded-lg p-3 text-center">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
+                      Carbs
+                    </p>
+                    <p className="text-xl font-bold text-slate-700">
+                      {plan.carbs}g
+                    </p>
+                  </div>
+                  <div className="bg-slate-50 rounded-lg p-3 text-center">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
+                      Water
+                    </p>
+                    <p className="text-xl font-bold text-slate-700">
+                      {plan.water}ml
+                    </p>
+                  </div>
+                  <div className="bg-indigo-50 rounded-lg p-3 text-center">
+                    <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-tight">
+                      Active Users
+                    </p>
+                    <p className="text-xl font-bold text-indigo-700">
+                      {plan.members}
+                    </p>
+                  </div>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div className="bg-slate-50 rounded-lg p-3 text-center">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Calories</p>
-                  <p className="text-xl font-bold text-slate-700">{plan.calories}</p>
-                </div>
-                <div className="bg-slate-50 rounded-lg p-3 text-center">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Protein</p>
-                  <p className="text-xl font-bold text-slate-700">{plan.protein}g</p>
-                </div>
-                <div className="bg-indigo-50 rounded-lg p-3 text-center">
-                  <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-tight">Active Users</p>
-                  <p className="text-xl font-bold text-indigo-700">{plan.members}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
     </>
   );
