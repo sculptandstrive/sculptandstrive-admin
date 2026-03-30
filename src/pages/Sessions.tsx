@@ -21,6 +21,7 @@ import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Sessions() {
   const [sessions, setSessions] = useState<any[]>([]);
@@ -29,6 +30,8 @@ export default function Sessions() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isPublishing, setIsPublishing] = useState(false);
+
+  const {user} = useAuth();
 
   const filteredClients = clients.filter(client => 
     client.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -222,14 +225,78 @@ export default function Sessions() {
     }));
   };
 
+  const getVideoDuration = (file) => {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement("video");
+      video.preload = "metadata";
+      video.src = URL.createObjectURL(file);
+      video.onloadedmetadata = () => {
+        URL.revokeObjectURL(video.src);
+        resolve(video.duration);
+      };
+      video.onerror = reject;
+    });
+  };
+
+  const handleVideoUpload = async(e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if(!file){
+      return;
+    }
+
+    const allowedTypes = ["video/mp4"]
+    const maxSize = 50 * 1024 * 1024;
+
+    if(!allowedTypes.includes(file.type)){
+      toast.error("Video Format should be mp4 only")
+      e.target.value = "";
+      return;
+    }
+
+    if(file.size > maxSize){
+      toast.error("Video Size Should be less than 50 MB")
+      e.target.value = "";
+      return;
+    }
+
+    const duration = await getVideoDuration(file)
+    if(duration as number > 60){
+      toast.error("Video Duration should be less than 60 seconds")
+       e.target.value = "";
+        return;
+    }
+
+    setLoading(true);
+
+    const fileExt = file.name.split(".").pop();
+    const filePath = `${Date.now()}.${fileExt}`;
+
+    const {error: uploadError} = await supabase.storage.from('tutorials').upload(filePath, file, {upsert: true})
+
+    if(uploadError){
+      toast.error("Video Not Uploaded")
+      e.target.value = "";
+      setLoading(false)
+      return;
+    }
+
+    const {data} = await supabase.storage.from('tutorials').getPublicUrl(filePath);
+    console.log(data.publicUrl)
+    setFormData({...formData, link: data.publicUrl})
+    setLoading(false)
+    return;
+  }
+
   const handleAddSession = async () => {
-    if (!formData.link || !formData.title) return toast.error("Title and Link are required");
+    if(formData.type === "live"){
+      if (!formData.link || !formData.title) return toast.error("Title and Link are required");
+    }
     if (isPublishing) return;
 
     const scheduledDateTime = new Date(`${formData.date}T${formData.time}:00`);
     const now = new Date();
     
-    if (formData.platform) {
+    if (formData.type === "live" && formData.platform) {
       const platformDetails = sessionRegex.find((p) => p.platform === formData.platform);
       if (platformDetails) {
         const isValid = platformDetails.regex.test(formData.link) || (platformDetails.regex2 && platformDetails.regex2.test(formData.link));
@@ -265,7 +332,7 @@ export default function Sessions() {
             return;
         }
 
-        if (!formData.isMass && formData.selectedClientIds.length > 0) {
+        if (!formData.isMass && formData.selectedClientIds.length > 0 && formData.type === "live") {
           const assignments = formData.selectedClientIds.map(cid => ({ 
             session_id: newSession.id, 
             client_id: cid 
@@ -292,7 +359,7 @@ export default function Sessions() {
           const { error: assignErr } = await supabase.from("session_assignments").insert(assignments);
           if (assignErr) toast.error("Session created, but user assignment failed.");
         }
-        else if(formData.isMass){
+        else if(formData.isMass && formData.type === "live"){
           const notifications = filteredClients.map((cid) => ({
             user_id: cid.user_id,
             title: `New Session: ${formData.title}`,
@@ -353,81 +420,138 @@ export default function Sessions() {
 
   return (
     <>
-      <PageHeader title="Sessions" description="Manage your Live workouts and Recorded Library.">
+      <PageHeader
+        title="Sessions"
+        description="Manage your Live workouts and Recorded Library."
+      >
         <div className="flex gap-2">
-            <Button variant="outline" size="icon" onClick={fetchData} className="text-slate-400 shrink-0">
-                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            </Button>
-            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={fetchData}
+            className="text-slate-400 shrink-0"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+          </Button>
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogTrigger asChild>
-                <Button className="bg-[#0ea5e9] hover:bg-[#0ea5e9]/90 text-white shadow-sm whitespace-nowrap">
-                <Plus className="w-4 h-4 mr-2" /> Add Session
-                </Button>
+              <Button className="bg-[#0ea5e9] hover:bg-[#0ea5e9]/90 text-white shadow-sm whitespace-nowrap">
+                <Plus className="w-4 h-4 mr-2" /> Add
+              </Button>
             </DialogTrigger>
             <DialogContent className="w-[95vw] sm:max-w-[550px] max-h-[90vh] overflow-y-auto overflow-x-hidden p-4 sm:p-6">
-                <DialogHeader><DialogTitle className="text-foreground">Schedule New Session</DialogTitle></DialogHeader>
-                <div className="grid gap-4 py-2">
+              <DialogHeader>
+                <DialogTitle className="text-foreground">
+                  Schedule New Session
+                </DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-2">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="grid gap-2">
+                  <div className="grid gap-2">
                     <Label className="text-slate-600">Session Type</Label>
-                    <Select value={formData.type} onValueChange={(v) => setFormData({...formData, type: v})}>
-                        <SelectTrigger className="border-slate-200 bg-slate-50/50">
+                    <Select
+                      value={formData.type}
+                      onValueChange={(v) =>
+                        setFormData({ ...formData, type: v })
+                      }
+                    >
+                      <SelectTrigger className="border-slate-200 bg-slate-50/50">
                         <SelectValue placeholder="Select Type" />
-                        </SelectTrigger>
-                        <SelectContent>
+                      </SelectTrigger>
+                      <SelectContent>
                         <SelectItem value="live">Live Streaming</SelectItem>
-                        <SelectItem value="recorded">Recorded Library</SelectItem>
-                        </SelectContent>
+                        <SelectItem value="recorded">
+                          Recorded Library
+                        </SelectItem>
+                      </SelectContent>
                     </Select>
-                    </div>
-                    <div className="grid gap-2">
+                  </div>
+                  <div className="grid gap-2">
                     <Label className="text-slate-600">Trainer / Coach</Label>
-                    <Input 
-                        value={formData.trainer} 
-                        className="border-slate-200" 
-                        placeholder="Coach name"
-                        onChange={(e) => setFormData({...formData, trainer: e.target.value.slice(0, 40)})}
+                    <Input
+                      value={formData.trainer}
+                      className="border-slate-200"
+                      placeholder="Coach name"
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          trainer: e.target.value.slice(0, 40),
+                        })
+                      }
                     />
-                    </div>
+                  </div>
                 </div>
 
                 <div className="grid gap-2">
-                    <Label className="text-slate-600">Session Title</Label>
-                    <Input 
-                    value={formData.title} 
-                    className="border-slate-200" 
+                  <Label className="text-slate-600">Session Title</Label>
+                  <Input
+                    value={formData.title}
+                    className="border-slate-200"
                     placeholder="e.g. Morning Cardio"
-                    onChange={(e) => setFormData({...formData, title: e.target.value.slice(0, 40)})}
-                    />
-                </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                    <Label className="text-slate-600">Date</Label>
-                    <Input 
-                        type="date" 
-                        min={today}
-                        className="border-slate-200" 
-                        value={formData.date} 
-                        onChange={(e) => setFormData({...formData, date: e.target.value})} 
-                    />
-                    </div>
-                    <div className="grid gap-2">
-                    <Label className="text-slate-600">Time</Label>
-                    <Input type="time" className="border-slate-200" value={formData.time} onChange={(e) => setFormData({...formData, time: e.target.value})} />
-                    </div>
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        title: e.target.value.slice(0, 40),
+                      })
+                    }
+                  />
                 </div>
 
+                {formData.type === "live" ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label className="text-slate-600">Date</Label>
+                      <Input
+                        type="date"
+                        min={today}
+                        className="border-slate-200"
+                        value={formData.date}
+                        onChange={(e) =>
+                          setFormData({ ...formData, date: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label className="text-slate-600">Time</Label>
+                      <Input
+                        type="time"
+                        className="border-slate-200"
+                        value={formData.time}
+                        onChange={(e) =>
+                          setFormData({ ...formData, time: e.target.value })
+                        }
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <></>
+                )}
+
                 <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-blue-50/50 border border-blue-100 rounded-lg">
-                    <div>
-                        <Label className="text-[11px] font-bold uppercase tracking-wider text-blue-600">Visibility Mode</Label>
-                        <p className="text-[10px] text-blue-400">Who can see this session?</p>
-                    </div>
-                    <div className="flex items-center gap-2">
+                  <div>
+                    <Label className="text-[11px] font-bold uppercase tracking-wider text-blue-600">
+                      Visibility Mode
+                    </Label>
+                    {/* {
+                      formData.type === "live" ? : 
+                    } */}
+                    <p className="text-[10px] text-blue-400">
+                      Who can see this{" "}
+                      {formData.type === "live" ? "session" : "library video"}?
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
                     <span className="text-[10px] text-slate-400">Private</span>
-                    <Switch checked={formData.isMass} onCheckedChange={(v) => setFormData({...formData, isMass: v})} />
-                    <span className="text-[10px] text-slate-600 font-medium">Public (All)</span>
-                    </div>
+                    <Switch
+                      checked={formData.isMass}
+                      onCheckedChange={(v) =>
+                        setFormData({ ...formData, isMass: v })
+                      }
+                    />
+                    <span className="text-[10px] text-slate-600 font-medium">
+                      Public (All)
+                    </span>
+                  </div>
                 </div>
 
                 {!formData.isMass && (
@@ -438,8 +562,8 @@ export default function Sessions() {
                       </Label>
                       <div className="relative w-full sm:w-auto sm:flex-1">
                         <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
-                        <Input 
-                          placeholder="Search name..." 
+                        <Input
+                          placeholder="Search name..."
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
                           className="h-8 text-[11px] pl-7 pr-2 border-slate-700 bg-slate-800 text-white w-full placeholder:text-slate-500"
@@ -448,132 +572,270 @@ export default function Sessions() {
                     </div>
                     <ScrollArea className="h-[120px] pr-2">
                       {filteredClients.length === 0 ? (
-                        <p className="text-[10px] text-slate-400 text-center py-4">No matching clients found.</p>
+                        <p className="text-[10px] text-slate-400 text-center py-4">
+                          No matching clients found.
+                        </p>
                       ) : (
-                        filteredClients.map(client => {
-                          return(
-                          <div key={client.user_id} className="flex items-center justify-between py-2 border-b border-slate-800 last:border-0 mr-1">
-                            <div className="flex flex-col min-w-0 flex-1 mr-2">
-                              <span className="text-xs font-medium text-white truncate">{client.full_name.length > 40 ? client.full_name.slice(0, 40) + "..." : client.full_name}</span>
-                              <span className="text-[9px] text-slate-500 uppercase font-mono">{client.user_id.slice(0,8)}...</span>
+                        filteredClients.map((client) => {
+                          return (
+                            <div
+                              key={client.user_id}
+                              className="flex items-center justify-between py-2 border-b border-slate-800 last:border-0 mr-1"
+                            >
+                              <div className="flex flex-col min-w-0 flex-1 mr-2">
+                                <span className="text-xs font-medium text-white truncate">
+                                  {client.full_name.length > 40
+                                    ? client.full_name.slice(0, 40) + "..."
+                                    : client.full_name}
+                                </span>
+                                <span className="text-[9px] text-slate-500 uppercase font-mono">
+                                  {client.user_id.slice(0, 8)}...
+                                </span>
+                              </div>
+                              <Checkbox
+                                checked={formData.selectedClientIds.includes(
+                                  client.user_id,
+                                )}
+                                onCheckedChange={() =>
+                                  handleToggleClient(client.user_id)
+                                }
+                                className="shrink-0 border-slate-500 data-[state=checked]:bg-[#0ea5e9] data-[state=checked]:border-[#0ea5e9]"
+                              />
                             </div>
-                            <Checkbox 
-                              checked={formData.selectedClientIds.includes(client.user_id)}
-                              onCheckedChange={() => handleToggleClient(client.user_id)}
-                              className="shrink-0 border-slate-500 data-[state=checked]:bg-[#0ea5e9] data-[state=checked]:border-[#0ea5e9]"
-                            />
-                          </div>
-                        )})
+                          );
+                        })
                       )}
                     </ScrollArea>
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {formData.type === "live" ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="grid gap-2">
-                    <Label className="text-slate-600">Platform</Label>
-                    <Select value={formData.platform} onValueChange={(v) => setFormData({...formData, platform: v})}>
-                        <SelectTrigger className="border-slate-200"><SelectValue placeholder="Select" /></SelectTrigger>
+                      <Label className="text-slate-600">Platform</Label>
+                      <Select
+                        value={formData.platform}
+                        onValueChange={(v) =>
+                          setFormData({ ...formData, platform: v })
+                        }
+                      >
+                        <SelectTrigger className="border-slate-200">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
                         <SelectContent>
-                        <SelectItem value="zoom">Zoom</SelectItem>
-                        <SelectItem value="google_meet">Google Meet</SelectItem>
-                        <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                        <SelectItem value="youtube">YouTube</SelectItem>
+                          <SelectItem value="zoom">Zoom</SelectItem>
+                          <SelectItem value="google_meet">
+                            Google Meet
+                          </SelectItem>
+                          <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                          <SelectItem value="youtube">YouTube</SelectItem>
                         </SelectContent>
-                    </Select>
+                      </Select>
                     </div>
                     <div className="grid gap-2">
-                    <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between">
                         <Label className="text-slate-600">Video Link</Label>
-                        <Button 
-                          type="button" variant="ghost" 
+                        <Button
+                          type="button"
+                          variant="ghost"
                           className="h-6 text-[10px] text-[#0ea5e9] px-2 flex items-center gap-1"
                           onClick={() => generateMeetLink()}
                         >
-                        <Video className="w-3 h-3" /> Auto-Meet
+                          <Video className="w-3 h-3" /> Auto-Meet
                         </Button>
-                    </div>
-                    <Input 
-                        className="border-slate-200" 
+                      </div>
+                      <Input
+                        className="border-slate-200"
                         placeholder="Paste link here..."
                         value={formData.link}
-                        onChange={(e) => setFormData({...formData, link: e.target.value})} 
-                    />
+                        onChange={(e) =>
+                          setFormData({ ...formData, link: e.target.value })
+                        }
+                      />
                     </div>
-                </div>
-                </div>
-                <DialogFooter className="mt-2">
-                <Button 
-                    onClick={handleAddSession} 
-                    disabled={isPublishing} 
-                    className="w-full bg-[#0ea5e9] hover:bg-[#0ea5e9]/90 text-white font-bold"
+                  </div>
+                ) : (
+                  <div className="grid gap-2">
+                    <Label className="text-slate-600">Choose File</Label>
+                    <Input
+                      type="file"
+                      className="border-slate-200"
+                      onChange={handleVideoUpload}
+                    />
+                  </div>
+                )}
+              </div>
+              <DialogFooter className="mt-2">
+                <Button
+                  onClick={handleAddSession}
+                  disabled={isPublishing}
+                  className="w-full bg-[#0ea5e9] hover:bg-[#0ea5e9]/90 text-white font-bold"
                 >
-                    {isPublishing ? 'Publishing...' : (formData.type === 'recorded' ? 'Add to Library' : 'Publish Live Session')}
+                  {isPublishing
+                    ? "Publishing..."
+                    : formData.type === "recorded"
+                      ? loading ? "Uploading..." : "Add to Library"
+                      : "Publish Live Session"}
                 </Button>
-                </DialogFooter>
+              </DialogFooter>
             </DialogContent>
-            </Dialog>
+          </Dialog>
         </div>
       </PageHeader>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
-        <StatCard title="Live Now" value={sessions.filter(s => getLiveStatus(s.scheduled_at, s.type)).length} icon={<Video className="text-[#0ea5e9]" />} bgColor="bg-sky-50" />
-        <StatCard title="Total Workouts" value={sessions.length} icon={<CalendarIcon className="text-[#0ea5e9]" />} bgColor="bg-sky-50" />
-        <StatCard title="Active Clients" value={clients.length} icon={<UsersIcon className="text-slate-400" />} bgColor="bg-slate-50" />
+        <StatCard
+          title="Live Now"
+          value={
+            sessions.filter((s) => getLiveStatus(s.scheduled_at, s.type)).length
+          }
+          icon={<Video className="text-[#0ea5e9]" />}
+          bgColor="bg-sky-50"
+        />
+        <StatCard
+          title="Total Workouts"
+          value={sessions.length}
+          icon={<CalendarIcon className="text-[#0ea5e9]" />}
+          bgColor="bg-sky-50"
+        />
+        <StatCard
+          title="Active Clients"
+          value={clients.length}
+          icon={<UsersIcon className="text-slate-400" />}
+          bgColor="bg-slate-50"
+        />
       </div>
 
       <Card className="border-none shadow-sm overflow-hidden">
-        <CardHeader className="px-4 sm:px-6"><CardTitle className="text-xl font-bold text-foreground">Session Management</CardTitle></CardHeader>
+        <CardHeader className="px-4 sm:px-6">
+          <CardTitle className="text-xl font-bold text-foreground">
+            Session Management
+          </CardTitle>
+        </CardHeader>
         <CardContent className="px-4 sm:px-6">
           <div className="space-y-3">
-            {loading ? <p className="text-center py-4 text-slate-400">Syncing database...</p> : 
-              sessions.length === 0 ? <p className="text-center py-4 text-slate-400">No sessions scheduled.</p> :
+            {loading ? (
+              <p className="text-center py-4 text-slate-400">
+                Syncing database...
+              </p>
+            ) : sessions.length === 0 ? (
+              <p className="text-center py-4 text-slate-400">
+                No sessions scheduled.
+              </p>
+            ) : (
               sessions.map((session) => {
-              const isLive = getLiveStatus(session.scheduled_at, session.type);
-              const isPast = isPastSession(session.scheduled_at, session.type);
-              const participantCount = session.admin_is_mass ? "ALL" : (session.session_assignments?.length || 0);
-              const sessionTime = new Date(session.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+                const isLive = getLiveStatus(
+                  session.scheduled_at,
+                  session.type,
+                );
+                const isPast = isPastSession(
+                  session.scheduled_at,
+                  session.type,
+                );
+                const participantCount = session.admin_is_mass
+                  ? "ALL"
+                  : session.session_assignments?.length || 0;
+                const sessionTime = new Date(
+                  session.scheduled_at,
+                ).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: false,
+                });
 
-              return (
-                <div key={session.id} className={`group flex flex-col sm:flex-row sm:items-center gap-4 p-4 sm:p-5 rounded-2xl border transition-all ${
-                  isPast ? 'opacity-50 bg-slate-50/30 border-slate-100 grayscale-[0.5]' : 'hover:border-sky-100 hover:bg-sky-50/30 border-slate-200'
-                }`}>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-foreground truncate max-w-[200px] sm:max-w-none">{session.title}</h4>
-                      <div className="flex gap-1">
-                        {isLive && <Badge className="bg-[#0ea5e9] text-white text-[9px] sm:text-[10px] uppercase font-bold px-1.5">LIVE</Badge>}
-                        {isPast && <Badge variant="secondary" className="text-[9px] bg-slate-200 text-slate-500 border-none uppercase px-1.5">PAST</Badge>}
-                        {session.admin_is_mass && <Badge variant="outline" className="text-[9px] border-blue-200 text-blue-500 uppercase px-1.5">PUBLIC</Badge>}
+                return (
+                  <div
+                    key={session.id}
+                    className={`group flex flex-col sm:flex-row sm:items-center gap-4 p-4 sm:p-5 rounded-2xl border transition-all ${
+                      isPast
+                        ? "opacity-50 bg-slate-50/30 border-slate-100 grayscale-[0.5]"
+                        : "hover:border-sky-100 hover:bg-sky-50/30 border-slate-200"
+                    }`}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <h4 className="font-semibold text-foreground truncate max-w-[200px] sm:max-w-none">
+                          {session.title}
+                        </h4>
+                        <div className="flex gap-1">
+                          {isLive && (
+                            <Badge className="bg-[#0ea5e9] text-white text-[9px] sm:text-[10px] uppercase font-bold px-1.5">
+                              LIVE
+                            </Badge>
+                          )}
+                          {isPast && (
+                            <Badge
+                              variant="secondary"
+                              className="text-[9px] bg-slate-200 text-slate-500 border-none uppercase px-1.5"
+                            >
+                              PAST
+                            </Badge>
+                          )}
+                          {session.admin_is_mass && (
+                            <Badge
+                              variant="outline"
+                              className="text-[9px] border-blue-200 text-blue-500 uppercase px-1.5"
+                            >
+                              PUBLIC
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-xs sm:text-sm text-slate-400 font-medium capitalize truncate">
+                        Coach {session.instructor}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center flex-wrap gap-2 sm:gap-6">
+                      <div className="flex items-center gap-2 text-slate-500 bg-white px-2 py-1.5 rounded-lg border border-slate-100">
+                        {session.type === "recorded" ? (
+                          <Video className="w-3.5 h-3.5 text-purple-500" />
+                        ) : (
+                          <Clock className="w-3.5 h-3.5 text-[#0ea5e9]" />
+                        )}
+                        <span className="text-xs sm:text-sm font-bold">
+                          {session.type === "recorded"
+                            ? "Library"
+                            : sessionTime}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-slate-500 bg-white px-2 py-1.5 rounded-lg border border-slate-100 min-w-[90px] sm:min-w-[110px]">
+                        <UsersIcon className="w-3.5 h-3.5 text-slate-400" />
+                        <span className="text-xs sm:text-sm font-semibold">
+                          {participantCount} Clients
+                        </span>
                       </div>
                     </div>
-                    <p className="text-xs sm:text-sm text-slate-400 font-medium capitalize truncate">Coach {session.instructor}</p>
-                  </div>
 
-                  <div className="flex items-center flex-wrap gap-2 sm:gap-6">
-                   <div className="flex items-center gap-2 text-slate-500 bg-white px-2 py-1.5 rounded-lg border border-slate-100">
-              {session.type === 'recorded' ? (
-            <Video className="w-3.5 h-3.5 text-purple-500" />) : (<Clock className="w-3.5 h-3.5 text-[#0ea5e9]" />)
-                  }
-                 <span className="text-xs sm:text-sm font-bold">
-              {session.type === 'recorded' ? 'Library' : sessionTime}
-            </span>
-                 </div>
-                    <div className="flex items-center gap-2 text-slate-500 bg-white px-2 py-1.5 rounded-lg border border-slate-100 min-w-[90px] sm:min-w-[110px]">
-                      <UsersIcon className="w-3.5 h-3.5 text-slate-400" />
-                      <span className="text-xs sm:text-sm font-semibold">{participantCount} Clients</span>
+                    <div className="flex items-center justify-end gap-2 border-t sm:border-t-0 pt-2 sm:pt-0">
+                      <Button
+                        variant="ghost"
+                        className="text-[#0ea5e9] text-xs sm:text-sm font-bold hover:bg-sky-50"
+                        onClick={() =>
+                          window.open(session.meeting_link, "_blank")
+                        }
+                      >
+                        View
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-slate-300 hover:text-red-500 hover:bg-red-50"
+                        onClick={() =>
+                          handleDelete(
+                            session.id,
+                            session.title,
+                            session.instructor,
+                          )
+                        }
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
-
-                  <div className="flex items-center justify-end gap-2 border-t sm:border-t-0 pt-2 sm:pt-0">
-                    <Button variant="ghost" className="text-[#0ea5e9] text-xs sm:text-sm font-bold hover:bg-sky-50" onClick={() => window.open(session.meeting_link, '_blank')}>View</Button>
-                    <Button variant="ghost" size="icon" className="text-slate-300 hover:text-red-500 hover:bg-red-50" onClick={() => handleDelete(session.id, session.title, session.instructor)}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </CardContent>
       </Card>
