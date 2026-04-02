@@ -74,7 +74,6 @@ export default function Fitness() {
   const [editPlan, setEditPlan] = useState({ id: "", name: "" });
   const [activePlan, setActivePlan] = useState<any>(null);
   const [planExercises, setPlanExercises] = useState<any[]>([]);
-  // planAssignments: list of { id, client_id, plan_id, full_name, email }
   const [planAssignments, setPlanAssignments] = useState<any[]>([]);
   const [assignUserId, setAssignUserId] = useState("");
   const [newPlanExercise, setNewPlanExercise] = useState({
@@ -270,6 +269,7 @@ export default function Fitness() {
     }
     toast({ title: "Category Deleted Successfully" });
     fetchCategories();
+    fetchAllExercises();
   };
 
   // ── Plans ──────────────────────────────────────────────────────────────────
@@ -297,7 +297,6 @@ export default function Fitness() {
       .eq("plan_id", planId);
 
     if (error) {
-      // console.log(error);
       toast({ title: "Failed to load assigned users", variant: "destructive" });
       return;
     }
@@ -425,7 +424,6 @@ export default function Fitness() {
   // ── User Assignment ────────────────────────────────────────────────────────
 
   const handleAssignPlan = async (userId: string, planId: string) => {
-    // Prevent duplicate assignment
     const alreadyAssigned = planAssignments.some((a) => a.client_id === userId);
     if (alreadyAssigned) {
       toast({
@@ -453,7 +451,6 @@ export default function Fitness() {
       description: "User has been added to the plan.",
     });
     setAssignUserId("");
-    // Refresh assignments for this plan + global user list
     fetchPlanAssignments(planId);
     fetchFitnessData();
   };
@@ -495,7 +492,6 @@ export default function Fitness() {
   // Re-run fetchFitnessData once allPlans is populated so active_plan_name resolves
   useEffect(() => {
     if (allPlans.length > 0) fetchFitnessData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allPlans.length]);
 
   const filteredExercises = useMemo(() => {
@@ -535,20 +531,20 @@ export default function Fitness() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Are you sure?")) return;
-    const { error } = await supabase.from("exercises").delete().eq("id", id);
-    if (!error) {
-      setExercises((prev) => prev.filter((ex) => ex.id !== id));
-      toast({ title: "Deleted" });
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Delete Failed",
-        description: error.message,
-      });
-    }
-  };
+  // const handleDelete = async (id: string) => {
+  //   if (!window.confirm("Are you sure?")) return;
+  //   const { error } = await supabase.from("exercises").delete().eq("id", id);
+  //   if (!error) {
+  //     setExercises((prev) => prev.filter((ex) => ex.id !== id));
+  //     toast({ title: "Deleted" });
+  //   } else {
+  //     toast({
+  //       variant: "destructive",
+  //       title: "Delete Failed",
+  //       description: error.message,
+  //     });
+  //   }
+  // };
 
   const handleCreateCategory = async () => {
     if (addCategory.length < 3 || addCategory.length > 30) {
@@ -723,7 +719,7 @@ export default function Fitness() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ── Categories ── */}
         <Card className="shadow-card border-none bg-card/60 backdrop-blur-md">
-          <CardHeader className="flex w-full flex-row justify-between items-center">
+          <CardHeader className="flex w-full md:flex-row flex-col md:justify-between md:items-center">
             <CardTitle className="font-display text-xl text-foreground">
               Categories
             </CardTitle>
@@ -827,7 +823,7 @@ export default function Fitness() {
                   key={ex.id}
                   className="flex flex-col md:flex-row items-center justify-between gap-2 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all group"
                 >
-                  <div className="flex flex-col md:flex-row items-center gap-4 min-w-0">
+                    <div className="flex flex-col md:flex-row items-center gap-4 min-w-0">
                     <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center flex-shrink-0">
                       <Dumbbell className="w-6 h-6 text-primary-foreground" />
                     </div>
@@ -950,7 +946,7 @@ export default function Fitness() {
 
         {/* ── Workout Plans ── */}
         <Card className="lg:col-span-full shadow-card border-none bg-card/60 backdrop-blur-md">
-          <CardHeader className="flex w-full flex-row justify-between items-center">
+          <CardHeader className="flex w-full flex-col md:flex-row md:justify-between md:items-center">
             <CardTitle className="font-display text-xl text-foreground">
               Workout Plans
             </CardTitle>
@@ -1017,7 +1013,7 @@ export default function Fitness() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col md:flex-row items-center gap-2">
                       {/* ── Manage Exercises Dialog ── */}
                       <Dialog
                         open={isManagePlanOpen && activePlan?.id === plan.id}
@@ -1495,7 +1491,7 @@ export default function Fitness() {
         </Card>
 
         {/* ── User Exercises (logged) ── */}
-        <Card className="lg:col-span-2 shadow-card border-none bg-card/60 backdrop-blur-md">
+        <Card className="lg:col-span-full shadow-card border-none bg-card/60 backdrop-blur-md">
           <CardHeader>
             <div className="flex flex-col md:flex-row gap-2 justify-between items-center">
               <CardTitle className="font-display text-xl text-foreground">
@@ -1536,14 +1532,14 @@ export default function Fitness() {
                         Total: {ex.sets * ex.reps}
                       </p>
                     </div>
-                    <Button
+                    {/* <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDelete(ex.id)}
                       className="text-muted-foreground hover:text-destructive"
                     >
                       <Trash2 className="w-5 h-5" />
-                    </Button>
+                    </Button> */}
                   </div>
                 </div>
               ))
