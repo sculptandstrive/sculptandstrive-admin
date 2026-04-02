@@ -80,7 +80,7 @@ export default function NutritionAdmin() {
         (supabase as any).from('recipes').select('*', { count: 'exact', head: true })
       ]);
 
-      console.log(plansRes)
+      // console.log(plansRes)
 
       setRecipeCount(recipeRes.count || 0);
 
@@ -188,7 +188,7 @@ export default function NutritionAdmin() {
       const { error } = await (supabase as any)
         .from('meal_plans')
         .insert([{ ...newPlan, calories: calVal, protein: proVal, fats: fatsVal, carbs: carbsVal, water: waterVal }]);
-      console.log(error)
+      // console.log(error)
       if (error) throw error;
 
       toast({ title: "Plan Created", description: "New plan is now live." });
@@ -224,7 +224,6 @@ export default function NutritionAdmin() {
 
   const handleAssignPlan = async (userId: string, planId: string) => {
     try {
-      console.log(userId);
       const { error } = await (supabase as any)
         .from("user_meal_plans")
         .upsert(

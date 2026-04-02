@@ -10,6 +10,8 @@ import {
   ChevronDown,
   Plus,
   SquarePen,
+  UserPlus,
+  Users,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -41,6 +43,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 
 export default function Fitness() {
   const [exercises, setExercises] = useState<any[]>([]);
@@ -66,10 +69,14 @@ export default function Fitness() {
   const [isEditPlanOpen, setIsEditPlanOpen] = useState(false);
   const [isManagePlanOpen, setIsManagePlanOpen] = useState(false);
   const [isAddPlanExerciseOpen, setIsAddPlanExerciseOpen] = useState(false);
+  const [isAssignUsersOpen, setIsAssignUsersOpen] = useState(false);
   const [newPlanName, setNewPlanName] = useState("");
   const [editPlan, setEditPlan] = useState({ id: "", name: "" });
   const [activePlan, setActivePlan] = useState<any>(null);
   const [planExercises, setPlanExercises] = useState<any[]>([]);
+  // planAssignments: list of { id, client_id, plan_id, full_name, email }
+  const [planAssignments, setPlanAssignments] = useState<any[]>([]);
+  const [assignUserId, setAssignUserId] = useState("");
   const [newPlanExercise, setNewPlanExercise] = useState({
     exercise_id: "",
     category_id: "",
@@ -81,36 +88,32 @@ export default function Fitness() {
   const stats = useMemo(() => {
     const total = exercises.length;
     const uniqueMovements = new Set(exercises.map((ex) => ex.name)).size;
-
     const avgSets =
       total > 0
         ? exercises.reduce((acc, curr) => acc + (Number(curr.sets) || 0), 0) /
           total
         : 0;
-
     const totalVol = exercises.reduce(
       (acc, curr) => acc + (Number(curr.sets) || 0) * (Number(curr.reps) || 0),
       0,
     );
-
     return {
       totalCount: total,
-      uniqueMovements: uniqueMovements,
+      uniqueMovements,
       avgSets: Math.round(avgSets * 10) / 10,
       totalRepVolume: totalVol.toLocaleString(),
     };
   }, [exercises]);
 
-  const handleAddExercise = async() => {
-    if(addExercise.name.length < 3 || addExercise.name.length > 20){
+  const handleAddExercise = async () => {
+    if (addExercise.name.length < 3 || addExercise.name.length > 20) {
       toast({
         title: "Add Exercise Error",
         description: "Exercise Name length should between 3 to 20 Characters",
         variant: "destructive",
       });
       return;
-    }
-    else if(addExercise.category_id === ""){
+    } else if (addExercise.category_id === "") {
       toast({
         title: "Add Exercise Error",
         description: "Please Select a category for exercise",
@@ -119,28 +122,25 @@ export default function Fitness() {
       return;
     }
 
-    const {error} = await supabase.from('exercises_list').insert({
+    const { error } = await supabase.from("exercises_list").insert({
       category_id: addExercise.category_id,
       name: addExercise.name,
-    })
-
-    if(error){
-       toast({
-         title: "Server Error",
-         description: "Please try again",
-         variant: "destructive",
-       });
-       setIsExerciseDialogOpen(false);
-       return;
-    }
-
-    toast({
-      title: "Exercise Added Successfully",
     });
 
+    if (error) {
+      toast({
+        title: "Server Error",
+        description: "Please try again",
+        variant: "destructive",
+      });
+      setIsExerciseDialogOpen(false);
+      return;
+    }
+
+    toast({ title: "Exercise Added Successfully" });
     fetchAllExercises();
     setIsExerciseDialogOpen(false);
-  }
+  };
 
   const handleEditExercise = async () => {
     if (editExercise.name.length < 3 || editExercise.name.length > 20) {
@@ -171,46 +171,69 @@ export default function Fitness() {
     }
 
     toast({ title: "Exercise Updated Successfully" });
-    fetchAllExercises(); // refresh list
+    fetchAllExercises();
     setIsEditExerciseOpen(false);
   };
 
-  const fetchAllExercises = async() => {
-    const {data, error} = await supabase.from('exercises_list').select("*");
-    setAllExercise(data)
-
-    if(error){
-      toast({
-        title : "Exercise Server error",
-        variant: "destructive"
-      })
+  const fetchAllExercises = async () => {
+    const { data, error } = await supabase.from("exercises_list").select("*");
+    setAllExercise(data);
+    if (error) {
+      toast({ title: "Exercise Server error", variant: "destructive" });
     }
-  }
+  };
 
   const fetchFitnessData = async () => {
     try {
       setLoading(true);
-      const { data: ExerciseData, error } = await supabase
-        .from("exercises")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) {
-        console.error("Supabase Connection Error:", error.message);
-        throw error;
+      const [ExerciseData, profilesRes, assignmentsRes] = await Promise.all([
+        supabase
+          .from("exercises")
+          .select("*")
+          .order("created_at", { ascending: false }),
+        (supabase as any).from("profiles").select("user_id, full_name, email").eq('is_admin', false),
+        (supabase as any)
+          .from("client_workout_assignments")
+          .select("client_id, plan_id"),
+      ]);
+
+      // Enrich exercises with user full_name
+      if (ExerciseData.data) {
+        const enriched = await Promise.all(
+          ExerciseData.data.map(async (data: any) => {
+            const { data: user } = await supabase
+              .from("profiles")
+              .select("full_name")
+              .eq("user_id", data.user_id)
+              .single();
+            return {
+              ...data,
+              full_name: user?.full_name?.split(" ")[0] || null,
+            };
+          }),
+        );
+        setExercises(enriched);
       }
 
-      const usersExercises = await Promise.all(
-        ExerciseData.map(async (data) => {
-          const { data: user, error: erroruser } = await supabase
-            .from("profiles")
-            .select("full_name")
-            .eq("user_id", data.user_id)
-            .single();
-          return { ...data, full_name: user?.full_name.split(" ")[0] || null };
-        }),
-      );
-      if (usersExercises) {
-        setExercises(usersExercises);
+      // Build users list with their active plan name
+      const assignments: any[] = assignmentsRes.data || [];
+      if (profilesRes.data) {
+        const formattedUsers = (profilesRes.data as any[]).map((profile) => {
+          // A user may have multiple plan assignments; grab the first for display
+          const userAssignment = assignments.find(
+            (a) => a.client_id === profile.user_id,
+          );
+          const activePlanEntry = allPlans.find(
+            (p) => p.id === userAssignment?.plan_id,
+          );
+          return {
+            id: profile.user_id,
+            full_name: profile.full_name || "Unknown User",
+            email: profile.email || "No Email",
+            active_plan_name: activePlanEntry ? activePlanEntry.name : null,
+          };
+        });
+        setUsers(formattedUsers);
       }
     } catch (error: any) {
       toast({
@@ -227,13 +250,9 @@ export default function Fitness() {
     const { data, error } = await supabase
       .from("exercise_category")
       .select("*");
-    console.log("Data is: ", data);
     setAllCategories(data);
     if (error) {
-      toast({
-        variant: "destructive",
-        title: "Fetch Category Error",
-      });
+      toast({ variant: "destructive", title: "Fetch Category Error" });
     }
   };
 
@@ -248,15 +267,13 @@ export default function Fitness() {
         variant: "destructive",
       });
       return;
-    } else {
-      toast({
-        title: "Category Deleted Successfully",
-      });
     }
+    toast({ title: "Category Deleted Successfully" });
     fetchCategories();
   };
 
-  // -- Plans Handlers
+  // ── Plans ──────────────────────────────────────────────────────────────────
+
   const fetchPlans = async () => {
     const { data, error } = await supabase
       .from("workout_plans")
@@ -273,6 +290,28 @@ export default function Fitness() {
     if (!error) setPlanExercises(data ?? []);
   };
 
+  const fetchPlanAssignments = async (planId: string) => {
+    const { data, error } = await supabase
+      .from("client_workout_assignments")
+      .select("id, client_id, plan_id, profiles(full_name, email)")
+      .eq("plan_id", planId);
+
+    if (error) {
+      // console.log(error);
+      toast({ title: "Failed to load assigned users", variant: "destructive" });
+      return;
+    }
+
+    const enriched = (data ?? []).map((row: any) => ({
+      id: row.id,
+      client_id: row.client_id,
+      plan_id: row.plan_id,
+      full_name: row.profiles?.full_name || "Unknown",
+      email: row.profiles?.email || "",
+    }));
+    setPlanAssignments(enriched);
+  };
+
   const handleCreatePlan = async () => {
     if (newPlanName.length < 3 || newPlanName.length > 50) {
       toast({
@@ -284,10 +323,9 @@ export default function Fitness() {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    const { error } = await supabase.from("workout_plans").insert({
-      name: newPlanName,
-      created_by: user?.id,
-    });
+    const { error } = await supabase
+      .from("workout_plans")
+      .insert({ name: newPlanName, created_by: user?.id });
     if (error) {
       toast({ title: "Failed to create plan", variant: "destructive" });
       return;
@@ -340,7 +378,10 @@ export default function Fitness() {
 
   const handleAddExerciseToPlan = async () => {
     if (!newPlanExercise.exercise_id || !newPlanExercise.sets) {
-      toast({ title: "Exercise and Sets are required", variant: "destructive" });
+      toast({
+        title: "Exercise and Sets are required",
+        variant: "destructive",
+      });
       return;
     }
     const { error } = await supabase.from("workout_plan_exercises").insert({
@@ -381,12 +422,81 @@ export default function Fitness() {
     fetchPlanExercises(activePlan.id);
   };
 
+  // ── User Assignment ────────────────────────────────────────────────────────
+
+  const handleAssignPlan = async (userId: string, planId: string) => {
+    // Prevent duplicate assignment
+    const alreadyAssigned = planAssignments.some((a) => a.client_id === userId);
+    if (alreadyAssigned) {
+      toast({
+        title: "User already assigned to this plan",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { error } = await supabase
+      .from("client_workout_assignments")
+      .insert({ client_id: userId, plan_id: planId });
+
+    if (error) {
+      toast({
+        title: "Failed to assign user",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "User Assigned",
+      description: "User has been added to the plan.",
+    });
+    setAssignUserId("");
+    // Refresh assignments for this plan + global user list
+    fetchPlanAssignments(planId);
+    fetchFitnessData();
+  };
+
+  const handleRemovePlan = async (assignmentId: string, planId: string) => {
+    if (!window.confirm("Remove this user from the plan?")) return;
+
+    const { error } = await supabase
+      .from("client_workout_assignments")
+      .delete()
+      .eq("id", assignmentId);
+
+    if (error) {
+      toast({
+        title: "Failed to remove user",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "User Removed",
+      description: "User has been removed from the plan.",
+    });
+    fetchPlanAssignments(planId);
+    fetchFitnessData();
+  };
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+
   useEffect(() => {
     fetchFitnessData();
     fetchCategories();
     fetchAllExercises();
     fetchPlans();
   }, []);
+
+  // Re-run fetchFitnessData once allPlans is populated so active_plan_name resolves
+  useEffect(() => {
+    if (allPlans.length > 0) fetchFitnessData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allPlans.length]);
 
   const filteredExercises = useMemo(() => {
     return activeFilter === "All"
@@ -395,19 +505,26 @@ export default function Fitness() {
   }, [exercises, activeFilter]);
 
   const exercisesWithCategory = useMemo(() => {
-    const mapped = allExercise.map((ex)=>({...ex, category_name: allCategories.find((cat)=>cat.id === ex.category_id)?.name ?? "Unknown"}));
+    const mapped = allExercise.map((ex: any) => ({
+      ...ex,
+      category_name:
+        (allCategories as any[]).find((cat: any) => cat.id === ex.category_id)
+          ?.name ?? "Unknown",
+    }));
     return activeFilter === "All"
       ? mapped
-      : mapped.filter((ex) => ex.category_name === activeFilter);
+      : mapped.filter((ex: any) => ex.category_name === activeFilter);
   }, [allExercise, allCategories, activeFilter]);
 
-  console.log(exercisesWithCategory)
-
-  const handleDeleteExercise = async(exerciseId: string) => {
-    const {error} = await supabase.from('exercises_list').delete().eq('id', exerciseId);
-
+  const handleDeleteExercise = async (exerciseId: string) => {
+    const { error } = await supabase
+      .from("exercises_list")
+      .delete()
+      .eq("id", exerciseId);
     if (!error) {
-      setAllExercise((prev) => prev.filter((ex) => ex.id !== exerciseId));
+      setAllExercise((prev: any[]) =>
+        prev.filter((ex) => ex.id !== exerciseId),
+      );
       toast({ title: "Deleted" });
     } else {
       toast({
@@ -416,13 +533,11 @@ export default function Fitness() {
         description: error.message,
       });
     }
-  }
+  };
 
   const handleDelete = async (id: string) => {
     if (!window.confirm("Are you sure?")) return;
-
     const { error } = await supabase.from("exercises").delete().eq("id", id);
-
     if (!error) {
       setExercises((prev) => prev.filter((ex) => ex.id !== id));
       toast({ title: "Deleted" });
@@ -444,46 +559,40 @@ export default function Fitness() {
       });
       return;
     }
-
     const { error } = await supabase
       .from("exercise_category")
       .insert({ name: addCategory });
-
     if (error) {
-      toast({
-        title: "Server Error",
-        variant: "destructive",
-      });
-      setAddCategory("");
-      setIsCategoryDialogOpen(false);
+      toast({ title: "Server Error", variant: "destructive" });
     } else {
-      toast({
-        title: "Category Added Successfully",
-      });
-      setAddCategory("");
-      setIsCategoryDialogOpen(false);
+      toast({ title: "Category Added Successfully" });
       fetchCategories();
     }
+    setAddCategory("");
+    setIsCategoryDialogOpen(false);
   };
 
-  // Pending to add exercise added count
-  const categories = allCategories.map((cat: any) => ({
+  const categories = (allCategories as any[]).map((cat: any) => ({
     id: cat.id,
     name: cat.name,
-    count: allExercise.filter((ex) => ex.category_id === cat.id).length,
+    count: allExercise.filter((ex: any) => ex.category_id === cat.id).length,
   }));
 
   const filteredPlanExercises = allExercise.filter(
-    (ex) => ex.category_id === newPlanExercise.category_id,
+    (ex: any) => ex.category_id === newPlanExercise.category_id,
   );
+
+  // Users not yet assigned to the active plan (for the assign dropdown)
+  const unassignedUsers = useMemo(() => {
+    const assignedIds = new Set(planAssignments.map((a) => a.client_id));
+    return users.filter((u) => !assignedIds.has(u.id));
+  }, [users, planAssignments]);
 
   if (loading)
     return (
-      <>
-        <div className="flex h-[70vh] items-center justify-center">
-          <Loader2 className="animate-spin" />
-        </div>
-      </>
+      <div className="flex h-[70vh] items-center justify-center">
+        <Loader2 className="animate-spin" />
+      </div>
     );
 
   return (
@@ -506,42 +615,37 @@ export default function Fitness() {
               <DialogTitle>Add Exercise</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-1 gap-4">
-                {/* Exercise Name */}
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Exercise Name</p>
-                  <Input
-                    type="text"
-                    maxLength={30}
-                    placeholder="e.g. Bench Press"
-                    value={addExercise.name}
-                    onChange={(e) =>
-                      setAddExercise({ ...addExercise, name: e.target.value })
-                    }
-                  />
-                </div>
-
-                {/* Category Dropdown */}
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Category</p>
-                  <Select
-                    value={addExercise.category_id}
-                    onValueChange={(value) =>
-                      setAddExercise({ ...addExercise, category_id: value })
-                    }
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Exercise Name</p>
+                <Input
+                  type="text"
+                  maxLength={30}
+                  placeholder="e.g. Bench Press"
+                  value={addExercise.name}
+                  onChange={(e) =>
+                    setAddExercise({ ...addExercise, name: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Category</p>
+                <Select
+                  value={addExercise.category_id}
+                  onValueChange={(value) =>
+                    setAddExercise({ ...addExercise, category_id: value })
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <DialogFooter>
@@ -617,6 +721,7 @@ export default function Fitness() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* ── Categories ── */}
         <Card className="shadow-card border-none bg-card/60 backdrop-blur-md">
           <CardHeader className="flex w-full flex-row justify-between items-center">
             <CardTitle className="font-display text-xl text-foreground">
@@ -674,8 +779,6 @@ export default function Fitness() {
             ) : (
               categories.map((category) => (
                 <div key={category.id} className="space-y-2">
-                  {" "}
-                  {/* ← key on id not name */}
                   <div className="flex justify-between text-sm items-center">
                     <span className="font-medium">{category.name}</span>
                     <span className="text-muted-foreground">
@@ -705,6 +808,7 @@ export default function Fitness() {
           </CardContent>
         </Card>
 
+        {/* ── Exercises List ── */}
         <Card className="lg:col-span-2 shadow-card border-none bg-card/60 backdrop-blur-md">
           <CardHeader>
             <div className="flex flex-col md:flex-row gap-2 justify-between items-center">
@@ -718,12 +822,12 @@ export default function Fitness() {
           </CardHeader>
           <CardContent className="space-y-4">
             {exercisesWithCategory.length > 0 ? (
-              exercisesWithCategory.map((ex) => (
+              exercisesWithCategory.map((ex: any) => (
                 <div
                   key={ex.id}
                   className="flex flex-col md:flex-row items-center justify-between gap-2 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all group"
                 >
-                  <div className="flex flex-col md:flex-row items-center  gap-4 min-w-0">
+                  <div className="flex flex-col md:flex-row items-center gap-4 min-w-0">
                     <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center flex-shrink-0">
                       <Dumbbell className="w-6 h-6 text-primary-foreground" />
                     </div>
@@ -844,12 +948,12 @@ export default function Fitness() {
           </CardContent>
         </Card>
 
+        {/* ── Workout Plans ── */}
         <Card className="lg:col-span-full shadow-card border-none bg-card/60 backdrop-blur-md">
           <CardHeader className="flex w-full flex-row justify-between items-center">
             <CardTitle className="font-display text-xl text-foreground">
               Workout Plans
             </CardTitle>
-            {/* Create Plan Dialog */}
             <Dialog open={isPlanDialogOpen} onOpenChange={setIsPlanDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
@@ -914,7 +1018,7 @@ export default function Fitness() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {/* Manage Exercises Dialog */}
+                      {/* ── Manage Exercises Dialog ── */}
                       <Dialog
                         open={isManagePlanOpen && activePlan?.id === plan.id}
                         onOpenChange={(open) => {
@@ -941,7 +1045,6 @@ export default function Fitness() {
                           </DialogHeader>
 
                           <div className="space-y-4 py-2">
-                            {/* Add exercise to plan button */}
                             <div className="flex justify-end">
                               <Dialog
                                 open={isAddPlanExerciseOpen}
@@ -972,7 +1075,6 @@ export default function Fitness() {
                                     </DialogTitle>
                                   </DialogHeader>
                                   <div className="grid gap-4 py-4">
-                                    {/* Step 1: Category */}
                                     <div className="space-y-2">
                                       <p className="text-sm font-medium">
                                         Category
@@ -991,19 +1093,20 @@ export default function Fitness() {
                                           <SelectValue placeholder="Select category" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                          {allCategories.map((cat: any) => (
-                                            <SelectItem
-                                              key={cat.id}
-                                              value={cat.id}
-                                            >
-                                              {cat.name}
-                                            </SelectItem>
-                                          ))}
+                                          {(allCategories as any[]).map(
+                                            (cat: any) => (
+                                              <SelectItem
+                                                key={cat.id}
+                                                value={cat.id}
+                                              >
+                                                {cat.name}
+                                              </SelectItem>
+                                            ),
+                                          )}
                                         </SelectContent>
                                       </Select>
                                     </div>
 
-                                    {/* Step 2: Exercise (filtered by category) */}
                                     {newPlanExercise.category_id && (
                                       <div className="space-y-2">
                                         <p className="text-sm font-medium">
@@ -1044,7 +1147,6 @@ export default function Fitness() {
                                       </div>
                                     )}
 
-                                    {/* Step 3: Sets / Reps / Weight */}
                                     {newPlanExercise.exercise_id && (
                                       <div className="space-y-2">
                                         <p className="text-sm font-medium">
@@ -1112,7 +1214,6 @@ export default function Fitness() {
                               </Dialog>
                             </div>
 
-                            {/* Exercise list in plan */}
                             {planExercises.length === 0 ? (
                               <div className="text-center py-8 text-muted-foreground text-sm">
                                 No exercises in this plan yet.
@@ -1129,7 +1230,7 @@ export default function Fitness() {
                                         {pe.exercises_list?.name}
                                       </p>
                                       <p className="text-xs text-muted-foreground">
-                                        {allCategories.find(
+                                        {(allCategories as any[]).find(
                                           (c: any) =>
                                             c.id ===
                                             pe.exercises_list?.category_id,
@@ -1168,7 +1269,160 @@ export default function Fitness() {
                         </DialogContent>
                       </Dialog>
 
-                      {/* Edit Plan Name Dialog */}
+                      {/* ── Assign Users Dialog ── */}
+                      <Dialog
+                        open={isAssignUsersOpen && activePlan?.id === plan.id}
+                        onOpenChange={(open) => {
+                          if (!open) {
+                            setIsAssignUsersOpen(false);
+                            setAssignUserId("");
+                          }
+                        }}
+                      >
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1 text-blue-600 border-blue-300"
+                            onClick={() => {
+                              setActivePlan(plan);
+                              fetchPlanAssignments(plan.id);
+                              setAssignUserId("");
+                              setIsAssignUsersOpen(true);
+                            }}
+                          >
+                            <Users className="w-4 h-4" /> Users
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-lg">
+                          <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                              <Users className="w-5 h-5 text-blue-500" />
+                              Assigned Users — {plan.name}
+                            </DialogTitle>
+                          </DialogHeader>
+
+                          <div className="space-y-5 py-2">
+                            {/* Assign new user */}
+                            <div className="space-y-2">
+                              <p className="text-sm font-medium">
+                                Assign a User
+                              </p>
+                              <div className="flex gap-2">
+                                <Select
+                                  value={assignUserId}
+                                  onValueChange={setAssignUserId}
+                                >
+                                  <SelectTrigger className="flex-1">
+                                    <SelectValue
+                                      placeholder={
+                                        unassignedUsers.length === 0
+                                          ? "All users assigned"
+                                          : "Select user…"
+                                      }
+                                    />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {unassignedUsers.length === 0 ? (
+                                      <SelectItem value="none" disabled>
+                                        No unassigned users
+                                      </SelectItem>
+                                    ) : (
+                                      unassignedUsers.map((u) => (
+                                        <SelectItem key={u.id} value={u.id}>
+                                          {u.full_name}
+                                          <span className="ml-1 text-xs focus:bg-accent focus:text-accent-foreground">
+                                            ({u.email})
+                                          </span>
+                                        </SelectItem>
+                                      ))
+                                    )}
+                                  </SelectContent>
+                                </Select>
+                                <Button
+                                  className="gap-1 bg-emerald-600 hover:bg-emerald-700 text-white shrink-0"
+                                  disabled={!assignUserId}
+                                  onClick={() =>
+                                    handleAssignPlan(assignUserId, plan.id)
+                                  }
+                                >
+                                  <UserPlus className="w-4 h-4" /> Assign
+                                </Button>
+                              </div>
+                            </div>
+
+                            {/* Currently assigned users */}
+                            <div className="space-y-2">
+                              <p className="text-sm font-medium">
+                                Currently Assigned
+                                {planAssignments.length > 0 && (
+                                  <Badge variant="secondary" className="ml-2">
+                                    {planAssignments.length}
+                                  </Badge>
+                                )}
+                              </p>
+
+                              {planAssignments.length === 0 ? (
+                                <div className="text-center py-6 text-muted-foreground text-sm rounded-lg border border-dashed">
+                                  No users assigned to this plan yet.
+                                </div>
+                              ) : (
+                                <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                                  {planAssignments.map((assignment) => (
+                                    <div
+                                      key={assignment.id}
+                                      className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-all"
+                                    >
+                                      <div className="flex items-center gap-3 min-w-0">
+                                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                          <span className="text-xs font-bold text-blue-700">
+                                            {assignment.full_name
+                                              .charAt(0)
+                                              .toUpperCase()}
+                                          </span>
+                                        </div>
+                                        <div className="min-w-0">
+                                          <p className="text-sm font-medium truncate">
+                                            {assignment.full_name}
+                                          </p>
+                                          <p className="text-xs text-muted-foreground truncate">
+                                            {assignment.email}
+                                          </p>
+                                        </div>
+                                      </div>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() =>
+                                          handleRemovePlan(
+                                            assignment.id,
+                                            plan.id,
+                                          )
+                                        }
+                                        className="text-red-400 hover:text-red-600 shrink-0"
+                                        title="Remove user from plan"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <DialogFooter>
+                            <Button
+                              variant="outline"
+                              onClick={() => setIsAssignUsersOpen(false)}
+                            >
+                              Done
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+
+                      {/* ── Edit Plan Name Dialog ── */}
                       <Dialog
                         open={isEditPlanOpen && editPlan.id === plan.id}
                         onOpenChange={(open) => {
@@ -1223,7 +1477,7 @@ export default function Fitness() {
                         </DialogContent>
                       </Dialog>
 
-                      {/* Delete */}
+                      {/* ── Delete Plan ── */}
                       <Button
                         variant="ghost"
                         size="icon"
@@ -1240,6 +1494,7 @@ export default function Fitness() {
           </CardContent>
         </Card>
 
+        {/* ── User Exercises (logged) ── */}
         <Card className="lg:col-span-2 shadow-card border-none bg-card/60 backdrop-blur-md">
           <CardHeader>
             <div className="flex flex-col md:flex-row gap-2 justify-between items-center">
