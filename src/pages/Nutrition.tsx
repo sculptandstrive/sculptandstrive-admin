@@ -13,7 +13,7 @@ import {
   UserMinus,
   Trash2,
   RefreshCw,
-  ChevronDown,
+  ChevronDown
 } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { PageHeader } from "@/components/PageHeader";
@@ -39,6 +39,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
+import Calculator from "@/components/nutrition/calculator";
 
 type MacroMode = "values" | "percentage";
 
@@ -864,6 +865,10 @@ export default function NutritionAdmin() {
           ))
         )}
       </div>
+      
+      <section className="pt-8">
+        <Calculator/>
+      </section>
     </>
   );
 }
