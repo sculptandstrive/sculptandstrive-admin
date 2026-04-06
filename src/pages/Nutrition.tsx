@@ -39,7 +39,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
-import Calculator from "@/components/nutrition/calculator";
+import Calculator from "@/components/nutrition/Calculator";
 
 type MacroMode = "values" | "percentage";
 
