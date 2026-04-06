@@ -72,12 +72,6 @@ const DEFAULT_PLAN = {
   water: "3000",
 };
 
-/**
- * Convert percentage-based macros to gram values using the Atwater factors:
- *   Protein  → 4 kcal/g
- *   Carbs    → 4 kcal/g
- *   Fats     → 9 kcal/g
- */
 function pctToGrams(
   calories: number,
   pct: number,

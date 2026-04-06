@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function Fitness() {
   const [exercises, setExercises] = useState<any[]>([]);
@@ -55,13 +56,14 @@ export default function Fitness() {
   const [isExerciseDialogOpen, setIsExerciseDialogOpen] = useState(false);
   const [addCategory, setAddCategory] = useState("");
   const [allCategories, setAllCategories] = useState([]);
-  const [addExercise, setAddExercise] = useState({ name: "", category_id: "" });
+  const [addExercise, setAddExercise] = useState({ name: "", details: "", category_id: "" });
   const [allExercise, setAllExercise] = useState<any>([]);
   const [isEditExerciseOpen, setIsEditExerciseOpen] = useState(false);
   const [editExercise, setEditExercise] = useState({
     id: "",
     name: "",
     category_id: "",
+    details: ""
   });
   // ------------------------- Plan States
   const [allPlans, setAllPlans] = useState<any[]>([]);
@@ -82,6 +84,8 @@ export default function Fitness() {
     sets: "",
     reps: "",
     weight_kg: "",
+    rest_timer: 30,
+    details: ""
   });
 
   const stats = useMemo(() => {
@@ -112,7 +116,16 @@ export default function Fitness() {
         variant: "destructive",
       });
       return;
-    } else if (addExercise.category_id === "") {
+    }
+    // else if(addExercise.details.length > 300 || addExercise.details.length < 30){
+    //   toast({
+    //     title: "Add Exercise Error",
+    //     description: "Exercise Details Length should between 30 to 300 Characters",
+    //     variant: "destructive",
+    //   });
+    //   return;
+    // }
+    else if (addExercise.category_id === "") {
       toast({
         title: "Add Exercise Error",
         description: "Please Select a category for exercise",
@@ -123,6 +136,7 @@ export default function Fitness() {
 
     const { error } = await supabase.from("exercises_list").insert({
       category_id: addExercise.category_id,
+      // description: addExercise.details,
       name: addExercise.name,
     });
 
@@ -151,12 +165,21 @@ export default function Fitness() {
       });
       return;
     }
+    // else if(editExercise.details.length > 300 || editExercise.details.length < 30){
+    //   toast({
+    //     title: "Add Exercise Error",
+    //     description: "Exercise Details Length should between 30 to 300 Characters",
+    //     variant: "destructive",
+    //   });
+    //   return;
+    // }
 
     const { error } = await supabase
       .from("exercises_list")
       .update({
         name: editExercise.name,
         category_id: editExercise.category_id,
+        // description: editExercise.details
       })
       .eq("id", editExercise.id);
 
@@ -176,6 +199,7 @@ export default function Fitness() {
 
   const fetchAllExercises = async () => {
     const { data, error } = await supabase.from("exercises_list").select("*");
+    // console.log(data);
     setAllExercise(data);
     if (error) {
       toast({ title: "Exercise Server error", variant: "destructive" });
@@ -391,6 +415,8 @@ export default function Fitness() {
       weight_kg: newPlanExercise.weight_kg
         ? parseFloat(newPlanExercise.weight_kg)
         : null,
+      rest_timer: newPlanExercise.rest_timer,
+      description: newPlanExercise.details
     });
     if (error) {
       toast({ title: "Failed to add exercise", variant: "destructive" });
@@ -403,6 +429,8 @@ export default function Fitness() {
       sets: "",
       reps: "",
       weight_kg: "",
+      rest_timer: 30,
+      details: ""
     });
     setIsAddPlanExerciseOpen(false);
     fetchPlanExercises(activePlan.id);
@@ -823,7 +851,7 @@ export default function Fitness() {
                   key={ex.id}
                   className="flex flex-col md:flex-row items-center justify-between gap-2 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all group"
                 >
-                    <div className="flex flex-col md:flex-row items-center gap-4 min-w-0">
+                  <div className="flex flex-col md:flex-row items-center gap-4 min-w-0">
                     <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center flex-shrink-0">
                       <Dumbbell className="w-6 h-6 text-primary-foreground" />
                     </div>
@@ -854,6 +882,7 @@ export default function Fitness() {
                               id: ex.id,
                               name: ex.name,
                               category_id: ex.category_id,
+                              details: ex.description,
                             });
                             setIsEditExerciseOpen(true);
                           }}
@@ -882,6 +911,21 @@ export default function Fitness() {
                               }
                             />
                           </div>
+                          {/* <div className="space-y-2">
+                            <p className="text-sm font-medium">Exercise Description</p>
+                            <Input
+                              type="text"
+                              maxLength={300}
+                              placeholder="No Details..."
+                              value={editExercise.details}
+                              onChange={(e) =>
+                                setEditExercise({
+                                  ...editExercise,
+                                  details: e.target.value,
+                                })
+                              }
+                            />
+                          </div> */}
                           <div className="space-y-2">
                             <p className="text-sm font-medium">Category</p>
                             <Select
@@ -1057,6 +1101,8 @@ export default function Fitness() {
                                         sets: "",
                                         reps: "",
                                         weight_kg: "",
+                                        rest_timer: 30,
+                                        details: "",
                                       });
                                       setIsAddPlanExerciseOpen(true);
                                     }}
@@ -1183,6 +1229,69 @@ export default function Fitness() {
                                             }
                                           />
                                         </div>
+
+                                        <p className="text-sm font-medium">
+                                          Rest Timer
+                                        </p>
+                                        <Input
+                                          type="number"
+                                          placeholder="Weight kg"
+                                          className="min-w-[120px]"
+                                          value={newPlanExercise.rest_timer}
+                                          onChange={(e) =>
+                                            setNewPlanExercise({
+                                              ...newPlanExercise,
+                                              rest_timer: e.target.value,
+                                            })
+                                          }
+                                        />
+                                        {/* <div className="flex gap-2">
+                                          <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                              <Button
+                                                variant="outline"
+                                                className="min-w-[120px]"
+                                              >
+                                                {newPlanExercise.rest_timer
+                                                  ? `${newPlanExercise.rest_timer}s`
+                                                  : "Select Rest"}
+                                              </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent>
+                                              {[15, 30, 45, 60, 90, 120].map(
+                                                (seconds) => (
+                                                  <DropdownMenuItem
+                                                    key={seconds}
+                                                    onSelect={() =>
+                                                      setNewPlanExercise({
+                                                        ...newPlanExercise,
+                                                        rest_timer: seconds,
+                                                      })
+                                                    }
+                                                  >
+                                                    {seconds}s
+                                                  </DropdownMenuItem>
+                                                ),
+                                              )}
+                                            </DropdownMenuContent>
+                                          </DropdownMenu>
+                                        </div> */}
+                                        <div className="space-y-2">
+                                          <p className="text-sm font-medium">
+                                            Exercise Description
+                                          </p>
+                                          <Textarea
+                                            maxLength={300}
+                                            placeholder="Max 300 Characters"
+                                            value={newPlanExercise.details}
+                                            onChange={(e) =>
+                                              setNewPlanExercise({
+                                                ...newPlanExercise,
+                                                details: e.target.value,
+                                              })
+                                            }
+                                          />
+                                        </div>
                                       </div>
                                     )}
                                   </div>
@@ -1233,11 +1342,13 @@ export default function Fitness() {
                                         )?.name ?? "—"}
                                         {" • "}
                                         {pe.sets} sets
-                                        {pe.reps ? ` • ${pe.reps} reps` : ""}
+                                        {pe.reps ? ` • ${pe.reps} reps ` : ""}
                                         {pe.weight_kg
-                                          ? ` • ${pe.weight_kg} kg`
+                                          ? ` • ${pe.weight_kg} kg `
                                           : ""}
+                                        • {pe.rest_timer}s Rest Time
                                       </p>
+                                      {/* <p>• {pe.rest_timer} Rest Time</p> */}
                                     </div>
                                     <Button
                                       variant="ghost"
