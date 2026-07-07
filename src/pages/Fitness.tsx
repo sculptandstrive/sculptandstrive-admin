@@ -55,6 +55,7 @@ export default function Fitness() {
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [isExerciseDialogOpen, setIsExerciseDialogOpen] = useState(false);
   const [addCategory, setAddCategory] = useState("");
+  const [parentCategoryId, setParentCategoryId] = useState("");
   const [allCategories, setAllCategories] = useState([]);
   const [addExercise, setAddExercise] = useState({ name: "", details: "", category_id: "" });
   const [allExercise, setAllExercise] = useState<any>([]);
@@ -583,9 +584,16 @@ export default function Fitness() {
       });
       return;
     }
+    let finalName = addCategory;
+    if (parentCategoryId && parentCategoryId !== "none") {
+      const parentCat: any = allCategories.find((cat: any) => cat.id === parentCategoryId);
+      if (parentCat) {
+        finalName = `${parentCat.name} > ${addCategory}`;
+      }
+    }
     const { error } = await supabase
       .from("exercise_category")
-      .insert({ name: addCategory });
+      .insert({ name: finalName });
     if (error) {
       toast({ title: "Server Error", variant: "destructive" });
     } else {
@@ -593,6 +601,7 @@ export default function Fitness() {
       fetchCategories();
     }
     setAddCategory("");
+    setParentCategoryId("");
     setIsCategoryDialogOpen(false);
   };
 
@@ -601,6 +610,28 @@ export default function Fitness() {
     name: cat.name,
     count: allExercise.filter((ex: any) => ex.category_id === cat.id).length,
   }));
+
+  const sortedCategories = useMemo(() => {
+    const list = [...categories];
+    list.sort((a: any, b: any) => {
+      const aParts = a.name.split(" > ");
+      const bParts = b.name.split(" > ");
+      
+      const aParent = aParts[0];
+      const bParent = bParts[0];
+      
+      if (aParent !== bParent) {
+        return aParent.localeCompare(bParent);
+      }
+      
+      if (aParts.length !== bParts.length) {
+        return aParts.length - bParts.length;
+      }
+      
+      return a.name.localeCompare(b.name);
+    });
+    return list;
+  }, [categories]);
 
   const filteredPlanExercises = allExercise.filter(
     (ex: any) => ex.category_id === newPlanExercise.category_id,
@@ -662,7 +693,7 @@ export default function Fitness() {
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent position="popper" side="bottom">
                     {categories.map((cat) => (
                       <SelectItem key={cat.id} value={cat.id}>
                         {cat.name}
@@ -777,6 +808,27 @@ export default function Fitness() {
                       onChange={(e) => setAddCategory(e.target.value)}
                     />
                   </div>
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">
+                      Sub Category of (Optional)
+                    </p>
+                    <Select
+                      value={parentCategoryId}
+                      onValueChange={setParentCategoryId}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select parent category (if subcategory)" />
+                      </SelectTrigger>
+                      <SelectContent position="popper" side="bottom" avoidCollisions={false} className="max-h-[200px] overflow-y-auto">
+                        <SelectItem value="none">None (Top-level Category)</SelectItem>
+                        {categories.filter((cat: any) => !cat.name.includes(" > ")).map((cat: any) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <DialogFooter>
                   <Button
@@ -801,33 +853,40 @@ export default function Fitness() {
                 No categories yet.
               </div>
             ) : (
-              categories.map((category) => (
-                <div key={category.id} className="space-y-2">
-                  <div className="flex justify-between text-sm items-center">
-                    <span className="font-medium">{category.name}</span>
-                    <span className="text-muted-foreground">
-                      {category.count}{" "}
-                      {category.count === 1 ? "exercise" : "exercises"}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0"
-                      onClick={() => handledeleteCategory(category.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+              sortedCategories.map((category) => {
+                const parts = category.name.split(" > ");
+                const isSub = parts.length > 1;
+                const displayName = isSub ? parts[1] : category.name;
+                return (
+                  <div key={category.id} className={`space-y-2 ${isSub ? "pl-4 border-l border-slate-700 ml-2" : ""}`}>
+                    <div className="flex justify-between text-sm items-center">
+                      <span className={`font-medium ${isSub ? "text-muted-foreground text-xs" : ""}`}>{displayName}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground text-xs">
+                          {category.count}{" "}
+                          {category.count === 1 ? "exercise" : "exercises"}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0"
+                          onClick={() => handledeleteCategory(category.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <Progress
+                      value={
+                        allExercise.length > 0
+                          ? (category.count / allExercise.length) * 100
+                          : 0
+                      }
+                      className="h-2"
+                    />
                   </div>
-                  <Progress
-                    value={
-                      allExercise.length > 0
-                        ? (category.count / allExercise.length) * 100
-                        : 0
-                    }
-                    className="h-2"
-                  />
-                </div>
-              ))
+                );
+              })
             )}
           </CardContent>
         </Card>
@@ -940,7 +999,7 @@ export default function Fitness() {
                               <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Select a category" />
                               </SelectTrigger>
-                              <SelectContent>
+                              <SelectContent position="popper" side="bottom">
                                 {categories.map((cat) => (
                                   <SelectItem key={cat.id} value={cat.id}>
                                     {cat.name}
@@ -1134,7 +1193,7 @@ export default function Fitness() {
                                         <SelectTrigger>
                                           <SelectValue placeholder="Select category" />
                                         </SelectTrigger>
-                                        <SelectContent>
+                                        <SelectContent position="popper" side="bottom">
                                           {(allCategories as any[]).map(
                                             (cat: any) => (
                                               <SelectItem
@@ -1166,7 +1225,7 @@ export default function Fitness() {
                                           <SelectTrigger>
                                             <SelectValue placeholder="Select exercise" />
                                           </SelectTrigger>
-                                          <SelectContent>
+                                          <SelectContent position="popper" side="bottom">
                                             {filteredPlanExercises.length ===
                                             0 ? (
                                               <SelectItem value="none" disabled>
@@ -1429,7 +1488,7 @@ export default function Fitness() {
                                       }
                                     />
                                   </SelectTrigger>
-                                  <SelectContent>
+                                  <SelectContent position="popper" side="bottom">
                                     {unassignedUsers.length === 0 ? (
                                       <SelectItem value="none" disabled>
                                         No unassigned users
@@ -1438,7 +1497,7 @@ export default function Fitness() {
                                       unassignedUsers.map((u) => (
                                         <SelectItem key={u.id} value={u.id}>
                                           {u.full_name}
-                                          <span className="ml-1 text-xs focus:bg-accent focus:text-accent-foreground">
+                                          <span className="ml-1 text-xs focus:bg-accent focus:text-accent-foreground text-slate-500">
                                             ({u.email})
                                           </span>
                                         </SelectItem>
