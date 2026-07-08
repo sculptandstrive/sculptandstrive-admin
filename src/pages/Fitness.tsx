@@ -1081,13 +1081,16 @@ export default function Fitness() {
   </p>
   <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
     {ex.category_name && (
-      <Badge variant="outline" className="text-[9px] bg-slate-800/50 border-slate-700 text-slate-300">
-        {ex.category_name}
-      </Badge>
-    )}
+  <Badge 
+    variant="outline" 
+    className="text-[9px] bg-[#143A6F] border-slate-700/50 text-slate-300 px-2 py-0.5 font-medium shadow-sm"
+  >
+    {ex.category_name}
+  </Badge>
+)}
     {ex.sub_category && ex.sub_category !== "none" && (
       <Badge variant="outline" className="text-[9px] bg-emerald-500/10 border-emerald-500/20 text-emerald-400">
-        🎯 {ex.sub_category}
+        {ex.sub_category}
       </Badge>
     )}
     {ex.difficulty && (
@@ -1096,7 +1099,7 @@ export default function Fitness() {
         ex.difficulty === "Intermediate" ? "bg-yellow-500/10 border-yellow-500/20 text-yellow-400" :
         "bg-red-500/10 border-red-500/20 text-red-400"
       }`}>
-        📈 {ex.difficulty}
+        {ex.difficulty}
       </Badge>
     )}
   </div>
@@ -1858,7 +1861,7 @@ export default function Fitness() {
                       <p className="font-bold text-foreground break-words whitespace-normal">
                         {ex.name}
                       </p>
-                      <p className="text-xs uppercase tracking-widest">
+                      <p className="text-xs text-muted-foreground uppercase tracking-widest">
                         {ex.category || "General"} • {ex.sets} Sets
                       </p>
                     </div>
