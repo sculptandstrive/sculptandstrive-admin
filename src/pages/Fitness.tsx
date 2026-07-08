@@ -8,6 +8,7 @@ import {
   Loader2,
   Trash2,
   ChevronDown,
+  ChevronUp,
   Plus,
   SquarePen,
   UserPlus,
@@ -110,10 +111,10 @@ export default function Fitness() {
   }, [exercises]);
 
   const handleAddExercise = async () => {
-    if (addExercise.name.length < 3 || addExercise.name.length > 20) {
+    if (addExercise.name.length < 3 || addExercise.name.length > 100) {
       toast({
         title: "Add Exercise Error",
-        description: "Exercise Name length should between 3 to 20 Characters",
+        description: "Exercise Name length should be between 3 to 100 Characters",
         variant: "destructive",
       });
       return;
@@ -157,11 +158,11 @@ export default function Fitness() {
   };
 
   const handleEditExercise = async () => {
-    if (editExercise.name.length < 3 || editExercise.name.length > 20) {
+    if (editExercise.name.length < 3 || editExercise.name.length > 100) {
       toast({
         title: "Edit Exercise Error",
         description:
-          "Exercise Name length should be between 3 to 20 characters",
+          "Exercise Name length should be between 3 to 100 characters",
         variant: "destructive",
       });
       return;
@@ -311,7 +312,8 @@ export default function Fitness() {
     const { data, error } = await supabase
       .from("workout_plan_exercises")
       .select("*, exercises_list(name, category_id)")
-      .eq("plan_id", planId);
+      .eq("plan_id", planId)
+      .order("display_order", { ascending: true });
     if (!error) setPlanExercises(data ?? []);
   };
 
@@ -408,6 +410,10 @@ export default function Fitness() {
       });
       return;
     }
+    const nextOrder = planExercises.length > 0
+      ? Math.max(...planExercises.map((e: any) => e.display_order ?? 0)) + 1
+      : 1;
+
     const { error } = await supabase.from("workout_plan_exercises").insert({
       plan_id: activePlan.id,
       exercise_id: newPlanExercise.exercise_id,
@@ -417,7 +423,8 @@ export default function Fitness() {
         ? parseFloat(newPlanExercise.weight_kg)
         : null,
       rest_timer: newPlanExercise.rest_timer,
-      description: newPlanExercise.details
+      description: newPlanExercise.details,
+      display_order: nextOrder
     });
     if (error) {
       toast({ title: "Failed to add exercise", variant: "destructive" });
@@ -448,6 +455,36 @@ export default function Fitness() {
     }
     toast({ title: "Exercise Removed" });
     fetchPlanExercises(activePlan.id);
+  };
+
+  const handleMoveExercise = async (currentEx: any, direction: "up" | "down") => {
+    const currentIndex = planExercises.findIndex((ex) => ex.id === currentEx.id);
+    if (currentIndex === -1) return;
+
+    const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= planExercises.length) return;
+
+    const targetEx = planExercises[targetIndex];
+
+    // Swap display_orders (using indices as backup fallback if null)
+    const currentOrder = currentEx.display_order ?? currentIndex;
+    const targetOrder = targetEx.display_order ?? targetIndex;
+
+    const { error: err1 } = await supabase
+      .from("workout_plan_exercises")
+      .update({ display_order: targetOrder })
+      .eq("id", currentEx.id);
+
+    const { error: err2 } = await supabase
+      .from("workout_plan_exercises")
+      .update({ display_order: currentOrder })
+      .eq("id", targetEx.id);
+
+    if (err1 || err2) {
+      toast({ title: "Failed to change sequence", variant: "destructive" });
+    } else {
+      fetchPlanExercises(activePlan.id);
+    }
   };
 
   // ── User Assignment ────────────────────────────────────────────────────────
@@ -576,10 +613,10 @@ export default function Fitness() {
   // };
 
   const handleCreateCategory = async () => {
-    if (addCategory.length < 3 || addCategory.length > 30) {
+    if (addCategory.length < 3 || addCategory.length > 100) {
       toast({
         title: "Category Name Error",
-        description: "Category Name length should between 3 to 30 Characters",
+        description: "Category Name length should between 3 to 100 Characters",
         variant: "destructive",
       });
       return;
@@ -619,15 +656,20 @@ export default function Fitness() {
       
       const aParent = aParts[0];
       const bParent = bParts[0];
+      const aIsSub = aParts.length > 1;
+      const bIsSub = bParts.length > 1;
       
+      // Group by parent category name first
       if (aParent !== bParent) {
         return aParent.localeCompare(bParent);
       }
       
-      if (aParts.length !== bParts.length) {
-        return aParts.length - bParts.length;
+      // Within the same parent category, parent comes first
+      if (aIsSub !== bIsSub) {
+        return aIsSub ? 1 : -1;
       }
       
+      // If both are subcategories under the same parent, sort by subcategory name
       return a.name.localeCompare(b.name);
     });
     return list;
@@ -674,7 +716,7 @@ export default function Fitness() {
                 <p className="text-sm font-medium">Exercise Name</p>
                 <Input
                   type="text"
-                  maxLength={30}
+                  maxLength={100}
                   placeholder="e.g. Bench Press"
                   value={addExercise.name}
                   onChange={(e) =>
@@ -777,119 +819,125 @@ export default function Fitness() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ── Categories ── */}
+        
+
         <Card className="shadow-card border-none bg-card/60 backdrop-blur-md">
-          <CardHeader className="flex w-full md:flex-row flex-col md:justify-between md:items-center">
-            <CardTitle className="font-display text-xl text-foreground">
-              Categories
-            </CardTitle>
-            <Dialog
-              open={isCategoryDialogOpen}
-              onOpenChange={setIsCategoryDialogOpen}
+  <CardHeader className="flex w-full md:flex-row flex-col md:justify-between md:items-center">
+    <CardTitle className="font-display text-xl text-foreground">
+      Categories
+    </CardTitle>
+    <Dialog
+      open={isCategoryDialogOpen}
+      onOpenChange={setIsCategoryDialogOpen}
+    >
+      <DialogTrigger asChild>
+        <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
+          <Plus className="w-4 h-4" /> Add Category
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add New Category</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="space-y-2">
+            <p className="text-sm font-medium">
+              Category Name
+            </p>
+            <Input
+              type="text"
+              maxLength={100}
+              placeholder="e.g., Abs"
+              value={addCategory}
+              onChange={(e) => setAddCategory(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-medium">
+              Sub Category of (Optional)
+            </p>
+            <Select
+              value={parentCategoryId}
+              onValueChange={setParentCategoryId}
             >
-              <DialogTrigger asChild>
-                <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
-                  <Plus className="w-4 h-4" /> Add Category
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add New Category</DialogTitle>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">
-                      Category Name (Max 20 chars)
-                    </p>
-                    <Input
-                      type="text"
-                      maxLength={20}
-                      placeholder="e.g., Abs"
-                      value={addCategory}
-                      onChange={(e) => setAddCategory(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">
-                      Sub Category of (Optional)
-                    </p>
-                    <Select
-                      value={parentCategoryId}
-                      onValueChange={setParentCategoryId}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select parent category (if subcategory)" />
-                      </SelectTrigger>
-                      <SelectContent position="popper" side="bottom" avoidCollisions={false} className="max-h-[200px] overflow-y-auto">
-                        <SelectItem value="none">None (Top-level Category)</SelectItem>
-                        {categories.filter((cat: any) => !cat.name.includes(" > ")).map((cat: any) => (
-                          <SelectItem key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsCategoryDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleCreateCategory}
-                    className="bg-emerald-600 text-white"
-                  >
-                    Save Category
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {categories.length === 0 ? (
-              <div className="text-center py-10 text-muted-foreground text-sm">
-                No categories yet.
-              </div>
-            ) : (
-              sortedCategories.map((category) => {
-                const parts = category.name.split(" > ");
-                const isSub = parts.length > 1;
-                const displayName = isSub ? parts[1] : category.name;
-                return (
-                  <div key={category.id} className={`space-y-2 ${isSub ? "pl-4 border-l border-slate-700 ml-2" : ""}`}>
-                    <div className="flex justify-between text-sm items-center">
-                      <span className={`font-medium ${isSub ? "text-muted-foreground text-xs" : ""}`}>{displayName}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground text-xs">
-                          {category.count}{" "}
-                          {category.count === 1 ? "exercise" : "exercises"}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0"
-                          onClick={() => handledeleteCategory(category.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <Progress
-                      value={
-                        allExercise.length > 0
-                          ? (category.count / allExercise.length) * 100
-                          : 0
-                      }
-                      className="h-2"
-                    />
-                  </div>
-                );
-              })
-            )}
-          </CardContent>
-        </Card>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select parent category (if subcategory)" />
+              </SelectTrigger>
+              <SelectContent position="popper" side="bottom" avoidCollisions={false} className="max-h-[200px] overflow-y-auto">
+                <SelectItem value="none">None (Top-level Category)</SelectItem>
+                {categories.filter((cat: any) => !cat.name.includes(" > ")).map((cat: any) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => setIsCategoryDialogOpen(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleCreateCategory}
+            className="bg-emerald-600 text-white"
+          >
+            Save Category
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  </CardHeader>
+  <CardContent className="space-y-4">
+  {categories.length === 0 ? (
+    <div className="text-center py-10 text-muted-foreground text-sm">
+      No categories yet.
+    </div>
+  ) : (
+    sortedCategories.map((category) => {
+      const parts = category.name.split(" > ");
+      const isSub = parts.length > 1;
+      const displayName = isSub ? parts[1] : category.name;
+      return (
+        <div key={category.id} className={isSub ? "py-1.5" : "py-3 border-b border-slate-100/5 last:border-b-0"}>
+          <div className={`flex justify-between text-sm items-center ${isSub ? "pl-4 border-l-2 border-emerald-500/30 ml-2" : ""}`}>
+            <span className={`font-medium ${isSub ? "text-muted-foreground text-xs" : "text-foreground"}`}>
+              {displayName}
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground text-xs">
+                {category.count} {category.count === 1 ? "exercise" : "exercises"}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0"
+                onClick={() => handledeleteCategory(category.id)}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+          {/* Only show progress bar for parent categories (not subcategories) */}
+          {!isSub && (
+            <Progress
+              value={
+                allExercise.length > 0
+                  ? (category.count / allExercise.length) * 100
+                  : 0
+              }
+              className="h-1 bg-slate-800 mt-2 [&>div]:bg-emerald-500"
+            />
+          )}
+        </div>
+      );
+    })
+  )}
+</CardContent>
+</Card>
 
         {/* ── Exercises List ── */}
         <Card className="lg:col-span-2 shadow-card border-none bg-card/60 backdrop-blur-md">
@@ -915,7 +963,7 @@ export default function Fitness() {
                       <Dumbbell className="w-6 h-6 text-primary-foreground" />
                     </div>
                     <div className="min-w-0 flex flex-col items-center md:block">
-                      <p className="font-bold text-foreground truncate">
+                      <p className="font-bold text-foreground break-words whitespace-normal">
                         {ex.name}
                       </p>
                     </div>
@@ -959,7 +1007,7 @@ export default function Fitness() {
                             <p className="text-sm font-medium">Exercise Name</p>
                             <Input
                               type="text"
-                              maxLength={20}
+                              maxLength={100}
                               placeholder="e.g. Bench Press"
                               value={editExercise.name}
                               onChange={(e) =>
@@ -1384,7 +1432,7 @@ export default function Fitness() {
                               </div>
                             ) : (
                               <div className="space-y-2">
-                                {planExercises.map((pe) => (
+                                {planExercises.map((pe, index) => (
                                   <div
                                     key={pe.id}
                                     className="flex items-center justify-between p-3 rounded-lg bg-muted/30"
@@ -1407,18 +1455,37 @@ export default function Fitness() {
                                           : ""}
                                         • {pe.rest_timer}s Rest Time
                                       </p>
-                                      {/* <p>• {pe.rest_timer} Rest Time</p> */}
                                     </div>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() =>
-                                        handleRemoveExerciseFromPlan(pe.id)
-                                      }
-                                      className="text-red-400 hover:text-red-600"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </Button>
+                                    <div className="flex items-center gap-1">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        disabled={index === 0}
+                                        onClick={() => handleMoveExercise(pe, "up")}
+                                        className="h-8 w-8 text-slate-400 hover:text-slate-200"
+                                      >
+                                        <ChevronUp className="w-4 h-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        disabled={index === planExercises.length - 1}
+                                        onClick={() => handleMoveExercise(pe, "down")}
+                                        className="h-8 w-8 text-slate-400 hover:text-slate-200"
+                                      >
+                                        <ChevronDown className="w-4 h-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() =>
+                                          handleRemoveExerciseFromPlan(pe.id)
+                                        }
+                                        className="text-red-400 hover:text-red-600"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    </div>
                                   </div>
                                 ))}
                               </div>
@@ -1684,7 +1751,7 @@ export default function Fitness() {
                       <Dumbbell className="w-6 h-6 text-primary-foreground" />
                     </div>
                     <div className="min-w-0 flex flex-col items-center md:block">
-                      <p className="font-bold text-foreground truncate">
+                      <p className="font-bold text-foreground break-words whitespace-normal">
                         {ex.name}
                       </p>
                       <p className="text-xs text-muted-foreground uppercase tracking-widest">
