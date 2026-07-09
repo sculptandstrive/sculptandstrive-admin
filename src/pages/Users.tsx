@@ -442,23 +442,6 @@ export default function Users() {
                           Assign Group
                         </Button>
 
-                        {/* ── Assign Coach Button ── */}
-                        {user.role === 'user' && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-7 w-28 text-[10px] bg-background"
-                            onClick={() => {
-                              setSelectedUserId(user.user_id);
-                              const currentCoach = coachesList.find(c => c.full_name === user.coach_name);
-                              setSelectedCoachId(currentCoach?.id || "none");
-                              setIsAssignCoachOpen(true);
-                            }}
-                          >
-                            <Shield className="w-3 h-3 mr-1 text-indigo-500" />
-                            Assign Coach
-                          </Button>
-                        )}
                         
                         <Button
                           variant="outline"
@@ -551,69 +534,7 @@ export default function Users() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Assign Coach Dialog ── */}
-      <Dialog open={isAssignCoachOpen} onOpenChange={setIsAssignCoachOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              Assign Coach to User
-            </DialogTitle>
-            <DialogDescription>
-              Select a coach to assign this user to.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-slate-700">Select Coach</p>
-              <Select value={selectedCoachId} onValueChange={setSelectedCoachId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose a coach..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none" className="hover:bg-[#2dd4bf]/10">
-                    None (Unassign)
-                  </SelectItem>
-                  {loadingCoaches ? (
-                    <SelectItem value="loading" disabled className="text-slate-500">
-                      Loading coaches...
-                    </SelectItem>
-                  ) : coachesList.length === 0 ? (
-                    <SelectItem value="no-coaches" disabled className="text-slate-500">
-                      No coaches available
-                    </SelectItem>
-                  ) : (
-                    coachesList.map((c) => (
-                      <SelectItem key={c.id} value={c.id} className="hover:bg-[#2dd4bf]/10">
-                        {c.full_name} ({c.email})
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setIsAssignCoachOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAssignCoach}
-              disabled={assigning}
-              className="bg-[#2dd4bf] text-black hover:bg-[#26b4a2] font-semibold"
-            >
-              {assigning ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <UserPlus className="w-4 h-4 mr-2" />
-              )}
-              Assign Coach
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
 
 
 
