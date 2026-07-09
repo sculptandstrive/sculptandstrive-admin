@@ -51,7 +51,7 @@ export const ThemeProvider = ({ children }) => {
     localStorage.setItem("app-accent", accentColor);
 
     const handleAppearance = async() => {
-          await supabase.from("admin_appearence").upsert({
+          await supabase.from("admin_appearance").upsert({
             user_id: user.id,
             theme,
             font_size: fontSize,

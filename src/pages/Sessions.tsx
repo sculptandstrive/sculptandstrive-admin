@@ -4,7 +4,7 @@ import {
   Clock, Plus, Trash2, RefreshCw, Search
 } from "lucide-react";
 import { useGoogleLogin } from '@react-oauth/google'; 
-import { supabase } from "../lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
+
+// ── Group Session State ──
+
 export default function Sessions() {
   const [sessions, setSessions] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]); 
@@ -30,6 +33,9 @@ export default function Sessions() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isPublishing, setIsPublishing] = useState(false);
+  const [sessionType, setSessionType] = useState<"individual" | "group">("individual");
+  const [selectedGroup, setSelectedGroup] = useState("");
+  const [groups, setGroups] = useState<any[]>([]);
 
   const {user} = useAuth();
 
@@ -116,6 +122,20 @@ export default function Sessions() {
     }
   };
 
+  const fetchGroups = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("workout_groups")
+        .select("id, name")
+        .order("name", { ascending: true });
+      
+      if (error) throw error;
+      setGroups(data || []);
+    } catch (error: any) {
+      console.error("Error fetching groups:", error);
+    }
+  };
+
   useEffect(() => { 
     const profileSubscription = supabase
       .channel('admin-profile-sync')
@@ -143,6 +163,7 @@ export default function Sessions() {
 
     getProfile();
     fetchData(); 
+    fetchGroups();
 
     return () => {
       supabase.removeChannel(profileSubscription);
@@ -480,6 +501,41 @@ export default function Sessions() {
                       }
                     />
                   </div>
+                  {/* ── Session Type Dropdown ── */}
+                  <div className="grid gap-2">
+                    <Label className="text-slate-600">Session Type</Label>
+                    <Select
+                      value={sessionType}
+                      onValueChange={(v) => setSessionType(v as "individual" | "group")}
+                    >
+                      <SelectTrigger className="border-slate-200 bg-slate-50/50">
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="individual">👤 Individual</SelectItem>
+                        <SelectItem value="group">👥 Group</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* ── Group Selector ── */}
+                  {sessionType === "group" && (
+                    <div className="grid gap-2">
+                      <Label className="text-slate-600">Select Group</Label>
+                      <Select value={selectedGroup} onValueChange={setSelectedGroup}>
+                        <SelectTrigger className="border-slate-200 bg-slate-50/50">
+                          <SelectValue placeholder="Choose a group..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {groups.map((g) => (
+                            <SelectItem key={g.id} value={g.id}>
+                              {g.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid gap-2">

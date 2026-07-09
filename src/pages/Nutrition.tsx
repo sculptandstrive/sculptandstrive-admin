@@ -40,6 +40,13 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import Calculator from "@/components/nutrition/Calculator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type MacroMode = "values" | "percentage";
 
@@ -81,8 +88,13 @@ function pctToGrams(
   return Math.round(((pct / 100) * calories) / factor);
 }
 
+
 export default function NutritionAdmin() {
   const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
+  const [assignType, setAssignType] = useState<"individual" | "group">("individual");
+  const [selectedGroupForPlan, setSelectedGroupForPlan] = useState("");
+  const [groups, setGroups] = useState<any[]>([]);
+  const [selectedUserForPlan, setSelectedUserForPlan] = useState("");
   const [filteredPlans, setFilteredPlans] = useState<MealPlan[]>([]);
   const [users, setUsers] = useState<UserAssignment[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -98,6 +110,7 @@ export default function NutritionAdmin() {
 
   useEffect(() => {
     fetchAdminDashboardData();
+    fetchGroups();
   }, []);
 
   useEffect(() => {
@@ -196,6 +209,20 @@ export default function NutritionAdmin() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchGroups = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("workout_groups")
+        .select("id, name")
+        .order("name", { ascending: true });
+      
+      if (error) throw error;
+      setGroups(data || []);
+    } catch (error: any) {
+      console.error("Error fetching groups:", error);
     }
   };
 
@@ -505,6 +532,68 @@ export default function NutritionAdmin() {
                       : "Enter macro amounts directly in grams."}
                   </p>
                 </div>
+
+                {/* ── NEW: Assign To Dropdown ── */}
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Assign To</p>
+                  <Select
+                    value={assignType}
+                    onValueChange={(v) => setAssignType(v as "individual" | "group")}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select assignment type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="individual">👤 Individual</SelectItem>
+                      <SelectItem value="group">👥 Group</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* ── User selector for Individual ── */}
+                {assignType === "individual" && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Select User</p>
+                    <Select value={selectedUserForPlan} onValueChange={setSelectedUserForPlan}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Choose a user..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {users.map((u) => (
+                          <SelectItem key={u.id} value={u.id}>
+                            {u.full_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* ── Group selector for Group ── */}
+                {assignType === "group" && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Select Group</p>
+                    <Select value={selectedGroupForPlan} onValueChange={setSelectedGroupForPlan}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Choose a group..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {groups.length === 0 ? (
+                          <SelectItem value="none" disabled>
+                            No groups available
+                          </SelectItem>
+                        ) : (
+                          groups.map((g) => (
+                            <SelectItem key={g.id} value={g.id}>
+                              {g.name}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  )}
+
 
                 {/* Daily Calories */}
                 <div className="grid grid-cols-2 gap-4">
