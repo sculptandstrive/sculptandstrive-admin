@@ -210,35 +210,38 @@ export default function Users() {
     }
   };
 
-  const handleAssignCoach = async () => {
-    if (!selectedUserId) return;
-    setAssigning(true);
+  const handleDirectAssignCoach = async (clientId: string, coachId: string) => {
     try {
+      setAssigning(true);
       // Clear existing assignment if any
       await supabase
         .from("coach_clients")
         .delete()
-        .eq("client_id", selectedUserId);
+        .eq("client_id", clientId);
 
-      if (selectedCoachId && selectedCoachId !== "none") {
+      if (coachId && coachId !== "none") {
         // Insert new assignment
         const { error } = await supabase
           .from("coach_clients")
           .insert({
-            coach_id: selectedCoachId,
-            client_id: selectedUserId,
+            coach_id: coachId,
+            client_id: clientId,
           });
 
         if (error) throw error;
-        toast({ title: "Success", description: "Coach assigned to user." });
+        toast({ title: "Success", description: "Coach assigned successfully." });
       } else {
-        toast({ title: "Success", description: "Coach unassigned." });
+        toast({ title: "Success", description: "Coach unassigned successfully." });
       }
 
-      setIsAssignCoachOpen(false);
-      setSelectedUserId("");
-      setSelectedCoachId("");
-      fetchUsers(); // Refresh user list
+      // Find the coach name to update the local dialog state in real-time
+      const assignedCoach = coachesList.find(c => c.id === coachId);
+      const coachName = assignedCoach ? assignedCoach.full_name : null;
+
+      // Update selected profile user locally so the dropdown reflects the change instantly
+      setSelectedProfileUser(prev => prev ? { ...prev, coach_name: coachName } : null);
+
+      fetchUsers(); // Refresh user list in background
     } catch (error: any) {
       toast({
         title: "Failed to assign coach",
@@ -566,8 +569,32 @@ export default function Users() {
                 <span className="text-xs text-muted-foreground font-normal">{selectedProfileUser?.email}</span>
               </div>
             </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground">
-              Joined on {selectedProfileUser?.created_at ? new Date(selectedProfileUser.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+            <DialogDescription className="text-xs text-muted-foreground flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+              <span>Joined on {selectedProfileUser?.created_at ? new Date(selectedProfileUser.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}</span>
+              {selectedProfileUser?.role === 'user' && (
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-[#1e293b] dark:text-slate-300">Assign Coach:</span>
+                  <Select
+                    value={
+                      coachesList.find(c => c.full_name === selectedProfileUser?.coach_name)?.id || "none"
+                    }
+                    onValueChange={(coachId) => handleDirectAssignCoach(selectedProfileUser.user_id, coachId)}
+                    disabled={assigning}
+                  >
+                    <SelectTrigger className="h-8 text-xs w-48 bg-background border-border text-foreground font-semibold px-2.5">
+                      <SelectValue placeholder="No Coach assigned" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None (Unassign)</SelectItem>
+                      {coachesList.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.full_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </DialogDescription>
           </DialogHeader>
 
