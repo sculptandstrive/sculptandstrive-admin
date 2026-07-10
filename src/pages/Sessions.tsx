@@ -23,9 +23,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
-
-// ── Group Session State ──
-
 export default function Sessions() {
   const [sessions, setSessions] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]); 
@@ -246,7 +243,7 @@ export default function Sessions() {
     }));
   };
 
-  const getVideoDuration = (file) => {
+  const getVideoDuration = (file: File): Promise<number> => {
     return new Promise((resolve, reject) => {
       const video = document.createElement("video");
       video.preload = "metadata";
@@ -281,7 +278,7 @@ export default function Sessions() {
     }
 
     const duration = await getVideoDuration(file)
-    if(duration as number > 60){
+    if(duration > 60){
       toast.error("Video Duration should be less than 60 seconds")
        e.target.value = "";
         return;
@@ -450,48 +447,44 @@ export default function Sessions() {
             variant="outline"
             size="icon"
             onClick={fetchData}
-            className="text-slate-400 shrink-0"
+            className="text-slate-400 shrink-0 h-9 w-9"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </Button>
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-[#0ea5e9] hover:bg-[#0ea5e9]/90 text-white shadow-sm whitespace-nowrap">
-                <Plus className="w-4 h-4 mr-2" /> Add
+              <Button className="bg-[#0ea5e9] hover:bg-[#0ea5e9]/90 text-white shadow-sm whitespace-nowrap text-xs h-9 px-3">
+                <Plus className="w-3.5 h-3.5 mr-1.5" /> Add
               </Button>
             </DialogTrigger>
-            <DialogContent className="w-[95vw] sm:max-w-[550px] max-h-[90vh] overflow-y-auto overflow-x-hidden p-4 sm:p-6">
+            <DialogContent className="w-[95vw] sm:max-w-[550px] max-h-[90vh] overflow-y-auto overflow-x-hidden p-5">
               <DialogHeader>
-                <DialogTitle className="text-foreground">
-                  Schedule New Session
-                </DialogTitle>
+                <DialogTitle className="text-base">Schedule New Session</DialogTitle>
               </DialogHeader>
               <div className="grid gap-4 py-2">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label className="text-slate-600">Session Type</Label>
+                  <div className="grid gap-1.5">
+                    <Label className="text-xs text-slate-600">Session Type</Label>
                     <Select
                       value={formData.type}
                       onValueChange={(v) =>
                         setFormData({ ...formData, type: v })
                       }
                     >
-                      <SelectTrigger className="border-slate-200 bg-slate-50/50">
+                      <SelectTrigger className="border-slate-200 bg-slate-50/50 h-9 text-sm">
                         <SelectValue placeholder="Select Type" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="live">Live Streaming</SelectItem>
-                        <SelectItem value="recorded">
-                          Recorded Library
-                        </SelectItem>
+                        <SelectItem value="recorded">Recorded Library</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="grid gap-2">
-                    <Label className="text-slate-600">Trainer / Coach</Label>
+                  <div className="grid gap-1.5">
+                    <Label className="text-xs text-slate-600">Trainer / Coach</Label>
                     <Input
                       value={formData.trainer}
-                      className="border-slate-200"
+                      className="border-slate-200 h-9 text-sm"
                       placeholder="Coach name"
                       onChange={(e) =>
                         setFormData({
@@ -501,14 +494,13 @@ export default function Sessions() {
                       }
                     />
                   </div>
-                  {/* ── Session Type Dropdown ── */}
-                  <div className="grid gap-2">
-                    <Label className="text-slate-600">Session Type</Label>
+                  <div className="grid gap-1.5">
+                    <Label className="text-xs text-slate-600">Session Type</Label>
                     <Select
                       value={sessionType}
                       onValueChange={(v) => setSessionType(v as "individual" | "group")}
                     >
-                      <SelectTrigger className="border-slate-200 bg-slate-50/50">
+                      <SelectTrigger className="border-slate-200 bg-slate-50/50 h-9 text-sm">
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
                       <SelectContent>
@@ -518,12 +510,11 @@ export default function Sessions() {
                     </Select>
                   </div>
 
-                  {/* ── Group Selector ── */}
                   {sessionType === "group" && (
-                    <div className="grid gap-2">
-                      <Label className="text-slate-600">Select Group</Label>
+                    <div className="grid gap-1.5">
+                      <Label className="text-xs text-slate-600">Select Group</Label>
                       <Select value={selectedGroup} onValueChange={setSelectedGroup}>
-                        <SelectTrigger className="border-slate-200 bg-slate-50/50">
+                        <SelectTrigger className="border-slate-200 bg-slate-50/50 h-9 text-sm">
                           <SelectValue placeholder="Choose a group..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -538,11 +529,11 @@ export default function Sessions() {
                   )}
                 </div>
 
-                <div className="grid gap-2">
-                  <Label className="text-slate-600">Session Title</Label>
+                <div className="grid gap-1.5">
+                  <Label className="text-xs text-slate-600">Session Title</Label>
                   <Input
                     value={formData.title}
-                    className="border-slate-200"
+                    className="border-slate-200 h-9 text-sm"
                     placeholder="e.g. Morning Cardio"
                     onChange={(e) =>
                       setFormData({
@@ -555,23 +546,23 @@ export default function Sessions() {
 
                 {formData.type === "live" ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label className="text-slate-600">Date</Label>
+                    <div className="grid gap-1.5">
+                      <Label className="text-xs text-slate-600">Date</Label>
                       <Input
                         type="date"
                         min={today}
-                        className="border-slate-200"
+                        className="border-slate-200 h-9 text-sm"
                         value={formData.date}
                         onChange={(e) =>
                           setFormData({ ...formData, date: e.target.value })
                         }
                       />
                     </div>
-                    <div className="grid gap-2">
-                      <Label className="text-slate-600">Time</Label>
+                    <div className="grid gap-1.5">
+                      <Label className="text-xs text-slate-600">Time</Label>
                       <Input
                         type="time"
-                        className="border-slate-200"
+                        className="border-slate-200 h-9 text-sm"
                         value={formData.time}
                         onChange={(e) =>
                           setFormData({ ...formData, time: e.target.value })
@@ -585,12 +576,9 @@ export default function Sessions() {
 
                 <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-blue-50/50 border border-blue-100 rounded-lg">
                   <div>
-                    <Label className="text-[11px] font-bold uppercase tracking-wider text-blue-600">
+                    <Label className="text-[10px] font-semibold uppercase tracking-wider text-blue-600">
                       Visibility Mode
                     </Label>
-                    {/* {
-                      formData.type === "live" ? : 
-                    } */}
                     <p className="text-[10px] text-blue-400">
                       Who can see this{" "}
                       {formData.type === "live" ? "session" : "library video"}?
@@ -613,7 +601,7 @@ export default function Sessions() {
                 {!formData.isMass && (
                   <div className="border rounded-xl p-3 sm:p-4 bg-slate-900/90 border-slate-700 max-w-full overflow-hidden">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-3">
-                      <Label className="text-xs font-bold text-[#0ea5e9]">
+                      <Label className="text-xs font-semibold text-[#0ea5e9]">
                         Assign to Clients ({formData.selectedClientIds.length})
                       </Label>
                       <div className="relative w-full sm:w-auto sm:flex-1">
@@ -622,7 +610,7 @@ export default function Sessions() {
                           placeholder="Search name..."
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
-                          className="h-8 text-[11px] pl-7 pr-2 border-slate-700 bg-slate-800 text-white w-full placeholder:text-slate-500"
+                          className="h-8 text-xs pl-7 pr-2 border-slate-700 bg-slate-800 text-white w-full placeholder:text-slate-500"
                         />
                       </div>
                     </div>
@@ -667,30 +655,28 @@ export default function Sessions() {
 
                 {formData.type === "live" ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label className="text-slate-600">Platform</Label>
+                    <div className="grid gap-1.5">
+                      <Label className="text-xs text-slate-600">Platform</Label>
                       <Select
                         value={formData.platform}
                         onValueChange={(v) =>
                           setFormData({ ...formData, platform: v })
                         }
                       >
-                        <SelectTrigger className="border-slate-200">
+                        <SelectTrigger className="border-slate-200 h-9 text-sm">
                           <SelectValue placeholder="Select" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="zoom">Zoom</SelectItem>
-                          <SelectItem value="google_meet">
-                            Google Meet
-                          </SelectItem>
+                          <SelectItem value="google_meet">Google Meet</SelectItem>
                           <SelectItem value="whatsapp">WhatsApp</SelectItem>
                           <SelectItem value="youtube">YouTube</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="grid gap-2">
+                    <div className="grid gap-1.5">
                       <div className="flex items-center justify-between">
-                        <Label className="text-slate-600">Video Link</Label>
+                        <Label className="text-xs text-slate-600">Video Link</Label>
                         <Button
                           type="button"
                           variant="ghost"
@@ -701,7 +687,7 @@ export default function Sessions() {
                         </Button>
                       </div>
                       <Input
-                        className="border-slate-200"
+                        className="border-slate-200 h-9 text-sm"
                         placeholder="Paste link here..."
                         value={formData.link}
                         onChange={(e) =>
@@ -711,11 +697,11 @@ export default function Sessions() {
                     </div>
                   </div>
                 ) : (
-                  <div className="grid gap-2">
-                    <Label className="text-slate-600">Choose File</Label>
+                  <div className="grid gap-1.5">
+                    <Label className="text-xs text-slate-600">Choose File</Label>
                     <Input
                       type="file"
-                      className="border-slate-200"
+                      className="border-slate-200 h-9 text-sm"
                       onChange={handleVideoUpload}
                     />
                   </div>
@@ -725,7 +711,7 @@ export default function Sessions() {
                 <Button
                   onClick={handleAddSession}
                   disabled={isPublishing}
-                  className="w-full bg-[#0ea5e9] hover:bg-[#0ea5e9]/90 text-white font-bold"
+                  className="w-full bg-[#0ea5e9] hover:bg-[#0ea5e9]/90 text-white font-semibold text-sm h-9"
                 >
                   {isPublishing
                     ? "Publishing..."
@@ -739,43 +725,43 @@ export default function Sessions() {
         </div>
       </PageHeader>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <StatCard
           title="Live Now"
           value={
             sessions.filter((s) => getLiveStatus(s.scheduled_at, s.type)).length
           }
-          icon={<Video className="text-[#0ea5e9]" />}
+          icon={<Video className="w-4 h-4 text-[#0ea5e9]" />}
           bgColor="bg-sky-50"
         />
         <StatCard
           title="Total Workouts"
           value={sessions.length}
-          icon={<CalendarIcon className="text-[#0ea5e9]" />}
+          icon={<CalendarIcon className="w-4 h-4 text-[#0ea5e9]" />}
           bgColor="bg-sky-50"
         />
         <StatCard
           title="Active Clients"
           value={clients.length}
-          icon={<UsersIcon className="text-slate-400" />}
+          icon={<UsersIcon className="w-4 h-4 text-slate-400" />}
           bgColor="bg-slate-50"
         />
       </div>
 
       <Card className="border-none shadow-sm overflow-hidden">
-        <CardHeader className="px-4 sm:px-6">
-          <CardTitle className="text-xl font-bold text-foreground">
+        <CardHeader className="px-5 py-4">
+          <CardTitle className="text-base font-semibold text-foreground">
             Session Management
           </CardTitle>
         </CardHeader>
-        <CardContent className="px-4 sm:px-6">
-          <div className="space-y-3">
+        <CardContent className="px-5 pb-5">
+          <div className="space-y-2.5">
             {loading ? (
-              <p className="text-center py-4 text-slate-400">
+              <p className="text-center py-4 text-slate-400 text-sm">
                 Syncing database...
               </p>
             ) : sessions.length === 0 ? (
-              <p className="text-center py-4 text-slate-400">
+              <p className="text-center py-4 text-slate-400 text-sm">
                 No sessions scheduled.
               </p>
             ) : (
@@ -802,7 +788,7 @@ export default function Sessions() {
                 return (
                   <div
                     key={session.id}
-                    className={`group flex flex-col sm:flex-row sm:items-center gap-4 p-4 sm:p-5 rounded-2xl border transition-all ${
+                    className={`group flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-xl border transition-all ${
                       isPast
                         ? "opacity-50 bg-slate-50/30 border-slate-100 grayscale-[0.5]"
                         : "hover:border-sky-100 hover:bg-sky-50/30 border-slate-200"
@@ -810,19 +796,19 @@ export default function Sessions() {
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <h4 className="font-semibold text-foreground truncate max-w-[200px] sm:max-w-none">
+                        <h4 className="font-semibold text-sm text-foreground truncate max-w-[200px] sm:max-w-none">
                           {session.title}
                         </h4>
                         <div className="flex gap-1">
                           {isLive && (
-                            <Badge className="bg-[#0ea5e9] text-white text-[9px] sm:text-[10px] uppercase font-bold px-1.5">
+                            <Badge className="bg-[#0ea5e9] text-white text-[9px] uppercase font-semibold px-1.5 py-0.5">
                               LIVE
                             </Badge>
                           )}
                           {isPast && (
                             <Badge
                               variant="secondary"
-                              className="text-[9px] bg-slate-200 text-slate-500 border-none uppercase px-1.5"
+                              className="text-[9px] bg-slate-200 text-slate-500 border-none uppercase px-1.5 py-0.5"
                             >
                               PAST
                             </Badge>
@@ -830,43 +816,44 @@ export default function Sessions() {
                           {session.admin_is_mass && (
                             <Badge
                               variant="outline"
-                              className="text-[9px] border-blue-200 text-blue-500 uppercase px-1.5"
+                              className="text-[9px] border-blue-200 text-blue-500 uppercase px-1.5 py-0.5"
                             >
                               PUBLIC
                             </Badge>
                           )}
                         </div>
                       </div>
-                      <p className="text-xs sm:text-sm text-slate-400 font-medium capitalize truncate">
+                      <p className="text-xs text-slate-400 font-medium capitalize truncate">
                         Coach {session.instructor}
                       </p>
                     </div>
 
-                    <div className="flex items-center flex-wrap gap-2 sm:gap-6">
-                      <div className="flex items-center gap-2 text-slate-500 bg-white px-2 py-1.5 rounded-lg border border-slate-100">
+                    <div className="flex items-center flex-wrap gap-2 sm:gap-4">
+                      <div className="flex items-center gap-1.5 text-slate-500 bg-white px-2 py-1.5 rounded-lg border border-slate-100">
                         {session.type === "recorded" ? (
                           <Video className="w-3.5 h-3.5 text-purple-500" />
                         ) : (
                           <Clock className="w-3.5 h-3.5 text-[#0ea5e9]" />
                         )}
-                        <span className="text-xs sm:text-sm font-bold">
+                        <span className="text-xs font-semibold">
                           {session.type === "recorded"
                             ? "Library"
                             : sessionTime}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 text-slate-500 bg-white px-2 py-1.5 rounded-lg border border-slate-100 min-w-[90px] sm:min-w-[110px]">
+                      <div className="flex items-center gap-1.5 text-slate-500 bg-white px-2 py-1.5 rounded-lg border border-slate-100 min-w-[80px]">
                         <UsersIcon className="w-3.5 h-3.5 text-slate-400" />
-                        <span className="text-xs sm:text-sm font-semibold">
+                        <span className="text-xs font-semibold">
                           {participantCount} Clients
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-end gap-2 border-t sm:border-t-0 pt-2 sm:pt-0">
+                    <div className="flex items-center justify-end gap-1.5 border-t sm:border-t-0 pt-2 sm:pt-0">
                       <Button
                         variant="ghost"
-                        className="text-[#0ea5e9] text-xs sm:text-sm font-bold hover:bg-sky-50"
+                        size="sm"
+                        className="text-[#0ea5e9] text-xs font-semibold hover:bg-sky-50 h-8 px-2.5"
                         onClick={() =>
                           window.open(session.meeting_link, "_blank")
                         }
@@ -876,7 +863,7 @@ export default function Sessions() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="text-slate-300 hover:text-red-500 hover:bg-red-50"
+                        className="text-slate-300 hover:text-red-500 hover:bg-red-50 h-8 w-8"
                         onClick={() =>
                           handleDelete(
                             session.id,
@@ -885,7 +872,7 @@ export default function Sessions() {
                           )
                         }
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                     </div>
                   </div>
@@ -902,12 +889,12 @@ export default function Sessions() {
 function StatCard({ title, value, icon, bgColor }: any) {
   return (
     <Card className="border-none shadow-sm">
-      <CardContent className="pt-6 flex items-center justify-between gap-4">
+      <CardContent className="pt-5 flex items-center justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-tight mb-1 truncate">{title}</p>
-          <p className="text-2xl sm:text-3xl font-bold text-foreground">{value}</p>
+          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1 truncate">{title}</p>
+          <p className="text-2xl font-bold text-foreground">{value}</p>
         </div>
-        <div className={`h-10 w-10 sm:h-12 sm:w-12 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0 ${bgColor}`}>{icon}</div>
+        <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${bgColor}`}>{icon}</div>
       </CardContent>
     </Card>
   );
