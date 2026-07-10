@@ -7,7 +7,7 @@ export const PageTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h1
     ref={ref}
-    className={cn("text-2xl font-bold tracking-tight leading-none text-foreground", className)}
+    className={cn("text-2xl font-display font-bold tracking-tight leading-none text-foreground", className)}
     {...props}
   />
 ));
@@ -31,7 +31,7 @@ export const SectionTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h2
     ref={ref}
-    className={cn("text-2xl font-semibold", className)}
+    className={cn("text-2xl font-display font-semibold", className)}
     {...props}
   />
 ));
@@ -43,7 +43,7 @@ export const CardTitleText = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h3
     ref={ref}
-    className={cn("text-base font-semibold", className)}
+    className={cn("text-base font-display font-semibold", className)}
     {...props}
   />
 ));
