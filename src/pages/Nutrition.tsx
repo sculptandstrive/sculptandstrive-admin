@@ -583,16 +583,15 @@ export default function NutritionAdmin() {
                             No groups available
                           </SelectItem>
                         ) : (
-                          groups.map((g) => (
-                            <SelectItem key={g.id} value={g.id}>
-                              {g.name}
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  )}
+                          {groups.map((g) => (
+  <SelectItem key={g.id} value={g.id}>
+    {g.name}
+  </SelectItem>
+))}
+      </SelectContent>
+    </Select>
+  </div>
+)}
 
 
                 {/* Daily Calories */}
@@ -743,67 +742,67 @@ export default function NutritionAdmin() {
       {/* ── Stats Grid ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 mt-6">
         <Card className="border-none shadow-sm">
-          <CardContent className="p-2 md:p-5 flex flex-col-reverse gap-3 md:flex-row justify-between items-center">
+          <CardContent className="p-2 md:p-6 flex flex-col-reverse gap-3 md:flex-row justify-between items-center">
             <div className="flex flex-col md:flex-col items-center md:items-start">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                 Live Meal Plans
               </p>
-              <p className="text-2xl font-bold mt-1">{mealPlans.length}</p>
+              <p className="text-3xl font-bold mt-1">{mealPlans.length}</p>
             </div>
-            <div className="bg-purple-100 p-2.5 rounded-[10px] text-purple-600">
-              <Utensils className="w-4 h-4" />
+            <div className="bg-purple-100 p-3 rounded-xl text-purple-600">
+              <Utensils className="w-6 h-6" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-none shadow-sm">
-          <CardContent className="p-2 md:p-5 flex flex-col-reverse gap-3 md:flex-row justify-between items-center">
+          <CardContent className="p-2 md:p-6 flex flex-col-reverse gap-3 md:flex-row justify-between items-center">
             <div className="flex flex-col items-center md:items-start">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                 Total Recipes
               </p>
-              <p className="text-2xl font-bold mt-1">{recipeCount}</p>
+              <p className="text-3xl font-bold mt-1">{recipeCount}</p>
             </div>
-            <div className="bg-emerald-50 p-2.5 rounded-[10px] text-emerald-600">
-              <Apple className="w-4 h-4" />
+            <div className="bg-emerald-50 p-3 rounded-xl text-emerald-600">
+              <Apple className="w-6 h-6" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-none shadow-sm">
-          <CardContent className="p-2 md:p-5 flex flex-col-reverse gap-3 md:flex-row justify-between items-center">
+          <CardContent className="p-2 md:p-6 flex flex-col-reverse gap-3 md:flex-row justify-between items-center">
             <div className="flex flex-col items-center md:items-start">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                 Global Avg Cals
               </p>
-              <p className="text-2xl font-bold mt-1">{globalAvgCals}</p>
+              <p className="text-3xl font-bold mt-1">{globalAvgCals}</p>
             </div>
-            <div className="bg-orange-50 p-2.5 rounded-[10px] text-orange-500">
-              <Flame className="w-4 h-4" />
+            <div className="bg-orange-50 p-3 rounded-xl text-orange-500">
+              <Flame className="w-6 h-6" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-none shadow-sm">
-          <CardContent className="p-2 md:p-5 flex flex-col-reverse gap-3 md:flex-row justify-between items-center">
+          <CardContent className="p-2 md:p-6 flex flex-col-reverse gap-3 md:flex-row justify-between items-center">
             <div className="flex flex-col items-center md:items-start">
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                 Water Intake Avg
               </p>
-              <p className="text-2xl font-bold mt-1">{globalWaterAvg}%</p>
+              <p className="text-3xl font-bold mt-1">{globalWaterAvg}%</p>
             </div>
-            <div className="bg-blue-50 p-2.5 rounded-[10px] text-blue-500">
-              <Droplets className="w-4 h-4" />
+            <div className="bg-blue-50 p-3 rounded-xl text-blue-500">
+              <Droplets className="w-6 h-6" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <h3 className="flex items-center gap-2 text-base font-semibold mb-6 text-foreground">
-        <Utensils className="w-4 h-4 text-indigo-600" /> Active Meal Plans
+      <h3 className="flex items-center gap-2 text-xl font-bold mb-6 text-foreground">
+        <Utensils className="w-5 h-5 text-indigo-600" /> Active Meal Plans
       </h3>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {loading ? (
           <div className="col-span-full flex justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
@@ -814,7 +813,7 @@ export default function NutritionAdmin() {
               key={plan.id}
               className="border-none shadow-md overflow-hidden"
             >
-              <CardContent className="p-3 md:p-5">
+              <CardContent className="p-3 md:p-6">
                 <div className="flex justify-between items-start flex-col md:flex-row gap-2 mb-6">
                   <div>
                     <div className="flex items-start gap-2">
