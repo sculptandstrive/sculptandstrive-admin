@@ -14,6 +14,9 @@ import Support from "./pages/Support";
 import Settings from "./pages/Settings";
 import Users from "./pages/Users";
 import Auth from "./pages/Auth";
+import Groups from "@/pages/admin/Groups";
+import GroupDetails from "@/pages/admin/GroupDetails";
+import GroupProgress from "@/pages/admin/GroupProgress";
 import NotFound from "./pages/NotFound";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { DashboardLayout } from "./components/DashboardLayout";
@@ -44,6 +47,9 @@ const App = () => (
                           <Route path = "/support" element = {<Support/>}/>
                           <Route path = "/settings" element = {<Settings/>}/>
                           <Route path = "/users" element = {<Users/>}/>
+                          <Route path="/admin/groups" element={<Groups />} />
+                          <Route path="/admin/groups/:id" element={<GroupDetails />} />
+                          <Route path="/admin/groups/:id/progress" element={<GroupProgress />} />
                         </Routes>
                       </DashboardLayout>
                     </ThemeProvider>

@@ -8,6 +8,7 @@ import {
   Loader2,
   Trash2,
   ChevronDown,
+  ChevronUp,
   Plus,
   SquarePen,
   UserPlus,
@@ -56,15 +57,27 @@ export default function Fitness() {
   const [isExerciseDialogOpen, setIsExerciseDialogOpen] = useState(false);
   const [addCategory, setAddCategory] = useState("");
   const [parentCategoryId, setParentCategoryId] = useState("");
+  const [isEditCategoryOpen, setIsEditCategoryOpen] = useState(false);
+  const [editCategoryName, setEditCategoryName] = useState("");
+  const [editCategoryId, setEditCategoryId] = useState("");
+  const [exerciseSearchQuery, setExerciseSearchQuery] = useState("");
   const [allCategories, setAllCategories] = useState([]);
-  const [addExercise, setAddExercise] = useState({ name: "", details: "", category_id: "" });
+  const [addExercise, setAddExercise] = useState({
+    name: "",
+    details: "",
+    category_id: "",
+    sub_category: "",
+    difficulty: ""
+  });
   const [allExercise, setAllExercise] = useState<any>([]);
   const [isEditExerciseOpen, setIsEditExerciseOpen] = useState(false);
   const [editExercise, setEditExercise] = useState({
     id: "",
     name: "",
     category_id: "",
-    details: ""
+    details: "",
+    sub_category: "",
+    difficulty: ""
   });
   // ------------------------- Plan States
   const [allPlans, setAllPlans] = useState<any[]>([]);
@@ -77,6 +90,9 @@ export default function Fitness() {
   const [editPlan, setEditPlan] = useState({ id: "", name: "" });
   const [activePlan, setActivePlan] = useState<any>(null);
   const [planExercises, setPlanExercises] = useState<any[]>([]);
+  const [adminWeightUnit, setAdminWeightUnit] = useState<"kg" | "lbs">(
+    (localStorage.getItem("admin_weight_unit") as "kg" | "lbs") || "kg"
+  );
   const [planAssignments, setPlanAssignments] = useState<any[]>([]);
   const [assignUserId, setAssignUserId] = useState("");
   const [newPlanExercise, setNewPlanExercise] = useState({
@@ -95,7 +111,7 @@ export default function Fitness() {
     const avgSets =
       total > 0
         ? exercises.reduce((acc, curr) => acc + (Number(curr.sets) || 0), 0) /
-          total
+        total
         : 0;
     const totalVol = exercises.reduce(
       (acc, curr) => acc + (Number(curr.sets) || 0) * (Number(curr.reps) || 0),
@@ -110,22 +126,14 @@ export default function Fitness() {
   }, [exercises]);
 
   const handleAddExercise = async () => {
-    if (addExercise.name.length < 3 || addExercise.name.length > 20) {
+    if (addExercise.name.length < 3 || addExercise.name.length > 100) {
       toast({
         title: "Add Exercise Error",
-        description: "Exercise Name length should between 3 to 20 Characters",
+        description: "Exercise Name length should be between 3 to 100 Characters",
         variant: "destructive",
       });
       return;
     }
-    // else if(addExercise.details.length > 300 || addExercise.details.length < 30){
-    //   toast({
-    //     title: "Add Exercise Error",
-    //     description: "Exercise Details Length should between 30 to 300 Characters",
-    //     variant: "destructive",
-    //   });
-    //   return;
-    // }
     else if (addExercise.category_id === "") {
       toast({
         title: "Add Exercise Error",
@@ -137,8 +145,9 @@ export default function Fitness() {
 
     const { error } = await supabase.from("exercises_list").insert({
       category_id: addExercise.category_id,
-      // description: addExercise.details,
       name: addExercise.name,
+      sub_category: addExercise.sub_category || null,
+      difficulty: addExercise.difficulty || null
     });
 
     if (error) {
@@ -157,30 +166,22 @@ export default function Fitness() {
   };
 
   const handleEditExercise = async () => {
-    if (editExercise.name.length < 3 || editExercise.name.length > 20) {
+    if (editExercise.name.length < 3 || editExercise.name.length > 100) {
       toast({
         title: "Edit Exercise Error",
-        description:
-          "Exercise Name length should be between 3 to 20 characters",
+        description: "Exercise Name length should be between 3 to 100 characters",
         variant: "destructive",
       });
       return;
     }
-    // else if(editExercise.details.length > 300 || editExercise.details.length < 30){
-    //   toast({
-    //     title: "Add Exercise Error",
-    //     description: "Exercise Details Length should between 30 to 300 Characters",
-    //     variant: "destructive",
-    //   });
-    //   return;
-    // }
 
     const { error } = await supabase
       .from("exercises_list")
       .update({
         name: editExercise.name,
         category_id: editExercise.category_id,
-        // description: editExercise.details
+        sub_category: editExercise.sub_category || null,
+        difficulty: editExercise.difficulty || null
       })
       .eq("id", editExercise.id);
 
@@ -311,7 +312,8 @@ export default function Fitness() {
     const { data, error } = await supabase
       .from("workout_plan_exercises")
       .select("*, exercises_list(name, category_id)")
-      .eq("plan_id", planId);
+      .eq("plan_id", planId)
+      .order("display_order", { ascending: true });
     if (!error) setPlanExercises(data ?? []);
   };
 
@@ -408,16 +410,23 @@ export default function Fitness() {
       });
       return;
     }
+    const nextOrder = planExercises.length > 0
+      ? Math.max(...planExercises.map((e: any) => e.display_order ?? 0)) + 1
+      : 1;
+
     const { error } = await supabase.from("workout_plan_exercises").insert({
       plan_id: activePlan.id,
       exercise_id: newPlanExercise.exercise_id,
       sets: parseInt(newPlanExercise.sets),
       reps: newPlanExercise.reps ? parseInt(newPlanExercise.reps) : null,
       weight_kg: newPlanExercise.weight_kg
-        ? parseFloat(newPlanExercise.weight_kg)
+        ? adminWeightUnit === "lbs"
+          ? parseFloat(newPlanExercise.weight_kg) / 2.20462
+          : parseFloat(newPlanExercise.weight_kg)
         : null,
       rest_timer: newPlanExercise.rest_timer,
-      description: newPlanExercise.details
+      description: newPlanExercise.details,
+      display_order: nextOrder
     });
     if (error) {
       toast({ title: "Failed to add exercise", variant: "destructive" });
@@ -448,6 +457,36 @@ export default function Fitness() {
     }
     toast({ title: "Exercise Removed" });
     fetchPlanExercises(activePlan.id);
+  };
+
+  const handleMoveExercise = async (currentEx: any, direction: "up" | "down") => {
+    const currentIndex = planExercises.findIndex((ex) => ex.id === currentEx.id);
+    if (currentIndex === -1) return;
+
+    const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= planExercises.length) return;
+
+    const targetEx = planExercises[targetIndex];
+
+    // Swap display_orders (using indices as backup fallback if null)
+    const currentOrder = currentEx.display_order ?? currentIndex;
+    const targetOrder = targetEx.display_order ?? targetIndex;
+
+    const { error: err1 } = await supabase
+      .from("workout_plan_exercises")
+      .update({ display_order: targetOrder })
+      .eq("id", currentEx.id);
+
+    const { error: err2 } = await supabase
+      .from("workout_plan_exercises")
+      .update({ display_order: currentOrder })
+      .eq("id", targetEx.id);
+
+    if (err1 || err2) {
+      toast({ title: "Failed to change sequence", variant: "destructive" });
+    } else {
+      fetchPlanExercises(activePlan.id);
+    }
   };
 
   // ── User Assignment ────────────────────────────────────────────────────────
@@ -536,10 +575,23 @@ export default function Fitness() {
         (allCategories as any[]).find((cat: any) => cat.id === ex.category_id)
           ?.name ?? "Unknown",
     }));
-    return activeFilter === "All"
-      ? mapped
-      : mapped.filter((ex: any) => ex.category_name === activeFilter);
-  }, [allExercise, allCategories, activeFilter]);
+    
+    let result = mapped;
+    if (activeFilter !== "All") {
+      result = result.filter((ex: any) => ex.category_name === activeFilter);
+    }
+    
+    if (exerciseSearchQuery.trim()) {
+      const q = exerciseSearchQuery.toLowerCase();
+      result = result.filter((ex: any) => 
+        ex.name?.toLowerCase().includes(q) ||
+        ex.category_name?.toLowerCase().includes(q) ||
+        (ex.sub_category && ex.sub_category.toLowerCase().includes(q))
+      );
+    }
+    
+    return result;
+  }, [allExercise, allCategories, activeFilter, exerciseSearchQuery]);
 
   const handleDeleteExercise = async (exerciseId: string) => {
     const { error } = await supabase
@@ -576,10 +628,10 @@ export default function Fitness() {
   // };
 
   const handleCreateCategory = async () => {
-    if (addCategory.length < 3 || addCategory.length > 30) {
+    if (addCategory.length < 3 || addCategory.length > 100) {
       toast({
         title: "Category Name Error",
-        description: "Category Name length should between 3 to 30 Characters",
+        description: "Category Name length should between 3 to 100 Characters",
         variant: "destructive",
       });
       return;
@@ -605,32 +657,53 @@ export default function Fitness() {
     setIsCategoryDialogOpen(false);
   };
 
+  const handleEditCategory = async () => {
+    if (editCategoryName.length < 3 || editCategoryName.length > 100) {
+      toast({
+        title: "Category Name Error",
+        description: "Category Name length should be between 3 to 100 characters",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { error } = await supabase
+      .from("exercise_category")
+      .update({ name: editCategoryName })
+      .eq("id", editCategoryId);
+
+    if (error) {
+      toast({ title: "Server Error", variant: "destructive" });
+    } else {
+      toast({ title: "Category Updated Successfully" });
+      fetchCategories();
+      fetchAllExercises();
+    }
+    setIsEditCategoryOpen(false);
+  };
+
   const categories = (allCategories as any[]).map((cat: any) => ({
     id: cat.id,
     name: cat.name,
     count: allExercise.filter((ex: any) => ex.category_id === cat.id).length,
   }));
 
-  const sortedCategories = useMemo(() => {
-    const list = [...categories];
-    list.sort((a: any, b: any) => {
-      const aParts = a.name.split(" > ");
-      const bParts = b.name.split(" > ");
-      
-      const aParent = aParts[0];
-      const bParent = bParts[0];
-      
-      if (aParent !== bParent) {
-        return aParent.localeCompare(bParent);
-      }
-      
-      if (aParts.length !== bParts.length) {
-        return aParts.length - bParts.length;
-      }
-      
-      return a.name.localeCompare(b.name);
+  const groupedCategories = useMemo(() => {
+    const parents = categories.filter((cat: any) => !cat.name.includes(" > "));
+    parents.sort((a: any, b: any) => a.name.localeCompare(b.name));
+
+    return parents.map((parent: any) => {
+      const subs = categories.filter((cat: any) => {
+        const parts = cat.name.split(" > ");
+        return parts.length > 1 && parts[0] === parent.name;
+      });
+      subs.sort((a: any, b: any) => a.name.localeCompare(b.name));
+
+      return {
+        ...parent,
+        subcategories: subs
+      };
     });
-    return list;
   }, [categories]);
 
   const filteredPlanExercises = allExercise.filter(
@@ -674,7 +747,7 @@ export default function Fitness() {
                 <p className="text-sm font-medium">Exercise Name</p>
                 <Input
                   type="text"
-                  maxLength={30}
+                  maxLength={100}
                   placeholder="e.g. Bench Press"
                   value={addExercise.name}
                   onChange={(e) =>
@@ -777,6 +850,8 @@ export default function Fitness() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ── Categories ── */}
+
+
         <Card className="shadow-card border-none bg-card/60 backdrop-blur-md">
           <CardHeader className="flex w-full md:flex-row flex-col md:justify-between md:items-center">
             <CardTitle className="font-display text-xl text-foreground">
@@ -793,39 +868,44 @@ export default function Fitness() {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Add New Category</DialogTitle>
+                  <DialogTitle>Add New Category / Subcategory</DialogTitle>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="space-y-2">
                     <p className="text-sm font-medium">
-                      Category Name (Max 20 chars)
+                      Category Name
                     </p>
                     <Input
                       type="text"
-                      maxLength={20}
-                      placeholder="e.g., Abs"
+                      maxLength={100}
+                      placeholder="e.g., Beginner or Hamstrings"
                       value={addCategory}
                       onChange={(e) => setAddCategory(e.target.value)}
                     />
                   </div>
+
                   <div className="space-y-2">
                     <p className="text-sm font-medium">
-                      Sub Category of (Optional)
+                      Parent Category <span className="text-slate-500">(Optional - to create a Subcategory)</span>
                     </p>
                     <Select
-                      value={parentCategoryId}
-                      onValueChange={setParentCategoryId}
+                      value={parentCategoryId || "none"}
+                      onValueChange={(value) =>
+                        setParentCategoryId(value === "none" ? "" : value)
+                      }
                     >
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select parent category (if subcategory)" />
+                        <SelectValue placeholder="Select parent category (optional)" />
                       </SelectTrigger>
-                      <SelectContent position="popper" side="bottom" avoidCollisions={false} className="max-h-[200px] overflow-y-auto">
-                        <SelectItem value="none">None (Top-level Category)</SelectItem>
-                        {categories.filter((cat: any) => !cat.name.includes(" > ")).map((cat: any) => (
-                          <SelectItem key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </SelectItem>
-                        ))}
+                      <SelectContent position="popper" side="bottom">
+                        <SelectItem value="none">None (Create as Parent Category)</SelectItem>
+                        {categories
+                          .filter((cat: any) => !cat.name.includes(" > "))
+                          .map((cat: any) => (
+                            <SelectItem key={cat.id} value={cat.id}>
+                              {cat.name}
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -833,13 +913,18 @@ export default function Fitness() {
                 <DialogFooter>
                   <Button
                     variant="outline"
-                    onClick={() => setIsCategoryDialogOpen(false)}
+                    onClick={() => {
+                      setIsCategoryDialogOpen(false);
+                      setAddCategory("");
+                      setParentCategoryId("");
+                    }}
                   >
                     Cancel
                   </Button>
                   <Button
                     onClick={handleCreateCategory}
                     className="bg-emerald-600 text-white"
+                    disabled={!addCategory.trim()}
                   >
                     Save Category
                   </Button>
@@ -853,37 +938,91 @@ export default function Fitness() {
                 No categories yet.
               </div>
             ) : (
-              sortedCategories.map((category) => {
-                const parts = category.name.split(" > ");
-                const isSub = parts.length > 1;
-                const displayName = isSub ? parts[1] : category.name;
+              groupedCategories.map((parent: any) => {
                 return (
-                  <div key={category.id} className={`space-y-2 ${isSub ? "pl-4 border-l border-slate-700 ml-2" : ""}`}>
+                  <div key={parent.id} className="py-3 border-b border-slate-100/5 last:border-b-0 space-y-2">
+                    {/* Parent Category Row */}
                     <div className="flex justify-between text-sm items-center">
-                      <span className={`font-medium ${isSub ? "text-muted-foreground text-xs" : ""}`}>{displayName}</span>
+                      <span className="font-medium text-foreground">
+                        {parent.name}
+                      </span>
                       <div className="flex items-center gap-2">
                         <span className="text-muted-foreground text-xs">
-                          {category.count}{" "}
-                          {category.count === 1 ? "exercise" : "exercises"}
+                          {parent.count} {parent.count === 1 ? "exercise" : "exercises"}
                         </span>
+                        <Button
+                           variant="ghost"
+                           size="icon"
+                           className="h-8 w-8 text-[#2dd4bf] hover:text-[#14b8a6] hover:bg-slate-50 shrink-0"
+                           onClick={() => {
+                             setEditCategoryId(parent.id);
+                             setEditCategoryName(parent.name);
+                             setIsEditCategoryOpen(true);
+                           }}
+                         >
+                           <SquarePen className="w-4 h-4" />
+                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0"
-                          onClick={() => handledeleteCategory(category.id)}
+                          onClick={() => handledeleteCategory(parent.id)}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
                     </div>
+
+                    {/* Progress Bar */}
                     <Progress
                       value={
                         allExercise.length > 0
-                          ? (category.count / allExercise.length) * 100
+                          ? (parent.count / allExercise.length) * 100
                           : 0
                       }
-                      className="h-2"
+                      className="h-2 bg-[#f1f5f9] mt-2 [&>div]:bg-[#1e293b]"
                     />
+
+                    {/* Subcategories (Indented underneath) */}
+                    {parent.subcategories.length > 0 && (
+                      <div className="mt-2 pl-4 border-l-2 border-emerald-500/20 ml-2 space-y-2">
+                        {parent.subcategories.map((sub: any) => {
+                          const subDisplayName = sub.name.split(" > ")[1] || sub.name;
+                          return (
+                            <div key={sub.id} className="flex justify-between text-sm items-center py-1">
+                              <span className="text-muted-foreground text-xs">
+                                {subDisplayName}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-muted-foreground text-[10px]">
+                                  {sub.count} {sub.count === 1 ? "exercise" : "exercises"}
+                                </span>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-[#2dd4bf] hover:text-[#14b8a6] hover:bg-slate-50 shrink-0"
+                                  onClick={() => {
+                                    setEditCategoryId(sub.id);
+                                    setEditCategoryName(sub.name);
+                                    setIsEditCategoryOpen(true);
+                                  }}
+                                >
+                                  <SquarePen className="w-3.5 h-3.5" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0"
+                                  onClick={() => handledeleteCategory(sub.id)}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 );
               })
@@ -891,16 +1030,56 @@ export default function Fitness() {
           </CardContent>
         </Card>
 
+        <Dialog open={isEditCategoryOpen} onOpenChange={setIsEditCategoryOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Category / Subcategory</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Category Name</p>
+                <Input
+                  type="text"
+                  maxLength={100}
+                  placeholder="Category name..."
+                  value={editCategoryName}
+                  onChange={(e) => setEditCategoryName(e.target.value)}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditCategoryOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleEditCategory}
+                className="bg-emerald-600 text-white"
+                disabled={!editCategoryName.trim()}
+              >
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {/* ── Exercises List ── */}
         <Card className="lg:col-span-2 shadow-card border-none bg-card/60 backdrop-blur-md">
           <CardHeader>
-            <div className="flex flex-col md:flex-row gap-2 justify-between items-center">
+            <div className="flex flex-col md:flex-row gap-4 justify-between items-center w-full">
               <CardTitle className="font-display text-xl text-foreground">
                 {activeFilter} Exercises List
               </CardTitle>
-              <span className="text-xs text-muted-foreground uppercase tracking-widest">
-                Showing {allExercise.length} results
-              </span>
+              <div className="flex items-center gap-4 w-full md:w-auto">
+                <Input
+                  placeholder="Search exercises..."
+                  value={exerciseSearchQuery}
+                  onChange={(e) => setExerciseSearchQuery(e.target.value)}
+                  className="max-w-[240px] h-9 text-xs"
+                />
+                <span className="text-xs text-muted-foreground uppercase tracking-widest whitespace-nowrap">
+                  Showing {exercisesWithCategory.length} results
+                </span>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -915,9 +1094,32 @@ export default function Fitness() {
                       <Dumbbell className="w-6 h-6 text-primary-foreground" />
                     </div>
                     <div className="min-w-0 flex flex-col items-center md:block">
-                      <p className="font-bold text-foreground truncate">
+                      <p className="font-bold text-foreground break-words whitespace-normal">
                         {ex.name}
                       </p>
+                      <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                        {ex.category_name && (
+                          <Badge
+                            variant="outline"
+                            className="text-[9px] bg-[#143A6F] border-slate-700/50 text-slate-300 px-2 py-0.5 font-medium shadow-sm"
+                          >
+                            {ex.category_name}
+                          </Badge>
+                        )}
+                        {ex.sub_category && ex.sub_category !== "none" && (
+                          <Badge variant="outline" className="text-[9px] bg-emerald-500/10 border-emerald-500/20 text-emerald-400">
+                            {ex.sub_category}
+                          </Badge>
+                        )}
+                        {ex.difficulty && (
+                          <Badge variant="outline" className={`text-[9px] ${ex.difficulty === "Beginner" ? "bg-green-500/10 border-green-500/20 text-green-400" :
+                              ex.difficulty === "Intermediate" ? "bg-yellow-500/10 border-yellow-500/20 text-yellow-400" :
+                                "bg-red-500/10 border-red-500/20 text-red-400"
+                            }`}>
+                            {ex.difficulty}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center justify-center">
@@ -959,7 +1161,7 @@ export default function Fitness() {
                             <p className="text-sm font-medium">Exercise Name</p>
                             <Input
                               type="text"
-                              maxLength={20}
+                              maxLength={100}
                               placeholder="e.g. Bench Press"
                               value={editExercise.name}
                               onChange={(e) =>
@@ -1227,7 +1429,7 @@ export default function Fitness() {
                                           </SelectTrigger>
                                           <SelectContent position="popper" side="bottom">
                                             {filteredPlanExercises.length ===
-                                            0 ? (
+                                              0 ? (
                                               <SelectItem value="none" disabled>
                                                 No exercises in this category
                                               </SelectItem>
@@ -1250,10 +1452,42 @@ export default function Fitness() {
 
                                     {newPlanExercise.exercise_id && (
                                       <div className="space-y-2">
-                                        <p className="text-sm font-medium">
-                                          Sets / Reps / Weight (kg)
-                                        </p>
-                                        <div className="flex gap-2">
+                                        <div className="flex justify-between items-center mt-2">
+                                          <p className="text-sm font-medium">
+                                            Sets / Reps / Weight ({adminWeightUnit})
+                                          </p>
+                                          <div className="flex gap-1 bg-slate-800 p-0.5 rounded-md border border-slate-700">
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                setAdminWeightUnit("kg");
+                                                localStorage.setItem("admin_weight_unit", "kg");
+                                              }}
+                                              className={`text-[9px] px-2 py-0.5 rounded font-bold transition-all ${
+                                                adminWeightUnit === "kg"
+                                                  ? "bg-slate-700 text-[#2dd4bf]"
+                                                  : "text-slate-400 hover:text-white"
+                                              }`}
+                                            >
+                                              KG
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                setAdminWeightUnit("lbs");
+                                                localStorage.setItem("admin_weight_unit", "lbs");
+                                              }}
+                                              className={`text-[9px] px-2 py-0.5 rounded font-bold transition-all ${
+                                                adminWeightUnit === "lbs"
+                                                  ? "bg-slate-700 text-[#2dd4bf]"
+                                                  : "text-slate-400 hover:text-white"
+                                              }`}
+                                            >
+                                              LBS
+                                            </button>
+                                          </div>
+                                        </div>
+                                        <div className="flex gap-2 mt-1">
                                           <Input
                                             type="number"
                                             placeholder="Sets *"
@@ -1278,7 +1512,7 @@ export default function Fitness() {
                                           />
                                           <Input
                                             type="number"
-                                            placeholder="Weight kg"
+                                            placeholder={`Weight (${adminWeightUnit})`}
                                             value={newPlanExercise.weight_kg}
                                             onChange={(e) =>
                                               setNewPlanExercise({
@@ -1294,7 +1528,7 @@ export default function Fitness() {
                                         </p>
                                         <Input
                                           type="number"
-                                          placeholder="Weight kg"
+                                          placeholder="Rest time (sec)"
                                           className="min-w-[120px]"
                                           value={newPlanExercise.rest_timer}
                                           onChange={(e) =>
@@ -1304,37 +1538,7 @@ export default function Fitness() {
                                             })
                                           }
                                         />
-                                        {/* <div className="flex gap-2">
-                                          <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                              <Button
-                                                variant="outline"
-                                                className="min-w-[120px]"
-                                              >
-                                                {newPlanExercise.rest_timer
-                                                  ? `${newPlanExercise.rest_timer}s`
-                                                  : "Select Rest"}
-                                              </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent>
-                                              {[15, 30, 45, 60, 90, 120].map(
-                                                (seconds) => (
-                                                  <DropdownMenuItem
-                                                    key={seconds}
-                                                    onSelect={() =>
-                                                      setNewPlanExercise({
-                                                        ...newPlanExercise,
-                                                        rest_timer: seconds,
-                                                      })
-                                                    }
-                                                  >
-                                                    {seconds}s
-                                                  </DropdownMenuItem>
-                                                ),
-                                              )}
-                                            </DropdownMenuContent>
-                                          </DropdownMenu>
-                                        </div> */}
+
                                         <div className="space-y-2">
                                           <p className="text-sm font-medium">
                                             Exercise Description
@@ -1384,7 +1588,7 @@ export default function Fitness() {
                               </div>
                             ) : (
                               <div className="space-y-2">
-                                {planExercises.map((pe) => (
+                                {planExercises.map((pe, index) => (
                                   <div
                                     key={pe.id}
                                     className="flex items-center justify-between p-3 rounded-lg bg-muted/30"
@@ -1403,22 +1607,43 @@ export default function Fitness() {
                                         {pe.sets} sets
                                         {pe.reps ? ` • ${pe.reps} reps ` : ""}
                                         {pe.weight_kg
-                                          ? ` • ${pe.weight_kg} kg `
+                                          ? adminWeightUnit === "lbs"
+                                            ? ` • ${Math.round(pe.weight_kg * 2.20462 * 10) / 10} lbs `
+                                            : ` • ${pe.weight_kg} kg `
                                           : ""}
                                         • {pe.rest_timer}s Rest Time
                                       </p>
-                                      {/* <p>• {pe.rest_timer} Rest Time</p> */}
                                     </div>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() =>
-                                        handleRemoveExerciseFromPlan(pe.id)
-                                      }
-                                      className="text-red-400 hover:text-red-600"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </Button>
+                                    <div className="flex items-center gap-1">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        disabled={index === 0}
+                                        onClick={() => handleMoveExercise(pe, "up")}
+                                        className="h-8 w-8 text-slate-400 hover:text-slate-200"
+                                      >
+                                        <ChevronUp className="w-4 h-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        disabled={index === planExercises.length - 1}
+                                        onClick={() => handleMoveExercise(pe, "down")}
+                                        className="h-8 w-8 text-slate-400 hover:text-slate-200"
+                                      >
+                                        <ChevronDown className="w-4 h-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() =>
+                                          handleRemoveExerciseFromPlan(pe.id)
+                                        }
+                                        className="text-red-400 hover:text-red-600"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    </div>
                                   </div>
                                 ))}
                               </div>
@@ -1684,7 +1909,7 @@ export default function Fitness() {
                       <Dumbbell className="w-6 h-6 text-primary-foreground" />
                     </div>
                     <div className="min-w-0 flex flex-col items-center md:block">
-                      <p className="font-bold text-foreground truncate">
+                      <p className="font-bold text-foreground break-words whitespace-normal">
                         {ex.name}
                       </p>
                       <p className="text-xs text-muted-foreground uppercase tracking-widest">

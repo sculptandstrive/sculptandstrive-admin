@@ -10,7 +10,8 @@ import {
   ChevronRight,
   LogOut,
   User,
-  Users
+  Users,
+  UsersRound
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { cn } from "@/lib/utils";
@@ -29,6 +30,7 @@ const menuItems = [
   { title: "Nutrition", url: "/nutrition", icon: Apple },
   { title: "Progress", url: "/progress", icon: TrendingUp },
   { title: "Users", url: "/users", icon: Users },
+  { title: "Groups", url: "/admin/groups", icon: UsersRound },
   { title: "Support/Help", url: "/support", icon: HelpCircle },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
