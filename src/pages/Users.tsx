@@ -375,18 +375,18 @@ export default function Users() {
       </PageHeader>
 
       <Card className="border-muted shadow-none overflow-hidden">
-        <CardHeader className="p-4 border-b flex flex-row items-center justify-between space-y-0 bg-muted/10">
-          <CardTitle className="text-sm font-bold uppercase tracking-wider flex items-center gap-2">
-            <UsersIcon className="w-4 h-4 text-primary" />
+        <CardHeader className="p-6 border-b flex flex-row items-center justify-between space-y-0 bg-muted/10">
+          <CardTitle className="text-xl font-semibold flex items-center gap-2">
+            <UsersIcon className="w-5 h-5 text-primary" />
             Registry ({filteredUsers.length})
           </CardTitle>
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
               placeholder="Filter by name/email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 h-8 w-64 text-xs bg-background"
+              className="pl-11 h-12 w-80 text-base rounded-xl bg-background border"
             />
           </div>
         </CardHeader>
@@ -395,10 +395,10 @@ export default function Users() {
             <Table className="min-w-full table-fixed border-collapse">
               <TableHeader className="bg-muted/30">
                 <TableRow>
-                  <TableHead className="w-[200px] h-9 text-[11px] uppercase pl-6 font-bold">Member Name</TableHead>
-                  <TableHead className="w-[250px] h-9 text-[11px] uppercase font-bold">Email Address</TableHead>
-                  <TableHead className="w-[120px] h-9 text-[11px] uppercase font-bold text-center">Current Role</TableHead>
-                  <TableHead className="w-[240px] h-9 text-[11px] uppercase font-bold text-right pr-6">Management</TableHead>
+                  <TableHead className="w-[200px] pl-6">Member Name</TableHead>
+                  <TableHead className="w-[250px]">Email Address</TableHead>
+                  <TableHead className="w-[120px] text-center">Current Role</TableHead>
+                  <TableHead className="w-[240px] text-right pr-6">Management</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -406,15 +406,15 @@ export default function Users() {
                   <TableRow key={user.id} className="hover:bg-muted/20 border-b last:border-0 transition-colors">
                     <TableCell className="py-2 pl-6">
                       <div className="flex items-center gap-3">
-                        <div className="w-7 h-7 rounded bg-primary/10 flex items-center justify-center text-[10px] font-bold shrink-0">
+                        <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center text-[10px] font-bold shrink-0">
                           {(user.full_name?.[0] || user.email?.[0] || "U").toUpperCase()}
                         </div>
-                        <span className="text-xs font-semibold truncate block max-w-[140px]" title={user.full_name || ""}>
+                        <span className="text-base font-semibold truncate block max-w-[140px]" title={user.full_name || ""}>
                           {user.full_name || "Unnamed User"}
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="py-2 text-xs text-muted-foreground">
+                    <TableCell className="py-2 text-sm text-slate-500">
                       <span className="truncate block max-w-[220px]" title={user.email || ""}>
                         {user.email || "not set"}
                       </span>

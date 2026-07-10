@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { PageTitle, PageSubtitle } from "@/components/ui/typography";
 
 interface PageHeaderProps {
   title: string;
@@ -12,9 +13,9 @@ export function PageHeader({ title, description, children, className }: PageHead
     <div className={cn("mb-8", className)}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-display font-bold text-foreground">{title}</h1>
+          <PageTitle>{title}</PageTitle>
           {description && (
-            <p className="mt-1 text-muted-foreground">{description}</p>
+            <PageSubtitle>{description}</PageSubtitle>
           )}
         </div>
         {children && <div className="flex items-center gap-3">{children}</div>}

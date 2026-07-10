@@ -284,19 +284,18 @@ return (
                 className="flex items-center justify-between p-3 rounded-xl bg-[#F5F7F9] border border-[#F5F7F9]"
               >
                 <div>
-                    <p className="text-sm font-medium text-gray-900">{member.full_name}</p>
-                    <p className="text-xs text-gray-400">{member.email}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                    
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-gray-300 hover:text-red-500 hover:bg-red-50 h-8 w-8 rounded-lg transition-colors"
-                        onClick={() => handleRemoveMember(member.id, member.full_name)}
-                    >
-                        <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
+                  <p className="text-lg font-semibold text-gray-900">{member.full_name}</p>
+                  <p className="text-base text-slate-500">{member.email}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-gray-300 hover:text-red-500 hover:bg-red-50 h-8 w-8 rounded-lg transition-colors"
+                    onClick={() => handleRemoveMember(member.id, member.full_name)}
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </Button>
                 </div>
               </div>
             ))}
@@ -304,16 +303,16 @@ return (
         )}
       </CardContent>
     </Card>
-
+ 
     {/* Assign User Dialog */}
     <Dialog open={isAssignOpen} onOpenChange={setIsAssignOpen}>
-      <DialogContent className="bg-white border-[#F5F7F9] shadow-lg rounded-xl max-w-md">
+      <DialogContent className="bg-white border-[#F5F7F9] shadow-lg max-w-md">
         <DialogHeader>
           <DialogTitle>Add Member to Group</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
-            <p className="text-sm font-medium text-gray-700">Select User</p>
+            <p className="text-base font-medium text-gray-700">Select User</p>
             <Select value={selectedUser} onValueChange={setSelectedUser}>
               <SelectTrigger className="bg-[#F5F7F9] border-[#F5F7F9] text-gray-900 focus:border-emerald-500 focus:ring-emerald-500/20">
                 <SelectValue placeholder="Choose a user..." />

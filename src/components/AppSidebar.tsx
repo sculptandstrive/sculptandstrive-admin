@@ -89,14 +89,14 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
                 to={item.url}
                 end={item.url === "/"}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-200 group",
+                  "flex items-center gap-3 px-3 py-3 rounded-lg text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-200 group text-lg font-medium",
                   collapsed && "justify-center px-2",
                 )}
-                activeClassName="bg-sidebar-accent text-sidebar-primary font-medium shadow-md"
+                activeClassName="bg-sidebar-accent text-sidebar-primary font-semibold shadow-md"
               >
                 <item.icon
                   className={cn(
-                    "w-5 h-5 flex-shrink-0 transition-transform group-hover:scale-110",
+                    "w-[22px] h-[22px] flex-shrink-0 transition-transform group-hover:scale-110",
                   )}
                 />
                 {!collapsed && (

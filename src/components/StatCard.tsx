@@ -12,15 +12,15 @@ interface StatCardProps {
 
 export function StatCard({ title, value, change, changeType = "neutral", icon: Icon, iconBg }: StatCardProps) {
   return (
-    <div className="bg-card rounded-xl p-6 shadow-card hover:shadow-card-hover transition-all duration-300 animate-slide-up border border-border/50">
+    <div className="bg-card rounded-2xl p-6 shadow-card hover:shadow-card-hover transition-all duration-300 animate-slide-up border border-border/50">
       <div className="flex items-start justify-between">
         <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <p className="text-3xl font-bold text-foreground">{value}</p>
+          <p className="text-base font-medium text-slate-500">{title}</p>
+          <p className="text-5xl font-bold text-foreground">{value}</p>
           {change && (
             <p className={cn(
-              "text-sm font-medium",
-              changeType === "positive" && "text-success",
+              "text-base",
+              changeType === "positive" && "text-emerald-600",
               changeType === "negative" && "text-destructive",
               changeType === "neutral" && "text-muted-foreground"
             )}>

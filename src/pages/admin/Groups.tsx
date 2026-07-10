@@ -291,23 +291,23 @@ export default function Groups() {
         </p>
       </div>
     ) : (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredGroups.map((group) => (
           <motion.div
             key={group.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-xl border border-[#F5F7F9] hover:border-emerald-500/30 hover:shadow-lg transition-all duration-200 overflow-hidden"
+            className="bg-white rounded-2xl border border-[#F5F7F9] hover:border-emerald-500/30 hover:shadow-lg transition-all duration-200 overflow-hidden"
           >
-            <div className="p-5">
+            <div className="p-6">
               {/* Header */}
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                    <Users className="w-4 h-4 text-emerald-600" />
+                  <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                    <Users className="w-5 h-5 text-emerald-600" />
                   </div>
                   <div className="min-w-0">
-                    <h4 className="text-sm font-semibold text-gray-900 truncate">
+                    <h4 className="text-xl font-semibold text-gray-900 truncate">
                       {group.name}
                     </h4>
                   </div>
@@ -318,13 +318,13 @@ export default function Groups() {
               </div>
 
               {/* Coach */}
-              <p className="text-xs text-gray-400 mb-4">
-                {group.coach_name}
+              <p className="text-base text-slate-500 mb-4">
+                Coach: {group.coach_name}
               </p>
 
               {/* Actions */}
               <div className="flex items-center justify-between pt-3 border-t border-[#F5F7F9]">
-                <span className="text-[10px] text-gray-400">
+                <span className="text-sm text-slate-400">
                   {new Date(group.created_at).toLocaleDateString()}
                 </span>
                 <div className="flex items-center gap-1">
