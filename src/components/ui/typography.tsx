@@ -7,7 +7,7 @@ export const PageTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h1
     ref={ref}
-    className={cn("text-4xl font-bold tracking-tight", className)}
+    className={cn("text-2xl font-bold tracking-tight leading-none text-foreground", className)}
     {...props}
   />
 ));

@@ -583,12 +583,13 @@ export default function NutritionAdmin() {
                             No groups available
                           </SelectItem>
                         ) : (
-                          {groups.map((g) => (
-  <SelectItem key={g.id} value={g.id}>
-    {g.name}
-  </SelectItem>
-))}
-      </SelectContent>
+                          groups.map((g) => (
+                            <SelectItem key={g.id} value={g.id}>
+                              {g.name}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
     </Select>
   </div>
 )}
