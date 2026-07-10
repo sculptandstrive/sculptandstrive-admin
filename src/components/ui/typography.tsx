@@ -19,7 +19,7 @@ export const PageSubtitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-lg text-slate-600 dark:text-slate-400 mt-2", className)}
+    className={cn("text-sm text-slate-600 dark:text-slate-400 mt-2", className)}
     {...props}
   />
 ));
@@ -43,7 +43,7 @@ export const CardTitleText = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h3
     ref={ref}
-    className={cn("text-2xl font-semibold", className)}
+    className={cn("text-base font-semibold", className)}
     {...props}
   />
 ));
@@ -56,7 +56,7 @@ export const SmallLabel = React.forwardRef<
   <span
     ref={ref}
     className={cn(
-      "text-sm font-medium text-muted-foreground uppercase tracking-wide",
+      "text-xs font-medium text-muted-foreground uppercase tracking-wide",
       className
     )}
     {...props}
@@ -85,7 +85,7 @@ export const BodyText = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-base", className)}
+    className={cn("text-sm", className)}
     {...props}
   />
 ));

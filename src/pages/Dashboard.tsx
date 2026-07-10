@@ -75,7 +75,7 @@ export default function Dashboard() {
         </Button>
       </PageHeader>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
         <StatCard
           title="Subscribed Members"
           value={loading ? "..." : memberCount.user.toLocaleString()}
@@ -104,7 +104,7 @@ export default function Dashboard() {
       <div className="space-y-6">
         <Card className="shadow-card animate-slide-up">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="font-display">Recent Activity</CardTitle>
+            <CardTitle className="font-display text-2xl font-semibold">Recent Activity</CardTitle>
             <Button
               variant="ghost"
               size="sm"
@@ -134,7 +134,7 @@ export default function Dashboard() {
                       <Activity className="w-5 h-5 text-accent-foreground" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">
+                      <p className="text-sm font-semibold text-foreground truncate">
                         {activity.admin_user_name}
                       </p>
                       <p className="text-sm text-muted-foreground truncate text-wrap md:text-nowrap">
@@ -160,7 +160,7 @@ export default function Dashboard() {
                       <Activity className="w-5 h-5 text-accent-foreground" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">
+                      <p className="text-sm font-semibold text-foreground truncate">
                         {activity.admin_user_name}
                       </p>
                       <p className="text-sm text-muted-foreground truncate">

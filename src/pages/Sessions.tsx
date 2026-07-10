@@ -725,7 +725,7 @@ export default function Sessions() {
         </div>
       </PageHeader>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-6">
         <StatCard
           title="Live Now"
           value={
@@ -796,7 +796,7 @@ export default function Sessions() {
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <h4 className="font-semibold text-sm text-foreground truncate max-w-[200px] sm:max-w-none">
+                        <h4 className="font-semibold text-base text-foreground truncate max-w-[200px] sm:max-w-none">
                           {session.title}
                         </h4>
                         <div className="flex gap-1">
@@ -823,7 +823,7 @@ export default function Sessions() {
                           )}
                         </div>
                       </div>
-                      <p className="text-xs text-slate-400 font-medium capitalize truncate">
+                      <p className="text-sm text-slate-400 font-medium capitalize truncate">
                         Coach {session.instructor}
                       </p>
                     </div>
@@ -853,7 +853,7 @@ export default function Sessions() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-[#0ea5e9] text-xs font-semibold hover:bg-sky-50 h-8 px-2.5"
+                        className="text-[#0ea5e9] text-sm font-semibold hover:bg-sky-50 h-9 px-2.5"
                         onClick={() =>
                           window.open(session.meeting_link, "_blank")
                         }

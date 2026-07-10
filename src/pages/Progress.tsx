@@ -282,20 +282,20 @@ export default function ProgressPage() {
       />
 
       {/* Aggregate Cards */}
-      <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
+      <div className="mb-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
         {stats.map((stat) => (
           <Card
             key={stat.title}
             className="shadow-card border-none bg-card/50 backdrop-blur"
           >
-            <CardContent className="pt-6">
+            <CardContent className="pt-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">{stat.title}</p>
-                  <p className="text-3xl font-bold">
+                  <p className="text-xs text-muted-foreground">{stat.title}</p>
+                  <p className="text-2xl font-bold">
                     {stat.value.toLocaleString()}
                   </p>
-                  <p className="text-sm font-medium text-success">
+                  <p className="text-xs font-medium text-success">
                     {stat.change}
                   </p>
                 </div>
@@ -308,12 +308,12 @@ export default function ProgressPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         {/* Member Growth Chart */}
         <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-accent" />
+              <Users className="h-4 w-4 text-accent" />
               Member Growth
             </CardTitle>
             <p className="text-sm text-muted-foreground">
@@ -598,7 +598,7 @@ export default function ProgressPage() {
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-accent/70 flex items-center justify-center">
-                            <Users className="w-5 h-5 text-accent-foreground" />
+                            <Users className="w-4 h-4 text-accent-foreground" />
                           </div>
                           <div>
                             <p className="font-medium text-sm">

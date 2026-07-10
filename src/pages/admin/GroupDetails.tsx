@@ -259,8 +259,8 @@ return (
     {/* Members Section */}
     <Card className="bg-white border-[#F5F7F9] shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-gray-900 text-lg flex items-center gap-2">
-          <Users className="w-5 h-5 text-emerald-600" />
+        <CardTitle className="text-gray-900 text-base font-semibold flex items-center gap-2">
+          <Users className="w-4 h-4 text-emerald-600" />
           Members ({group.members.length})
         </CardTitle>
         <Button
@@ -284,8 +284,8 @@ return (
                 className="flex items-center justify-between p-3 rounded-xl bg-[#F5F7F9] border border-[#F5F7F9]"
               >
                 <div>
-                  <p className="text-lg font-semibold text-gray-900">{member.full_name}</p>
-                  <p className="text-base text-slate-500">{member.email}</p>
+                  <p className="text-sm font-semibold text-gray-900">{member.full_name}</p>
+                  <p className="text-xs text-slate-500">{member.email}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
@@ -294,7 +294,7 @@ return (
                     className="text-gray-300 hover:text-red-500 hover:bg-red-50 h-8 w-8 rounded-lg transition-colors"
                     onClick={() => handleRemoveMember(member.id, member.full_name)}
                   >
-                    <Trash2 className="w-5 h-5" />
+                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               </div>

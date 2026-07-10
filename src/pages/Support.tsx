@@ -122,10 +122,10 @@ export default function Support() {
 
   const getPriorityIcon = (priority: string) => {
     switch (priority) {
-      case "high": return <AlertCircle className="w-5 h-5 text-destructive" />;
-      case "medium": return <Clock className="w-5 h-5 text-yellow-500" />;
-      case "low": return <CheckCircle className="w-5 h-5 text-green-500" />;
-      default: return <MessageCircle className="w-5 h-5 text-primary" />;
+      case "high": return <AlertCircle className="w-4 h-4 text-destructive" />;
+      case "medium": return <Clock className="w-4 h-4 text-yellow-500" />;
+      case "low": return <CheckCircle className="w-4 h-4 text-green-500" />;
+      default: return <MessageCircle className="w-4 h-4 text-primary" />;
     }
   };
 
@@ -137,37 +137,37 @@ export default function Support() {
       />
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
         <Card className="shadow-sm border-l-4 border-l-red-500">
-          <CardContent className="pt-6 flex justify-between items-center">
+          <CardContent className="pt-5 flex justify-between items-center">
             <div>
-              <p className="text-sm text-muted-foreground font-semibold">NEW TICKETS</p>
-              <p className="text-3xl font-bold">{tickets.filter(t => t.status === 'open').length}</p>
+              <p className="text-xs text-muted-foreground font-semibold">NEW TICKETS</p>
+              <p className="text-2xl font-bold">{tickets.filter(t => t.status === 'open').length}</p>
             </div>
-            <div className="p-3 rounded-xl bg-red-50 text-red-500"><AlertCircle /></div>
+            <div className="p-2.5 rounded-[10px] bg-red-50 text-red-500"><AlertCircle className="w-4 h-4" /></div>
           </CardContent>
         </Card>
         <Card className="shadow-sm border-l-4 border-l-yellow-500">
-          <CardContent className="pt-6 flex justify-between items-center">
+          <CardContent className="pt-5 flex justify-between items-center">
             <div>
-              <p className="text-sm text-muted-foreground font-semibold">BEING VIEWED</p>
-              <p className="text-3xl font-bold">{tickets.filter(t => t.status === 'in_progress').length}</p>
+              <p className="text-xs text-muted-foreground font-semibold">BEING VIEWED</p>
+              <p className="text-2xl font-bold">{tickets.filter(t => t.status === 'in_progress').length}</p>
             </div>
-            <div className="p-3 rounded-xl bg-yellow-50 text-yellow-500"><Eye /></div>
+            <div className="p-2.5 rounded-[10px] bg-yellow-50 text-yellow-500"><Eye className="w-4 h-4" /></div>
           </CardContent>
         </Card>
         <Card className="shadow-sm border-l-4 border-l-green-500">
-          <CardContent className="pt-6 flex justify-between items-center">
+          <CardContent className="pt-5 flex justify-between items-center">
             <div>
-              <p className="text-sm text-muted-foreground font-semibold">CLOSED / SOLVED</p>
-              <p className="text-3xl font-bold">{tickets.filter(t => t.status === 'resolved').length}</p>
+              <p className="text-xs text-muted-foreground font-semibold">CLOSED / SOLVED</p>
+              <p className="text-2xl font-bold">{tickets.filter(t => t.status === 'resolved').length}</p>
             </div>
-            <div className="p-3 rounded-xl bg-green-50 text-green-500"><CheckCircle /></div>
+            <div className="p-2.5 rounded-[10px] bg-green-50 text-green-500"><CheckCircle className="w-4 h-4" /></div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Support Tickets Column */}
         <Card className="lg:col-span-2 shadow-card">
           <CardHeader className="flex flex-row items-center justify-between border-b pb-4">

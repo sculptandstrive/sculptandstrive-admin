@@ -818,7 +818,7 @@ export default function Fitness() {
         </DropdownMenu>
       </PageHeader>
 
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-5 mb-8">
         <StatCard
           title="Total Exercises"
           value={stats.totalCount}
@@ -848,13 +848,13 @@ export default function Fitness() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* ── Categories ── */}
 
 
         <Card className="shadow-card border-none bg-card/60 backdrop-blur-md">
           <CardHeader className="flex w-full md:flex-row flex-col md:justify-between md:items-center">
-            <CardTitle className="font-display text-xl text-foreground">
+            <CardTitle className="font-display text-base font-semibold text-foreground">
               Categories
             </CardTitle>
             <Dialog
@@ -1127,7 +1127,7 @@ export default function Fitness() {
                       {ex.category_name || "General"}
                     </p>
                   </div>
-                  <div className="flex flex-col md:flex-row items-center gap-2 md:gap-6">
+                  <div className="flex flex-col md:flex-row items-center gap-2 md:gap-5">
                     <Dialog
                       open={isEditExerciseOpen && editExercise.id === ex.id}
                       onOpenChange={(open) => {
@@ -1149,7 +1149,7 @@ export default function Fitness() {
                           }}
                           className="text-muted-foreground hover:text-blue-500"
                         >
-                          <SquarePen className="w-5 h-5 text-blue-500" />
+                          <SquarePen className="w-4 h-4 text-blue-500" />
                         </Button>
                       </DialogTrigger>
                       <DialogContent>
@@ -1236,7 +1236,7 @@ export default function Fitness() {
                       onClick={() => handleDeleteExercise(ex.id)}
                       className="text-muted-foreground hover:text-destructive"
                     >
-                      <Trash2 className="w-5 h-5" />
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </div>
@@ -1252,7 +1252,7 @@ export default function Fitness() {
         {/* ── Workout Plans ── */}
         <Card className="lg:col-span-full shadow-card border-none bg-card/60 backdrop-blur-md">
           <CardHeader className="flex w-full flex-col md:flex-row md:justify-between md:items-center">
-            <CardTitle className="font-display text-xl text-foreground">
+            <CardTitle className="font-display text-base font-semibold text-foreground">
               Workout Plans
             </CardTitle>
             <Dialog open={isPlanDialogOpen} onOpenChange={setIsPlanDialogOpen}>
@@ -1307,7 +1307,7 @@ export default function Fitness() {
                   >
                     <div className="flex items-center gap-4 min-w-0">
                       <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                        <Dumbbell className="w-5 h-5 text-emerald-700" />
+                        <Dumbbell className="w-4 h-4 text-emerald-700" />
                       </div>
                       <div>
                         <p className="font-bold text-foreground">{plan.name}</p>
@@ -1688,7 +1688,7 @@ export default function Fitness() {
                         <DialogContent className="max-w-lg">
                           <DialogHeader>
                             <DialogTitle className="flex items-center gap-2">
-                              <Users className="w-5 h-5 text-blue-500" />
+                              <Users className="w-4 h-4 text-blue-500" />
                               Assigned Users — {plan.name}
                             </DialogTitle>
                           </DialogHeader>
@@ -1920,7 +1920,7 @@ export default function Fitness() {
                   <div className="flex items-center justify-center">
                     <p className="text-primary font-semibold">{ex.full_name}</p>
                   </div>
-                  <div className="flex flex-col md:flex-row items-center gap-2 md:gap-6">
+                  <div className="flex flex-col md:flex-row items-center gap-2 md:gap-5">
                     <div className="flex justify-between gap-4 items-center md:block text-right">
                       <p className="font-bold text-accent">{ex.reps} reps</p>
                       <p className="text-xs text-muted-foreground">

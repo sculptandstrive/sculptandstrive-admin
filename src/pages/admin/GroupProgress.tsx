@@ -175,8 +175,8 @@ return (
     {/* Members Progress Table */}
     <Card className="bg-white border-[#F5F7F9] shadow-sm">
       <CardHeader>
-        <CardTitle className="text-gray-900 text-lg flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-emerald-600" />
+        <CardTitle className="text-gray-900 text-base font-semibold flex items-center gap-2">
+          <TrendingUp className="w-4 h-4 text-emerald-600" />
           Member Progress Comparison
         </CardTitle>
       </CardHeader>

@@ -375,18 +375,18 @@ export default function Users() {
       </PageHeader>
 
       <Card className="border-muted shadow-none overflow-hidden">
-        <CardHeader className="p-6 border-b flex flex-row items-center justify-between space-y-0 bg-muted/10">
-          <CardTitle className="text-xl font-semibold flex items-center gap-2">
-            <UsersIcon className="w-5 h-5 text-primary" />
+        <CardHeader className="p-5 border-b flex flex-row items-center justify-between space-y-0 bg-muted/10">
+          <CardTitle className="flex items-center gap-2">
+            <UsersIcon className="w-4 h-4 text-primary" />
             Registry ({filteredUsers.length})
           </CardTitle>
           <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Filter by name/email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-11 h-12 w-80 text-base rounded-xl bg-background border"
+              className="pl-9 h-9 w-64 text-sm rounded-[10px] bg-background border"
             />
           </div>
         </CardHeader>
@@ -409,7 +409,7 @@ export default function Users() {
                         <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center text-[10px] font-bold shrink-0">
                           {(user.full_name?.[0] || user.email?.[0] || "U").toUpperCase()}
                         </div>
-                        <span className="text-base font-semibold truncate block max-w-[140px]" title={user.full_name || ""}>
+                        <span className="text-sm font-semibold truncate block max-w-[140px]" title={user.full_name || ""}>
                           {user.full_name || "Unnamed User"}
                         </span>
                       </div>
@@ -558,9 +558,9 @@ export default function Users() {
 
       {/* ── Client Profile Dialog ── */}
       <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto bg-background border border-border text-foreground rounded-2xl p-6 custom-scrollbar">
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto bg-background border border-border text-foreground rounded-xl p-5 custom-scrollbar">
           <DialogHeader className="border-b border-border pb-4 mb-4">
-            <DialogTitle className="text-xl font-bold flex items-center gap-3">
+            <DialogTitle className="text-base font-semibold flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-[#1e293b]/10 flex items-center justify-center text-xs font-black text-[#1e293b]">
                 {(selectedProfileUser?.full_name?.[0] || selectedProfileUser?.email?.[0] || "U").toUpperCase()}
               </div>
@@ -623,7 +623,7 @@ export default function Users() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {/* Column 1: Health History */}
                 <div className="space-y-4">
                   <h4 className="font-bold text-sm text-foreground uppercase tracking-widest border-b border-border pb-1.5">Health Questionnaire</h4>
