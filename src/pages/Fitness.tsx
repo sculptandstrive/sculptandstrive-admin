@@ -760,18 +760,79 @@ export default function Fitness() {
                 <Select
                   value={addExercise.category_id}
                   onValueChange={(value) =>
-                    setAddExercise({ ...addExercise, category_id: value })
+                    setAddExercise({ ...addExercise, category_id: value, sub_category: "" })
                   }
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent position="popper" side="bottom">
-                    {categories.map((cat) => (
+                    {categories.filter((cat) => !cat.name.includes(" > ")).map((cat) => (
                       <SelectItem key={cat.id} value={cat.id}>
                         {cat.name}
                       </SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Subcategory selection dropdown */}
+              {(() => {
+                const selectedParent = allCategories.find((cat: any) => cat.id === addExercise.category_id) as any;
+                const subs = selectedParent
+                  ? (allCategories as any[]).filter((cat: any) => cat.name.startsWith(`${selectedParent.name} > `))
+                  : [];
+                if (subs.length === 0) return null;
+                return (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Subcategory</p>
+                    <Select
+                      value={addExercise.sub_category || "none"}
+                      onValueChange={(value) =>
+                        setAddExercise({
+                          ...addExercise,
+                          sub_category: value === "none" ? "" : value,
+                        })
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a subcategory" />
+                      </SelectTrigger>
+                      <SelectContent position="popper" side="bottom">
+                        <SelectItem value="none">None</SelectItem>
+                        {subs.map((sub: any) => {
+                          const subName = sub.name.split(" > ")[1];
+                          return (
+                            <SelectItem key={sub.id} value={subName}>
+                              {subName}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                );
+              })()}
+
+              {/* Difficulty Level selection dropdown */}
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Difficulty Level</p>
+                <Select
+                  value={addExercise.difficulty}
+                  onValueChange={(value) =>
+                    setAddExercise({
+                      ...addExercise,
+                      difficulty: value,
+                    })
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select difficulty" />
+                  </SelectTrigger>
+                  <SelectContent position="popper" side="bottom">
+                    <SelectItem value="Beginner">Beginner</SelectItem>
+                    <SelectItem value="Intermediate">Intermediate</SelectItem>
+                    <SelectItem value="Advanced">Advanced</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1143,7 +1204,9 @@ export default function Fitness() {
                               id: ex.id,
                               name: ex.name,
                               category_id: ex.category_id,
-                              details: ex.description,
+                              details: ex.description || "",
+                              sub_category: ex.sub_category || "",
+                              difficulty: ex.difficulty || "",
                             });
                             setIsEditExerciseOpen(true);
                           }}
@@ -1195,6 +1258,7 @@ export default function Fitness() {
                                 setEditExercise({
                                   ...editExercise,
                                   category_id: value,
+                                  sub_category: "",
                                 })
                               }
                             >
@@ -1202,11 +1266,72 @@ export default function Fitness() {
                                 <SelectValue placeholder="Select a category" />
                               </SelectTrigger>
                               <SelectContent position="popper" side="bottom">
-                                {categories.map((cat) => (
+                                {categories.filter((cat) => !cat.name.includes(" > ")).map((cat) => (
                                   <SelectItem key={cat.id} value={cat.id}>
                                     {cat.name}
                                   </SelectItem>
                                 ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Subcategory selection dropdown */}
+                          {(() => {
+                            const selectedParent = allCategories.find((cat: any) => cat.id === editExercise.category_id) as any;
+                            const subs = selectedParent
+                              ? (allCategories as any[]).filter((cat: any) => cat.name.startsWith(`${selectedParent.name} > `))
+                              : [];
+                            if (subs.length === 0) return null;
+                            return (
+                              <div className="space-y-2">
+                                <p className="text-sm font-medium">Subcategory</p>
+                                <Select
+                                  value={editExercise.sub_category || "none"}
+                                  onValueChange={(value) =>
+                                    setEditExercise({
+                                      ...editExercise,
+                                      sub_category: value === "none" ? "" : value,
+                                    })
+                                  }
+                                >
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select a subcategory" />
+                                  </SelectTrigger>
+                                  <SelectContent position="popper" side="bottom">
+                                    <SelectItem value="none">None</SelectItem>
+                                    {subs.map((sub: any) => {
+                                      const subName = sub.name.split(" > ")[1];
+                                      return (
+                                        <SelectItem key={sub.id} value={subName}>
+                                          {subName}
+                                        </SelectItem>
+                                      );
+                                    })}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            );
+                          })()}
+
+                          {/* Difficulty Level selection dropdown */}
+                          <div className="space-y-2">
+                            <p className="text-sm font-medium">Difficulty Level</p>
+                            <Select
+                              value={editExercise.difficulty}
+                              onValueChange={(value) =>
+                                setEditExercise({
+                                  ...editExercise,
+                                  difficulty: value,
+                                })
+                              }
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Select difficulty" />
+                              </SelectTrigger>
+                              <SelectContent position="popper" side="bottom">
+                                <SelectItem value="Beginner">Beginner</SelectItem>
+                                <SelectItem value="Intermediate">Intermediate</SelectItem>
+                                <SelectItem value="Advanced">Advanced</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
