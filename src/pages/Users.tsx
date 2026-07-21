@@ -332,11 +332,20 @@ export default function Users() {
       toast({ title: "Restricted", description: "You cannot demote yourself.", variant: "destructive" });
       return;
     }
+    if (user.role === 'admin') {
+      toast({ title: "Restricted", description: "Admin accounts created in DB cannot be manually changed to user.", variant: "destructive" });
+      return;
+    }
     setRoleChangeDialog({ open: true, user, newRole });
   };
 
   const confirmRoleChange = async () => {
     if (!roleChangeDialog.user || !roleChangeDialog.newRole) return;
+    if (roleChangeDialog.user.role === 'admin') {
+      toast({ title: "Restricted", description: "Admin accounts created in DB cannot be manually changed to user.", variant: "destructive" });
+      setRoleChangeDialog({ open: false, user: null, newRole: null });
+      return;
+    }
     setUpdating(true);
     try {
       let newExpiry = new Date();
@@ -368,10 +377,15 @@ export default function Users() {
   return (
     <>
       <PageHeader title="User Management" description="Real-time access control.">
-        <Button onClick={fetchUsers} variant="outline" size="sm" disabled={loading}>
-          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-          Sync
-        </Button>
+        <div className="relative max-w-xs w-full">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search users..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8 bg-background text-xs"
+          />
+        </div>
       </PageHeader>
 
       <Card className="border-muted shadow-none overflow-hidden">
@@ -431,7 +445,6 @@ export default function Users() {
                     </TableCell>
                     <TableCell className="py-2 text-right pr-6">
                       <div className="flex items-center gap-2 justify-end">
-                        {/* ── NEW: Assign Group Button ── */}
                         <Button
                           variant="outline"
                           size="sm"
@@ -458,12 +471,16 @@ export default function Users() {
                         >
                           View Profile
                         </Button>
-                        <Select value={user.role} onValueChange={(val: AppRole) => handleRoleChange(user, val)} disabled={user.user_id === currentUser?.id || updating}>
-                          <SelectTrigger className="h-7 w-28 text-[10px] bg-background">
+                        <Select 
+                          value={user.role} 
+                          onValueChange={(val: AppRole) => handleRoleChange(user, val)} 
+                          disabled={user.role === 'admin' || user.user_id === currentUser?.id || updating}
+                        >
+                          <SelectTrigger className="h-7 w-28 text-[10px] bg-background disabled:opacity-75 disabled:cursor-not-allowed">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="admin" className="text-xs font-bold text-destructive">ADMIN</SelectItem>
+                            <SelectItem value="admin" className="text-xs font-bold text-destructive" disabled>ADMIN</SelectItem>
                             <SelectItem value="user" className="text-xs font-medium">USER</SelectItem>
                             <SelectItem value="trial_user" className="text-xs font-medium">TRIAL USER</SelectItem>
                             <SelectItem value="coach" className="text-xs font-medium text-indigo-600">COACH</SelectItem>
