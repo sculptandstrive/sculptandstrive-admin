@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "admin-sculptandstrive",
+  "name": "sculptandstrive-admin",
   "compatibility_date": "2026-07-08",
   "observability": {
     "enabled": true
