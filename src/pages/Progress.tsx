@@ -1,21 +1,14 @@
 import { useMemo, useState, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
 import {
   TrendingUp,
-  Target,
-  Award,
-  Scale,
-  LineChart,
   Loader2,
-  AlertCircle,
   Users,
-  Calendar,
+  LineChart,
 } from "lucide-react";
-import { DashboardLayout } from "@/components/DashboardLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   LineChart as RechartsLineChart,
   Line,
@@ -27,11 +20,6 @@ import {
   Area,
   AreaChart,
 } from "recharts";
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-);
 
 interface UserRole {
   id: string;
@@ -47,6 +35,7 @@ interface MemberGrowthData {
 }
 
 export default function ProgressPage() {
+
   const [allMembers, setAllMembers] = useState<any[]>([]);
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [memberGrowthData, setMemberGrowthData] = useState<MemberGrowthData[]>(
@@ -61,10 +50,10 @@ export default function ProgressPage() {
         setIsLoading(true);
         setError(null);
 
-        // Fetch progress records
+        // Fetch progress records with member name from profiles
         const { data: progressData, error: progressError } = await supabase
           .from("progress_records")
-          .select("*");
+          .select("*, profiles:user_id(full_name)");
 
         if (progressError) throw progressError;
         setAllMembers(progressData || []);
@@ -202,8 +191,8 @@ export default function ProgressPage() {
     const growthRate =
       lastMonthMembers > 0
         ? Math.round(
-            ((thisMonthMembers - lastMonthMembers) / lastMonthMembers) * 100,
-          )
+          ((thisMonthMembers - lastMonthMembers) / lastMonthMembers) * 100,
+        )
         : 100;
 
     return {
@@ -214,21 +203,7 @@ export default function ProgressPage() {
     };
   }, [userRoles]);
 
-  //  DYNAMIC CALCULATIONS
   const stats = useMemo(() => {
-    const goalsMet = allMembers.filter((m) => {
-      const start = m.start_weight;
-      const current = m.current_weight;
-      const target = m.target_weight;
-
-      if (target && start && current) {
-        return start > target
-          ? current <= target // Weight Loss Met
-          : current >= target; // Muscle Gain Met
-      }
-      return (m.progress_percentage || 0) >= 100;
-    }).length;
-
     return [
       {
         title: "Total Members",
@@ -242,14 +217,8 @@ export default function ProgressPage() {
         change: `${memberGrowthStats.thisWeek} this week`,
         icon: TrendingUp,
       },
-      // {
-      //   title: "Weight Goals Met",
-      //   value: goalsMet,
-      //   change: "+12%",
-      //   icon: Scale,
-      // },
     ];
-  }, [allMembers, memberGrowthStats]);
+  }, [memberGrowthStats]);
 
   const calculateProgress = (member: any) => {
     const { start_weight, target_weight, current_weight, progress_percentage } =
@@ -503,127 +472,44 @@ export default function ProgressPage() {
       </div>
 
       {/* Additional Stats Row */}
-      {/* <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mt-6"> */}
-      {/* <Card className="shadow-card">
-            <CardHeader>
-              <CardTitle>Member Goal Progress</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {allMembers.length === 0 ? (
-                  <p className="text-center py-10 text-muted-foreground italic">
-                    No records found in progress_records table.
-                  </p>
-                ) : (
-                  allMembers.slice(0, 5).map((member) => {
-                    const progressValue = calculateProgress(member);
-                    return (
-                      <div key={member.id} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <p className="font-medium">
-                            {member.user_name || "Member " + member.id}
-                          </p>
-                          <span className="font-bold text-accent">
-                            {progressValue}%
-                          </span>
-                        </div>
-                        <Progress value={progressValue} className="h-2" />
-                        <p className="text-xs text-muted-foreground italic">
-                          {member.target_weight
-                            ? `${member.start_weight}kg → ${member.current_weight}kg (Target: ${member.target_weight}kg)`
-                            : member.milestone_note || "Milestone goal"}
-                        </p>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </CardContent>
-          </Card> */}
-
-      {/* Recent Members */}
-      {/* <Card className="shadow-card">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mt-6">
+        <Card className="shadow-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-accent" />
-              Recent Members
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Latest users who joined the platform
-            </p>
+            <CardTitle>Member Goal Progress</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {userRoles.length === 0 ? (
-                <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-muted-foreground/30 bg-muted/10">
-                  <p className="text-center text-muted-foreground italic">
-                    No members found in user_roles table.
-                  </p>
-                </div>
+            <div className="space-y-6">
+              {allMembers.length === 0 ? (
+                <p className="text-center py-10 text-muted-foreground italic">
+                  No records found in progress_records table.
+                </p>
               ) : (
-                [...userRoles]
-                  .sort(
-                    (a, b) =>
-                      new Date(b.created_at).getTime() -
-                      new Date(a.created_at).getTime(),
-                  )
-                  .slice(0, 10)
-                  .map((role) => {
-                    const joinDate = new Date(role.created_at);
-                    const now = new Date();
-                    const diffInDays = Math.floor(
-                      (now.getTime() - joinDate.getTime()) /
-                        (1000 * 60 * 60 * 24),
-                    );
-
-                    let timeAgo = "";
-                    if (diffInDays === 0) {
-                      timeAgo = "Today";
-                    } else if (diffInDays === 1) {
-                      timeAgo = "Yesterday";
-                    } else if (diffInDays < 7) {
-                      timeAgo = `${diffInDays} days ago`;
-                    } else if (diffInDays < 30) {
-                      const weeks = Math.floor(diffInDays / 7);
-                      timeAgo = `${weeks} week${weeks > 1 ? "s" : ""} ago`;
-                    } else {
-                      const months = Math.floor(diffInDays / 30);
-                      timeAgo = `${months} month${months > 1 ? "s" : ""} ago`;
-                    }
-
-                    return (
-                      <div
-                        key={role.id}
-                        className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-accent/70 flex items-center justify-center">
-                            <Users className="w-4 h-4 text-accent-foreground" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-sm">
-                              User {role.user_id.slice(0, 8)}...
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {timeAgo}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs bg-accent/10 text-accent px-2 py-1 rounded-full font-medium">
-                            {role.role}
-                          </span>
-                        </div>
+                allMembers.slice(0, 5).map((member) => {
+                  const progressValue = calculateProgress(member);
+                  return (
+                    <div key={member.id} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="font-medium">
+                          {member.profiles?.full_name || member.user_name || "Member"}
+                        </p>
+                        <span className="font-bold text-accent">
+                          {progressValue}%
+                        </span>
                       </div>
-                    );
-                  })
+                      <Progress value={progressValue} className="h-2" />
+                      <p className="text-xs text-muted-foreground italic">
+                        {member.target_weight
+                          ? `${member.start_weight}kg → ${member.current_weight}kg (Target: ${member.target_weight}kg)`
+                          : member.milestone_note || "Milestone goal"}
+                      </p>
+                    </div>
+                  );
+                })
               )}
             </div>
           </CardContent>
-        </Card> */}
-
-      {/* Growth Rate Trends */}
-      {/* </div> */}
+        </Card>
+      </div>
     </>
   );
 }

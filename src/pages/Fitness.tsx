@@ -501,6 +501,18 @@ export default function Fitness() {
       return;
     }
 
+    // Get the current logged-in admin's user_id to store as who assigned this plan
+    const { data: { user: adminUser } } = await supabase.auth.getUser();
+    const adminUserId = adminUser?.id;
+
+    // Update the plan's created_by to the current admin so the user sees correct name
+    if (adminUserId) {
+      await supabase
+        .from("workout_plans")
+        .update({ created_by: adminUserId })
+        .eq("id", planId);
+    }
+
     const { error } = await supabase
       .from("client_workout_assignments")
       .insert({ client_id: userId, plan_id: planId });
@@ -575,21 +587,21 @@ export default function Fitness() {
         (allCategories as any[]).find((cat: any) => cat.id === ex.category_id)
           ?.name ?? "Unknown",
     }));
-    
+
     let result = mapped;
     if (activeFilter !== "All") {
       result = result.filter((ex: any) => ex.category_name === activeFilter);
     }
-    
+
     if (exerciseSearchQuery.trim()) {
       const q = exerciseSearchQuery.toLowerCase();
-      result = result.filter((ex: any) => 
+      result = result.filter((ex: any) =>
         ex.name?.toLowerCase().includes(q) ||
         ex.category_name?.toLowerCase().includes(q) ||
         (ex.sub_category && ex.sub_category.toLowerCase().includes(q))
       );
     }
-    
+
     return result;
   }, [allExercise, allCategories, activeFilter, exerciseSearchQuery]);
 
@@ -1012,17 +1024,17 @@ export default function Fitness() {
                           {parent.count} {parent.count === 1 ? "exercise" : "exercises"}
                         </span>
                         <Button
-                           variant="ghost"
-                           size="icon"
-                           className="h-8 w-8 text-[#2dd4bf] hover:text-[#14b8a6] hover:bg-slate-50 shrink-0"
-                           onClick={() => {
-                             setEditCategoryId(parent.id);
-                             setEditCategoryName(parent.name);
-                             setIsEditCategoryOpen(true);
-                           }}
-                         >
-                           <SquarePen className="w-4 h-4" />
-                         </Button>
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-[#2dd4bf] hover:text-[#14b8a6] hover:bg-slate-50 shrink-0"
+                          onClick={() => {
+                            setEditCategoryId(parent.id);
+                            setEditCategoryName(parent.name);
+                            setIsEditCategoryOpen(true);
+                          }}
+                        >
+                          <SquarePen className="w-4 h-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -1174,8 +1186,8 @@ export default function Fitness() {
                         )}
                         {ex.difficulty && (
                           <Badge variant="outline" className={`text-[9px] ${ex.difficulty === "Beginner" ? "bg-green-500/10 border-green-500/20 text-green-400" :
-                              ex.difficulty === "Intermediate" ? "bg-yellow-500/10 border-yellow-500/20 text-yellow-400" :
-                                "bg-red-500/10 border-red-500/20 text-red-400"
+                            ex.difficulty === "Intermediate" ? "bg-yellow-500/10 border-yellow-500/20 text-yellow-400" :
+                              "bg-red-500/10 border-red-500/20 text-red-400"
                             }`}>
                             {ex.difficulty}
                           </Badge>
@@ -1588,11 +1600,10 @@ export default function Fitness() {
                                                 setAdminWeightUnit("kg");
                                                 localStorage.setItem("admin_weight_unit", "kg");
                                               }}
-                                              className={`text-[9px] px-2 py-0.5 rounded font-bold transition-all ${
-                                                adminWeightUnit === "kg"
+                                              className={`text-[9px] px-2 py-0.5 rounded font-bold transition-all ${adminWeightUnit === "kg"
                                                   ? "bg-slate-700 text-[#2dd4bf]"
                                                   : "text-slate-400 hover:text-white"
-                                              }`}
+                                                }`}
                                             >
                                               KG
                                             </button>
@@ -1602,11 +1613,10 @@ export default function Fitness() {
                                                 setAdminWeightUnit("lbs");
                                                 localStorage.setItem("admin_weight_unit", "lbs");
                                               }}
-                                              className={`text-[9px] px-2 py-0.5 rounded font-bold transition-all ${
-                                                adminWeightUnit === "lbs"
+                                              className={`text-[9px] px-2 py-0.5 rounded font-bold transition-all ${adminWeightUnit === "lbs"
                                                   ? "bg-slate-700 text-[#2dd4bf]"
                                                   : "text-slate-400 hover:text-white"
-                                              }`}
+                                                }`}
                                             >
                                               LBS
                                             </button>

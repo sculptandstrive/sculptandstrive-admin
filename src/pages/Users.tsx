@@ -158,14 +158,23 @@ export default function Users() {
       const [profilesRes, rolesRes, coachClientsRes] = await Promise.all([
         supabase.from("profiles").select("*").order("created_at", { ascending: false }),
         supabase.from("user_roles").select("user_id, role"),
-        supabase.from("coach_clients").select("client_id, coach_id, profiles:coach_id(full_name)")
+        // Fix 3: ORDER BY created_at DESC so latest assignment wins
+        supabase.from("coach_clients")
+          .select("client_id, coach_id, profiles:coach_id(full_name)")
+          .order("created_at", { ascending: false })
       ]);
 
       if (profilesRes.error) throw profilesRes.error;
       if (rolesRes.error) throw rolesRes.error;
 
       const rolesMap = new Map(rolesRes.data.map(r => [r.user_id, r.role]));
-      const coachMap = new Map((coachClientsRes?.data || []).map((cc: any) => [cc.client_id, cc.profiles?.full_name]));
+      // Fix 3: only take the first (most-recent) coach per client_id
+      const coachMap = new Map<string, string | null>();
+      for (const cc of (coachClientsRes?.data || []) as any[]) {
+        if (!coachMap.has(cc.client_id)) {
+          coachMap.set(cc.client_id, cc.profiles?.full_name ?? null);
+        }
+      }
 
       const formattedUsers: UserWithRole[] = (profilesRes.data || []).map((profile) => ({
         id: profile.id,
@@ -213,11 +222,13 @@ export default function Users() {
   const handleDirectAssignCoach = async (clientId: string, coachId: string) => {
     try {
       setAssigning(true);
-      // Clear existing assignment if any
-      await supabase
+      // Fix 5: throw if DELETE fails to prevent orphaned rows
+      const { error: deleteError } = await supabase
         .from("coach_clients")
         .delete()
         .eq("client_id", clientId);
+
+      if (deleteError) throw deleteError;
 
       if (coachId && coachId !== "none") {
         // Insert new assignment
@@ -234,14 +245,18 @@ export default function Users() {
         toast({ title: "Success", description: "Coach unassigned successfully." });
       }
 
-      // Find the coach name to update the local dialog state in real-time
-      const assignedCoach = coachesList.find(c => c.id === coachId);
+      // Fix 4: resolve coach name, then optimistically update both list card and dialog
+      const assignedCoach = coachesList.find((c) => c.id === coachId);
       const coachName = assignedCoach ? assignedCoach.full_name : null;
 
-      // Update selected profile user locally so the dropdown reflects the change instantly
-      setSelectedProfileUser(prev => prev ? { ...prev, coach_name: coachName } : null);
+      setUsers((prev) =>
+        prev.map((u) => (u.user_id === clientId ? { ...u, coach_name: coachName } : u))
+      );
 
-      fetchUsers(); // Refresh user list in background
+      // Update selected profile dialog state
+      setSelectedProfileUser((prev) => (prev ? { ...prev, coach_name: coachName } : null));
+
+      fetchUsers(); // Refresh full list in background
     } catch (error: any) {
       toast({
         title: "Failed to assign coach",
