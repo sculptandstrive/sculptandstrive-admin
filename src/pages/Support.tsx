@@ -89,7 +89,7 @@ export default function Support() {
         <Card className="border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] border-l-4 border-l-[#EF4444] bg-white">
           <CardContent className="pt-5 flex justify-between items-center">
             <div>
-              <p className="text-xs text-[#64748B] font-semibold">NEW TICKETS</p>
+              <p className="text-[10px] text-[#64748B] font-bold uppercase tracking-wider">NEW TICKETS</p>
               <p className="text-2xl font-bold text-[#111827]">{tickets.filter(t => t.status === 'open').length}</p>
             </div>
             <div className="p-2.5 rounded-[10px] bg-[#EF4444]/10 text-[#EF4444]"><AlertCircle className="w-4 h-4" /></div>
@@ -98,7 +98,7 @@ export default function Support() {
         <Card className="border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] border-l-4 border-l-[#F59E0B] bg-white">
           <CardContent className="pt-5 flex justify-between items-center">
             <div>
-              <p className="text-xs text-[#64748B] font-semibold">BEING VIEWED</p>
+              <p className="text-[10px] text-[#64748B] font-bold uppercase tracking-wider">BEING VIEWED</p>
               <p className="text-2xl font-bold text-[#111827]">{tickets.filter(t => t.status === 'in_progress').length}</p>
             </div>
             <div className="p-2.5 rounded-[10px] bg-[#F59E0B]/10 text-[#F59E0B]"><Eye className="w-4 h-4" /></div>
@@ -107,7 +107,7 @@ export default function Support() {
         <Card className="border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] border-l-4 border-l-[#10B981] bg-white">
           <CardContent className="pt-5 flex justify-between items-center">
             <div>
-              <p className="text-xs text-[#64748B] font-semibold">CLOSED / SOLVED</p>
+              <p className="text-[10px] text-[#64748B] font-bold uppercase tracking-wider">CLOSED / SOLVED</p>
               <p className="text-2xl font-bold text-[#111827]">{tickets.filter(t => t.status === 'resolved').length}</p>
             </div>
             <div className="p-2.5 rounded-[10px] bg-[#10B981]/10 text-[#10B981]"><CheckCircle className="w-4 h-4" /></div>
@@ -119,7 +119,7 @@ export default function Support() {
         {/* Support Tickets Column */}
         <Card className="lg:col-span-3 border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] bg-white">
           <CardHeader className="flex flex-row items-center justify-between border-b border-[#E2E8F0] pb-4">
-            <CardTitle className="text-[#111827] font-bold">Live Support Tickets</CardTitle>
+            <CardTitle className="text-base font-bold text-[#111827]">Live Support Tickets</CardTitle>
             <Button variant="ghost" size="sm" onClick={fetchData} disabled={loading} className="text-[#64748B] hover:bg-[#07AC7D]/10 rounded-[8px]">
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </Button>
@@ -127,7 +127,7 @@ export default function Support() {
           <CardContent className="pt-6">
             <div className="space-y-4">
               {tickets.length === 0 ? (
-                <div className="text-center py-10 text-[#64748B]">No active tickets.</div>
+                <div className="text-center py-10 text-xs text-[#64748B]">No active tickets.</div>
               ) : (
                 tickets.map((ticket) => (
                   <div key={ticket.id} className="p-4 rounded-[14px] border border-[#E2E8F0] bg-[#F5F7F9] space-y-3 hover:shadow-[0_4px_18px_rgba(15,23,42,0.08)] transition-shadow duration-150">
@@ -135,25 +135,25 @@ export default function Support() {
                       <div className="flex gap-3">
                         {getPriorityIcon(ticket.priority || "high")}
                         <div>
-                          <p className="font-bold text-[#111827]">{ticket.user_name}</p>
+                          <p className="text-sm font-bold text-[#111827]">{ticket.user_name}</p>
                           <p className="text-xs text-[#64748B]">{new Date(ticket.created_at).toLocaleString()}</p>
                         </div>
                       </div>
                       <div className="flex gap-2">{getStatusBadge(ticket.status)}</div>
                     </div>
-                    <div className="p-3 bg-white rounded-[8px] border border-[#E2E8F0] text-sm italic text-[#334155] break-words overflow-hidden">
+                    <div className="p-3 bg-white rounded-[8px] border border-[#E2E8F0] text-xs font-medium text-[#334155] break-words overflow-hidden">
                       "{ticket.message}"
                     </div>
                     <div className="flex justify-between items-center pt-2">
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="border-[#E2E8F0] text-[#334155] hover:bg-[#07AC7D]/10 hover:text-[#07AC7D] rounded-[8px]" onClick={() => updateStatus(ticket.id, "in_progress")}>View</Button>
-                        <Button variant="outline" size="sm" className="text-[#07AC7D] border-[#07AC7D]/30 hover:bg-[#07AC7D]/10 rounded-[8px]" onClick={() => updateStatus(ticket.id, "resolved")}>Close</Button>
+                        <Button variant="outline" size="sm" className="text-xs font-semibold border-[#E2E8F0] text-[#334155] hover:bg-[#07AC7D]/10 hover:text-[#07AC7D] rounded-[8px]" onClick={() => updateStatus(ticket.id, "in_progress")}>View</Button>
+                        <Button variant="outline" size="sm" className="text-xs font-semibold text-[#07AC7D] border-[#07AC7D]/30 hover:bg-[#07AC7D]/10 rounded-[8px]" onClick={() => updateStatus(ticket.id, "resolved")}>Close</Button>
                       </div>
                       <div className="flex gap-2">
                         <Button variant="ghost" size="icon" className="text-[#EF4444] hover:bg-[#EF4444]/10 rounded-[8px]" onClick={() => deleteTicket(ticket.id)}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
-                        <Button size="sm" className="bg-[#07AC7D] hover:bg-[#07AC7D]/90 text-white rounded-[8px] transition-colors duration-150" onClick={() => openWhatsApp(ticket)}>
+                        <Button size="sm" className="text-xs font-semibold bg-[#07AC7D] hover:bg-[#07AC7D]/90 text-white rounded-[8px] transition-colors duration-150" onClick={() => openWhatsApp(ticket)}>
                           <MessageSquare className="w-4 h-4 mr-2" /> Admin WP
                         </Button>
                       </div>

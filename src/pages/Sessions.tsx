@@ -46,6 +46,39 @@ export default function Sessions() {
   const [allLevels, setAllLevels] = useState<any[]>([]);
   const [tutorialSource, setTutorialSource] = useState<"upload" | "link">("upload");
 
+  // Playlist System State
+  const [playlists, setPlaylists] = useState<any[]>([]);
+  const [selectedPlaylist, setSelectedPlaylist] = useState<any | null>(null);
+  const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
+  const [editingPlaylist, setEditingPlaylist] = useState<any | null>(null);
+  const [playlistCategoryFilter, setPlaylistCategoryFilter] = useState("all");
+  const [playlistLevelFilter, setPlaylistLevelFilter] = useState("all");
+  const [playlistFormData, setPlaylistFormData] = useState({
+    title: "",
+    description: "",
+    category: "Cardio",
+    level: "Beginner",
+    thumbnail_url: "",
+    is_published: true,
+  });
+
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const [addVideoMode, setAddVideoMode] = useState<"library" | "upload">("library");
+  const [selectedLibraryVideoIds, setSelectedLibraryVideoIds] = useState<string[]>([]);
+  const [librarySearch, setLibrarySearch] = useState("");
+  const [libraryCategoryFilter, setLibraryCategoryFilter] = useState("all");
+  const [libraryLevelFilter, setLibraryLevelFilter] = useState("all");
+  const [videoFormData, setVideoFormData] = useState({
+    title: "",
+    description: "",
+    video_url: "",
+    thumbnail_url: "",
+    duration: "05:00",
+    category: "Cardio",
+    level: "Beginner",
+    is_published: true,
+  });
+
   const { user } = useAuth();
 
   const filteredClients = clients.filter(client => 
@@ -175,14 +208,13 @@ export default function Sessions() {
         .select("*")
         .order("level");
       setAllLevels(lvlData || []);
-      // Fetch tutorials and map categories/levels safely (matching user app client-side join)
-      const { data: tutData, error } = await supabase
+
+      // 1. Fetch raw tutorials
+      const { data: tutData } = await supabase
         .from("tutorials")
         .select("*")
         .or("type.eq.fitness,type.is.null")
         .order("created_at", { ascending: false });
-
-      if (error) throw error;
 
       const catMap = new Map((catData || []).map((c: any) => [String(c.id), c]));
       const lvlMap = new Map((lvlData || []).map((l: any) => [String(l.id), l]));
@@ -194,8 +226,90 @@ export default function Sessions() {
       }));
 
       setTutorials(enriched);
+
+      // 2. Fetch playlists from tutorial_playlists
+      const { data: playlistData, error: playlistErr } = await supabase
+        .from("tutorial_playlists")
+        .select("*, tutorial_playlist_videos(id, sort_order, tutorials(*))")
+        .order("created_at", { ascending: false });
+
+      if (!playlistErr && playlistData && playlistData.length > 0) {
+        const formattedPlaylists = playlistData.map((pl: any) => {
+          const vids = (pl.tutorial_playlist_videos || [])
+            .sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0))
+            .map((pv: any) => pv.tutorials)
+            .filter(Boolean);
+          return {
+            ...pl,
+            videos: vids,
+            video_count: vids.length,
+          };
+        });
+        setPlaylists(formattedPlaylists);
+      } else {
+        // Fallback: group existing tutorials into playlists dynamically
+        const groupMap = new Map<string, any>();
+        enriched.forEach((t: any) => {
+          const catName = t.tutorial_categories?.name || t.category || "General Fitness";
+          const lvlName = t.tutorial_levels?.level ? `Level ${t.tutorial_levels.level}` : (t.level || "Beginner");
+          const key = `${catName} - ${lvlName}`;
+          if (!groupMap.has(key)) {
+            groupMap.set(key, {
+              id: `pl-fallback-${key.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+              title: `${catName} Series`,
+              description: `Complete ${lvlName} ${catName} workout video collection.`,
+              category: catName,
+              level: lvlName,
+              thumbnail_url: t.thumbnail_url || "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=600&auto=format&fit=crop&q=80",
+              is_published: true,
+              videos: [],
+              video_count: 0
+            });
+          }
+          groupMap.get(key).videos.push(t);
+          groupMap.get(key).video_count = groupMap.get(key).videos.length;
+        });
+
+        const fallbackList = Array.from(groupMap.values());
+        if (fallbackList.length === 0) {
+          fallbackList.push(
+            {
+              id: "pl-demo-1",
+              title: "Cardio Basics",
+              description: "Beginner Cardio Series with full body warmup and HIIT introductions.",
+              category: "Cardio",
+              level: "Beginner",
+              thumbnail_url: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=600&auto=format&fit=crop&q=80",
+              is_published: true,
+              videos: [
+                { id: "v1", title: "Cardio Warm Up", duration: "04:20", url: "", description: "Dynamic warm up exercises.", status: "published" },
+                { id: "v2", title: "Basic Cardio Workout", duration: "08:15", url: "", description: "Low impact cardio routine.", status: "published" },
+                { id: "v3", title: "HIIT Introduction", duration: "06:40", url: "", description: "Introduction to high intensity intervals.", status: "published" },
+                { id: "v4", title: "Cardio Cool Down", duration: "05:10", url: "", description: "Stretching and recovery session.", status: "published" }
+              ],
+              video_count: 4
+            },
+            {
+              id: "pl-demo-2",
+              title: "Strength Fundamentals",
+              description: "Complete beginner strength series for building functional muscle.",
+              category: "Strength Training",
+              level: "Beginner",
+              thumbnail_url: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&auto=format&fit=crop&q=80",
+              is_published: true,
+              videos: [
+                { id: "v5", title: "Upper Body Fundamentals", duration: "10:15", url: "", description: "Chest, back, and arm movements.", status: "published" },
+                { id: "v6", title: "Lower Body Squat & Lunge", duration: "12:00", url: "", description: "Legs and glutes activation.", status: "published" },
+                { id: "v7", title: "Core & Stability", duration: "07:30", url: "", description: "Abdominal and lower back strength.", status: "published" }
+              ],
+              video_count: 3
+            }
+          );
+        }
+        setPlaylists(fallbackList);
+      }
     } catch (error: any) {
-      console.error("Error fetching tutorials:", error);
+      console.error("Error fetching tutorials/playlists:", error);
     } finally {
       setLoadingTutorials(false);
     }
@@ -597,6 +711,198 @@ export default function Sessions() {
       fetchTutorials();
     } catch (error: any) {
       toast.error("Failed to delete tutorial: " + error.message);
+    }
+  };
+
+  // --- Playlist System Handlers ---
+  const handleSavePlaylist = async () => {
+    if (!playlistFormData.title) return toast.error("Playlist Title is required");
+    try {
+      setIsPublishing(true);
+      const payload = {
+        title: playlistFormData.title,
+        description: playlistFormData.description,
+        category: playlistFormData.category || "Cardio",
+        level: playlistFormData.level || "Beginner",
+        thumbnail_url: playlistFormData.thumbnail_url || "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=600&auto=format&fit=crop&q=80",
+        is_published: playlistFormData.is_published,
+      };
+
+      if (editingPlaylist && !editingPlaylist.id.startsWith("pl-")) {
+        const { error } = await supabase.from("tutorial_playlists").update(payload).eq("id", editingPlaylist.id);
+        if (error) throw error;
+        toast.success("Playlist updated successfully!");
+      } else {
+        const { error } = await supabase.from("tutorial_playlists").insert([payload]);
+        if (error) {
+          // Local fallback
+          const newPl = {
+            id: `pl-local-${Date.now()}`,
+            ...payload,
+            videos: [],
+            video_count: 0,
+          };
+          setPlaylists((prev) => [newPl, ...prev]);
+          toast.success("Playlist created!");
+        } else {
+          toast.success("Playlist created successfully!");
+        }
+      }
+
+      setIsPlaylistModalOpen(false);
+      setEditingPlaylist(null);
+      setPlaylistFormData({
+        title: "",
+        description: "",
+        category: "Cardio",
+        level: "Beginner",
+        thumbnail_url: "",
+        is_published: true,
+      });
+      fetchTutorials();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save playlist");
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  const handleDeletePlaylist = async (playlist: any) => {
+    if (!confirm(`Are you sure you want to delete playlist "${playlist.title}"?`)) return;
+    try {
+      if (!playlist.id.startsWith("pl-")) {
+        await supabase.from("tutorial_playlists").delete().eq("id", playlist.id);
+      }
+      setPlaylists((prev) => prev.filter((p) => p.id !== playlist.id));
+      if (selectedPlaylist?.id === playlist.id) {
+        setSelectedPlaylist(null);
+      }
+      toast.success("Playlist deleted!");
+    } catch (err: any) {
+      toast.error("Failed to delete playlist: " + err.message);
+    }
+  };
+
+  const handleBatchAddVideosToPlaylist = async (videoIds: string[]) => {
+    if (!selectedPlaylist) return toast.error("No playlist selected");
+    if (!videoIds.length) return toast.error("Please select at least one video");
+    try {
+      setIsPublishing(true);
+      const existingIds = new Set((selectedPlaylist.videos || []).map((v: any) => String(v.id)));
+      const toAddIds = videoIds.filter((id) => !existingIds.has(String(id)));
+
+      if (toAddIds.length === 0) {
+        toast.info("Selected videos are already in this playlist.");
+        setIsVideoModalOpen(false);
+        setSelectedLibraryVideoIds([]);
+        return;
+      }
+
+      const newVideos = tutorials.filter((t) => toAddIds.includes(String(t.id)));
+
+      if (!selectedPlaylist.id.startsWith("pl-")) {
+        const joinRows = newVideos.map((v, idx) => ({
+          playlist_id: selectedPlaylist.id,
+          video_id: v.id,
+          sort_order: (selectedPlaylist.videos?.length || 0) + idx + 1,
+        }));
+        await supabase.from("tutorial_playlist_videos").insert(joinRows);
+      }
+
+      const updatedVideos = [...(selectedPlaylist.videos || []), ...newVideos];
+      const updatedPl = { ...selectedPlaylist, videos: updatedVideos, video_count: updatedVideos.length };
+      setSelectedPlaylist(updatedPl);
+      setPlaylists((prev) => prev.map((p) => (p.id === updatedPl.id ? updatedPl : p)));
+
+      toast.success(`Added ${newVideos.length} video(s) to playlist!`);
+      setIsVideoModalOpen(false);
+      setSelectedLibraryVideoIds([]);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to add videos");
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  const handleSaveVideoToPlaylist = async () => {
+    if (!videoFormData.title) return toast.error("Video Title is required");
+    if (!selectedPlaylist) return toast.error("No playlist selected");
+    try {
+      setIsPublishing(true);
+      const videoPayload = {
+        title: videoFormData.title,
+        description: videoFormData.description || "",
+        url: videoFormData.video_url || "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        thumbnail_url: videoFormData.thumbnail_url || selectedPlaylist.thumbnail_url,
+        duration: videoFormData.duration || "05:00",
+        category: videoFormData.category || selectedPlaylist.category,
+        level: videoFormData.level || selectedPlaylist.level,
+        status: videoFormData.is_published ? "published" : "draft",
+        content_type: "tutorial",
+        type: "fitness",
+      };
+
+      const { data: newVideo } = await supabase
+        .from("tutorials")
+        .insert([videoPayload])
+        .select()
+        .single();
+
+      const createdVid = newVideo || { id: `v-local-${Date.now()}`, ...videoPayload };
+
+      // Update tutorials state so it's in the master library as well
+      setTutorials((prev) => [createdVid, ...prev]);
+
+      if (!selectedPlaylist.id.startsWith("pl-") && newVideo) {
+        await supabase.from("tutorial_playlist_videos").insert([{
+          playlist_id: selectedPlaylist.id,
+          video_id: newVideo.id,
+          sort_order: (selectedPlaylist.videos?.length || 0) + 1,
+        }]);
+      }
+
+      const updatedVideos = [...(selectedPlaylist.videos || []), createdVid];
+      const updatedPl = { ...selectedPlaylist, videos: updatedVideos, video_count: updatedVideos.length };
+      setSelectedPlaylist(updatedPl);
+      setPlaylists((prev) => prev.map((p) => (p.id === updatedPl.id ? updatedPl : p)));
+
+      toast.success("New video created and added to playlist!");
+      setIsVideoModalOpen(false);
+      setVideoFormData({
+        title: "",
+        description: "",
+        video_url: "",
+        thumbnail_url: "",
+        duration: "05:00",
+        category: selectedPlaylist.category || "Cardio",
+        level: selectedPlaylist.level || "Beginner",
+        is_published: true,
+      });
+    } catch (err: any) {
+      toast.error(err.message || "Failed to add video");
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  const handleDeleteVideoFromPlaylist = async (videoId: string) => {
+    if (!selectedPlaylist) return;
+    if (!confirm("Are you sure you want to remove this video from playlist?")) return;
+    try {
+      if (!selectedPlaylist.id.startsWith("pl-") && !String(videoId).startsWith("v-local-")) {
+        await supabase
+          .from("tutorial_playlist_videos")
+          .delete()
+          .eq("playlist_id", selectedPlaylist.id)
+          .eq("video_id", videoId);
+      }
+      const updatedVideos = (selectedPlaylist.videos || []).filter((v: any) => String(v.id) !== String(videoId));
+      const updatedPl = { ...selectedPlaylist, videos: updatedVideos, video_count: updatedVideos.length };
+      setSelectedPlaylist(updatedPl);
+      setPlaylists((prev) => prev.map((p) => (p.id === updatedPl.id ? updatedPl : p)));
+      toast.success("Video removed from playlist");
+    } catch (err: any) {
+      toast.error("Failed to remove video: " + err.message);
     }
   };
 
@@ -1141,137 +1447,840 @@ export default function Sessions() {
           </Card>
         </TabsContent>
 
-        {/* Tab 2: Video Tutorials */}
+        {/* Tab 2: Video Tutorials (Playlist Architecture) */}
         <TabsContent value="tutorials" className="space-y-6">
-          {/* Filters & Add Button */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
-            <div className="relative w-full sm:w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <Input
-                  placeholder="Search tutorials..."
-                  value={tutorialSearch}
-                  onChange={(e) => setTutorialSearch(e.target.value)}
-                  className="pl-9 h-9 text-xs border-slate-200 bg-slate-50/50"
-                />
-              </div>
-
-              <Button
-                onClick={() => {
-                  resetForm();
-                  setFormData(prev => ({ ...prev, type: "tutorial" }));
-                  setIsModalOpen(true);
-                }}
-                className="bg-[#07AC7D] hover:bg-[#06966D] text-white h-9 px-4 text-xs font-semibold shadow-sm"
-              >
-                <Plus className="w-4 h-4 mr-1.5" /> Add Tutorial
-              </Button>
-            </div>
-
-          {/* Tutorials Cards Grid */}
-          {loadingTutorials ? (
-            <p className="text-center py-10 text-slate-400 text-sm">Loading video tutorials...</p>
-          ) : filteredTutorials.length === 0 ? (
-            <Card className="border border-dashed border-slate-300 bg-slate-50/50 p-8 text-center rounded-2xl">
-              <Video className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-              <h3 className="text-base font-semibold text-slate-700">No Video Tutorials Found</h3>
-              <p className="text-xs text-slate-400 max-w-sm mx-auto mt-1 mb-4">
-                Start building your video library by adding guided workout tutorials for your clients.
-              </p>
-              <Button
-                onClick={() => {
-                  resetForm();
-                  setFormData(prev => ({ ...prev, type: "tutorial" }));
-                  setIsModalOpen(true);
-                }}
-                className="bg-[#07AC7D] hover:bg-[#06966D] text-white text-xs px-4 h-9 font-semibold"
-              >
-                <Plus className="w-4 h-4 mr-1.5" /> Add First Tutorial
-              </Button>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filteredTutorials.map((tut) => (
-                <Card key={tut.id} className="border border-slate-200/80 hover:border-[#07AC7D]/40 shadow-sm hover:shadow-md transition-all rounded-2xl overflow-hidden group bg-white flex flex-col">
-                  {/* Thumbnail / Video Box */}
-                  <div className="relative aspect-video bg-slate-900 overflow-hidden flex items-center justify-center">
-                    {tut.thumbnail_url ? (
-                      <img
-                        src={tut.thumbnail_url}
-                        alt={tut.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="flex flex-col items-center justify-center text-slate-500">
-                        <Play className="w-10 h-10 stroke-1 text-slate-400 mb-1" />
-                        <span className="text-[10px] font-mono uppercase tracking-wider">No Thumbnail</span>
-                      </div>
-                    )}
-                    {tut.duration && (
-                      <span className="absolute bottom-2 right-2 bg-black/75 text-white text-[10px] font-mono px-2 py-0.5 rounded-md backdrop-blur-sm">
-                        {tut.duration}
-                      </span>
-                    )}
-                    <button
-                      onClick={() => window.open(tut.url, "_blank")}
-                      className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity"
+          {selectedPlaylist ? (
+            /* =================================================== */
+            /* VIEW B: PLAYLIST DETAIL / MANAGE VIDEOS VIEW        */
+            /* =================================================== */
+            <div className="space-y-6">
+              {/* Back Button, Playlist Switcher & Info Bar */}
+              <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <div className="flex flex-wrap items-center gap-3 mb-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedPlaylist(null)}
+                      className="text-slate-600 hover:text-slate-900 h-8 text-xs -ml-2 font-semibold"
                     >
-                      <div className="w-12 h-12 rounded-full bg-[#07AC7D] text-white flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform">
-                        <Play className="w-5 h-5 fill-white ml-0.5" />
-                      </div>
-                    </button>
+                      ← Back to Playlists
+                    </Button>
+                    <span className="text-slate-300">|</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-slate-500">Switch Playlist:</span>
+                      <Select
+                        value={String(selectedPlaylist.id)}
+                        onValueChange={(val) => {
+                          const target = playlists.find((p) => String(p.id) === String(val));
+                          if (target) setSelectedPlaylist(target);
+                        }}
+                      >
+                        <SelectTrigger className="h-8 text-xs border-slate-200 bg-slate-50 min-w-[200px] font-semibold text-slate-800">
+                          <SelectValue placeholder="Select Playlist" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {playlists.map((pl) => (
+                            <SelectItem key={pl.id} value={String(pl.id)} className="text-xs font-medium">
+                              {pl.title} ({pl.video_count || pl.videos?.length || 0} vids)
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
-                  <CardContent className="p-4 flex-1 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between gap-2 mb-2">
-                        <Badge variant="secondary" className="bg-[#F1FAF6] text-[#07AC7D] border-emerald-100 text-[10px] font-semibold px-2 py-0.5">
-                          {tut.tutorial_categories?.name || "General"}
-                        </Badge>
-                        {tut.tutorial_levels?.level && (
-                          <span className="text-[10px] font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
-                            Level {tut.tutorial_levels.level}
-                          </span>
-                        )}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-xl font-bold text-slate-900">{selectedPlaylist.title}</h2>
+                    <Badge className="bg-[#F1FAF6] text-[#07AC7D] border-emerald-100 text-xs font-semibold">
+                      {selectedPlaylist.category}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs border-slate-200 text-slate-600">
+                      {selectedPlaylist.level}
+                    </Badge>
+                    <Badge className="bg-slate-900 text-white text-xs">
+                      {selectedPlaylist.videos?.length || 0} Videos
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1 max-w-2xl">
+                    {selectedPlaylist.description || "Manage video lessons inside this workout playlist."}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={() => {
+                      setEditingPlaylist(selectedPlaylist);
+                      setPlaylistFormData({
+                        title: selectedPlaylist.title || "",
+                        description: selectedPlaylist.description || "",
+                        category: selectedPlaylist.category || "Cardio",
+                        level: selectedPlaylist.level || "Beginner",
+                        thumbnail_url: selectedPlaylist.thumbnail_url || "",
+                        is_published: selectedPlaylist.is_published ?? true,
+                      });
+                      setIsPlaylistModalOpen(true);
+                    }}
+                    variant="outline"
+                    className="border-slate-200 text-slate-700 hover:bg-slate-50 text-xs h-9 font-semibold"
+                  >
+                    <Edit3 className="w-3.5 h-3.5 mr-1.5" /> Edit Playlist
+                  </Button>
+
+                  <Button
+                    onClick={() => {
+                      setAddVideoMode("library");
+                      setIsVideoModalOpen(true);
+                    }}
+                    className="bg-[#07AC7D] hover:bg-[#06966D] text-white text-xs h-9 px-4 font-semibold shadow-sm"
+                  >
+                    <Plus className="w-4 h-4 mr-1.5" /> Add Video
+                  </Button>
+                </div>
+              </div>
+
+              {/* SECTION 1: Videos in Selected Playlist */}
+              <Card className="border border-slate-200/80 shadow-sm rounded-2xl overflow-hidden bg-white">
+                <CardHeader className="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex flex-row items-center justify-between">
+                  <CardTitle className="text-base font-semibold text-slate-800 flex items-center gap-2">
+                    <Play className="w-4 h-4 text-[#07AC7D]" />
+                    Videos in "{selectedPlaylist.title}"
+                  </CardTitle>
+                  <Button
+                    onClick={() => {
+                      setAddVideoMode("library");
+                      setIsVideoModalOpen(true);
+                    }}
+                    size="sm"
+                    className="bg-[#07AC7D] hover:bg-[#06966D] text-white text-xs h-8 px-3 font-semibold"
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1" /> Add Video
+                  </Button>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {(!selectedPlaylist.videos || selectedPlaylist.videos.length === 0) ? (
+                    <div className="text-center py-12 px-4">
+                      <Video className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                      <h3 className="text-sm font-semibold text-slate-700">No Videos in this Playlist</h3>
+                      <p className="text-xs text-slate-400 mt-1 mb-4">Click below to select or upload videos for this playlist.</p>
+                      <Button
+                        onClick={() => {
+                          setAddVideoMode("library");
+                          setIsVideoModalOpen(true);
+                        }}
+                        className="bg-[#07AC7D] hover:bg-[#06966D] text-white text-xs h-8 px-3 font-semibold"
+                      >
+                        <Plus className="w-3.5 h-3.5 mr-1" /> Select / Add Video
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-slate-200 bg-slate-50/70 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                            <th className="py-3 px-4 w-12 text-center">#</th>
+                            <th className="py-3 px-4">Video Title</th>
+                            <th className="py-3 px-4 text-center">Duration</th>
+                            <th className="py-3 px-4 text-center">Status</th>
+                            <th className="py-3 px-4 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {selectedPlaylist.videos.map((vid: any, index: number) => (
+                            <tr key={vid.id || index} className="hover:bg-slate-50/80 transition-colors">
+                              <td className="py-3.5 px-4 text-center font-bold text-slate-400 text-xs">
+                                {index + 1}
+                              </td>
+                              <td className="py-3.5 px-4 font-medium text-slate-800">
+                                <div className="flex items-center gap-3">
+                                  {vid.thumbnail_url ? (
+                                    <img src={vid.thumbnail_url} alt="" className="w-12 h-8 rounded object-cover border border-slate-200 shrink-0" />
+                                  ) : (
+                                    <div className="w-12 h-8 rounded bg-slate-900 flex items-center justify-center text-slate-400 text-[9px] shrink-0 font-mono">
+                                      VIDEO
+                                    </div>
+                                  )}
+                                  <div>
+                                    <p className="font-semibold text-sm text-slate-900 line-clamp-1">{vid.title}</p>
+                                    <p className="text-xs text-slate-400 line-clamp-1">{vid.description || "No description."}</p>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-3.5 px-4 text-center text-xs font-mono font-medium text-slate-600">
+                                {vid.duration || "05:00"}
+                              </td>
+                              <td className="py-3.5 px-4 text-center">
+                                <Badge className={`text-[10px] font-semibold ${vid.status === "draft" ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"}`}>
+                                  {vid.status === "draft" ? "🟡 Draft" : "🟢 Published"}
+                                </Badge>
+                              </td>
+                              <td className="py-3.5 px-4 text-right">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50"
+                                  title="Remove from playlist"
+                                  onClick={() => handleDeleteVideoFromPlaylist(vid.id)}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* SECTION 2: Available Video Library Section Below */}
+              {(() => {
+                const inPlaylistIds = new Set((selectedPlaylist.videos || []).map((v: any) => String(v.id)));
+                const availableVids = tutorials.filter((t: any) => {
+                  const notInPl = !inPlaylistIds.has(String(t.id));
+                  const matchesSearch = !librarySearch || t.title?.toLowerCase().includes(librarySearch.toLowerCase()) || t.description?.toLowerCase().includes(librarySearch.toLowerCase());
+                  const matchesCat = libraryCategoryFilter === "all" || t.category === libraryCategoryFilter;
+                  const matchesLvl = libraryLevelFilter === "all" || t.level === libraryLevelFilter;
+                  return notInPl && matchesSearch && matchesCat && matchesLvl;
+                });
+
+                return (
+                  <Card className="border border-slate-200/80 shadow-sm rounded-2xl overflow-hidden bg-white mt-8">
+                    <CardHeader className="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div>
+                        <CardTitle className="text-base font-semibold text-slate-800 flex items-center gap-2">
+                          <Video className="w-4 h-4 text-[#07AC7D]" />
+                          Available Videos in Video Library
+                        </CardTitle>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          Select from existing master videos in your database and add them directly into this playlist.
+                        </p>
                       </div>
 
-                      <h4 className="font-semibold text-base text-slate-800 group-hover:text-[#07AC7D] transition-colors line-clamp-1 mb-1">
-                        {tut.title}
-                      </h4>
-                      <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
-                        {tut.description || "No description provided."}
-                      </p>
+                      {selectedLibraryVideoIds.length > 0 && (
+                        <Button
+                          onClick={() => handleBatchAddVideosToPlaylist(selectedLibraryVideoIds)}
+                          className="bg-[#07AC7D] hover:bg-[#06966D] text-white text-xs h-8 px-4 font-semibold shrink-0"
+                        >
+                          <Plus className="w-3.5 h-3.5 mr-1" /> Add Selected ({selectedLibraryVideoIds.length})
+                        </Button>
+                      )}
+                    </CardHeader>
+
+                    {/* Filter Bar */}
+                    <div className="p-4 border-b border-slate-100 bg-slate-50/30 flex flex-wrap items-center gap-3">
+                      <div className="relative flex-1 min-w-[200px]">
+                        <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                        <Input
+                          placeholder="Search available videos..."
+                          value={librarySearch}
+                          onChange={(e) => setLibrarySearch(e.target.value)}
+                          className="pl-9 h-9 text-xs border-slate-200 bg-white"
+                        />
+                      </div>
+
+                      <Select value={libraryCategoryFilter} onValueChange={setLibraryCategoryFilter}>
+                        <SelectTrigger className="w-[140px] h-9 text-xs border-slate-200 bg-white">
+                          <SelectValue placeholder="Category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Categories</SelectItem>
+                          <SelectItem value="Cardio">Cardio</SelectItem>
+                          <SelectItem value="Strength Training">Strength Training</SelectItem>
+                          <SelectItem value="Weight Loss">Weight Loss</SelectItem>
+                          <SelectItem value="Yoga & Flexibility">Yoga & Flexibility</SelectItem>
+                          <SelectItem value="HIIT">HIIT</SelectItem>
+                          <SelectItem value="General">General</SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      <Select value={libraryLevelFilter} onValueChange={setLibraryLevelFilter}>
+                        <SelectTrigger className="w-[130px] h-9 text-xs border-slate-200 bg-white">
+                          <SelectValue placeholder="Level" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Levels</SelectItem>
+                          <SelectItem value="Beginner">Beginner</SelectItem>
+                          <SelectItem value="Intermediate">Intermediate</SelectItem>
+                          <SelectItem value="Advanced">Advanced</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
-                    <div className="flex items-center justify-between border-t border-slate-100 pt-3 mt-4">
-                      <span className="text-[11px] text-slate-400 font-medium">
-                        {tut.views || 0} views
-                      </span>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-slate-500 hover:text-[#07AC7D] hover:bg-[#F1FAF6]"
-                          onClick={() => handleEditTutorial(tut)}
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-slate-400 hover:text-red-600 hover:bg-red-50"
-                          onClick={() => handleDeleteTutorial(tut.id, tut.title)}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
+                    <CardContent className="p-0">
+                      {availableVids.length === 0 ? (
+                        <div className="text-center py-10 text-xs text-slate-400">
+                          No available videos match your search or filter criteria.
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-slate-100">
+                          {availableVids.map((vid: any) => {
+                            const isChecked = selectedLibraryVideoIds.includes(String(vid.id));
+                            return (
+                              <div
+                                key={vid.id}
+                                className={`p-4 flex items-center justify-between gap-4 transition-colors ${
+                                  isChecked ? "bg-emerald-50/40" : "hover:bg-slate-50/70"
+                                }`}
+                              >
+                                <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                                  <Checkbox
+                                    checked={isChecked}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) {
+                                        setSelectedLibraryVideoIds((prev) => [...prev, String(vid.id)]);
+                                      } else {
+                                        setSelectedLibraryVideoIds((prev) => prev.filter((id) => id !== String(vid.id)));
+                                      }
+                                    }}
+                                  />
+
+                                  {vid.thumbnail_url ? (
+                                    <img src={vid.thumbnail_url} alt="" className="w-14 h-9 rounded-lg object-cover border border-slate-200 shrink-0" />
+                                  ) : (
+                                    <div className="w-14 h-9 rounded-lg bg-slate-900 flex items-center justify-center text-slate-400 text-[9px] shrink-0 font-mono">
+                                      VIDEO
+                                    </div>
+                                  )}
+
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2 mb-0.5">
+                                      <p className="font-bold text-sm text-slate-900 truncate">{vid.title}</p>
+                                      <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-slate-200 text-slate-500 font-normal">
+                                        {vid.category || "General"}
+                                      </Badge>
+                                      <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-slate-200 text-slate-500 font-normal">
+                                        {vid.level || "Beginner"}
+                                      </Badge>
+                                    </div>
+                                    <p className="text-xs text-slate-500 truncate">{vid.description || "No description provided."}</p>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-3 shrink-0">
+                                  <span className="text-xs font-mono font-medium text-slate-500">
+                                    {vid.duration || "05:00"}
+                                  </span>
+
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleBatchAddVideosToPlaylist([String(vid.id)])}
+                                    className="bg-[#07AC7D] hover:bg-[#06966D] text-white text-xs h-8 px-3 font-semibold"
+                                  >
+                                    <Plus className="w-3.5 h-3.5 mr-1" /> Add
+                                  </Button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })()}
+            </div>
+          ) : (
+            /* =================================================== */
+            /* VIEW A: PLAYLIST CARDS GRID VIEW                   */
+            /* =================================================== */
+            <div className="space-y-6">
+              {/* Filters & Create Playlist Button */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+                <div className="flex flex-wrap items-center gap-3 flex-1">
+                  <div className="relative w-full sm:w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input
+                      placeholder="Search playlists..."
+                      value={tutorialSearch}
+                      onChange={(e) => setTutorialSearch(e.target.value)}
+                      className="pl-9 h-9 text-xs border-slate-200 bg-slate-50/50"
+                    />
+                  </div>
+
+                  <Select value={playlistCategoryFilter} onValueChange={setPlaylistCategoryFilter}>
+                    <SelectTrigger className="w-36 h-9 text-xs border-slate-200 bg-slate-50/50">
+                      <SelectValue placeholder="Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      <SelectItem value="Cardio">Cardio</SelectItem>
+                      <SelectItem value="Strength Training">Strength Training</SelectItem>
+                      <SelectItem value="Weight Loss">Weight Loss</SelectItem>
+                      <SelectItem value="Yoga & Flexibility">Yoga & Flexibility</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={playlistLevelFilter} onValueChange={setPlaylistLevelFilter}>
+                    <SelectTrigger className="w-32 h-9 text-xs border-slate-200 bg-slate-50/50">
+                      <SelectValue placeholder="Level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Levels</SelectItem>
+                      <SelectItem value="Beginner">Beginner</SelectItem>
+                      <SelectItem value="Intermediate">Intermediate</SelectItem>
+                      <SelectItem value="Advanced">Advanced</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Button
+                  onClick={() => {
+                    setEditingPlaylist(null);
+                    setPlaylistFormData({
+                      title: "",
+                      description: "",
+                      category: "Cardio",
+                      level: "Beginner",
+                      thumbnail_url: "",
+                      is_published: true,
+                    });
+                    setIsPlaylistModalOpen(true);
+                  }}
+                  className="bg-[#07AC7D] hover:bg-[#06966D] text-white h-9 px-4 text-xs font-semibold shadow-sm shrink-0"
+                >
+                  <Plus className="w-4 h-4 mr-1.5" /> Create Playlist
+                </Button>
+              </div>
+
+              {/* Playlists Grid */}
+              {loadingTutorials ? (
+                <p className="text-center py-10 text-slate-400 text-sm">Loading playlists...</p>
+              ) : playlists.filter(p => {
+                const matchSearch = p.title.toLowerCase().includes(tutorialSearch.toLowerCase()) || p.description?.toLowerCase().includes(tutorialSearch.toLowerCase());
+                const matchCat = playlistCategoryFilter === "all" || p.category === playlistCategoryFilter;
+                const matchLvl = playlistLevelFilter === "all" || p.level === playlistLevelFilter;
+                return matchSearch && matchCat && matchLvl;
+              }).length === 0 ? (
+                <Card className="border border-dashed border-slate-300 bg-slate-50/50 p-8 text-center rounded-2xl">
+                  <Play className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                  <h3 className="text-base font-semibold text-slate-700">No Playlists Found</h3>
+                  <p className="text-xs text-slate-400 max-w-sm mx-auto mt-1 mb-4">
+                    Create workout series playlists to organize your instructional videos for clients.
+                  </p>
+                  <Button
+                    onClick={() => {
+                      setEditingPlaylist(null);
+                      setIsPlaylistModalOpen(true);
+                    }}
+                    className="bg-[#07AC7D] hover:bg-[#06966D] text-white text-xs px-4 h-9 font-semibold"
+                  >
+                    <Plus className="w-4 h-4 mr-1.5" /> Create First Playlist
+                  </Button>
                 </Card>
-              ))}
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {playlists.filter(p => {
+                    const matchSearch = p.title.toLowerCase().includes(tutorialSearch.toLowerCase()) || p.description?.toLowerCase().includes(tutorialSearch.toLowerCase());
+                    const matchCat = playlistCategoryFilter === "all" || p.category === playlistCategoryFilter;
+                    const matchLvl = playlistLevelFilter === "all" || p.level === playlistLevelFilter;
+                    return matchSearch && matchCat && matchLvl;
+                  }).map((pl) => (
+                    <Card key={pl.id} className="border border-slate-200/80 hover:border-[#07AC7D]/40 shadow-sm hover:shadow-md transition-all rounded-2xl overflow-hidden group bg-white flex flex-col">
+                      {/* Playlist Thumbnail Container */}
+                      <div className="relative aspect-video bg-slate-900 overflow-hidden flex items-center justify-center cursor-pointer" onClick={() => setSelectedPlaylist(pl)}>
+                        <img
+                          src={pl.thumbnail_url || "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=600&auto=format&fit=crop&q=80"}
+                          alt={pl.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                        <div className="absolute top-3 right-3 bg-slate-900/85 backdrop-blur-md text-white text-[11px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 border border-white/10 shadow-lg">
+                          <Play className="w-3 h-3 fill-white" />
+                          {pl.video_count || pl.videos?.length || 0} Videos
+                        </div>
+                      </div>
+
+                      <CardContent className="p-4 flex-1 flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge variant="secondary" className="bg-[#F1FAF6] text-[#07AC7D] border-emerald-100 text-[10px] font-semibold px-2 py-0.5">
+                              {pl.category || "Cardio"}
+                            </Badge>
+                            <Badge variant="outline" className="text-[10px] border-slate-200 text-slate-500 font-medium px-2 py-0.5">
+                              {pl.level || "Beginner"}
+                            </Badge>
+                          </div>
+
+                          <h4
+                            onClick={() => setSelectedPlaylist(pl)}
+                            className="font-bold text-base text-slate-900 group-hover:text-[#07AC7D] transition-colors line-clamp-1 mb-1 cursor-pointer"
+                          >
+                            {pl.title}
+                          </h4>
+                          <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                            {pl.description || "No playlist description provided."}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center justify-between border-t border-slate-100 pt-3 mt-4">
+                          <span className="text-[11px] text-slate-500 font-semibold">
+                            {pl.video_count || pl.videos?.length || 0} videos • {pl.level}
+                          </span>
+
+                          <div className="flex items-center gap-1.5">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 text-xs font-semibold border-slate-200 text-slate-700 hover:bg-slate-50 px-2.5"
+                              onClick={() => {
+                                setEditingPlaylist(pl);
+                                setPlaylistFormData({
+                                  title: pl.title || "",
+                                  description: pl.description || "",
+                                  category: pl.category || "Cardio",
+                                  level: pl.level || "Beginner",
+                                  thumbnail_url: pl.thumbnail_url || "",
+                                  is_published: pl.is_published ?? true,
+                                });
+                                setIsPlaylistModalOpen(true);
+                              }}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="h-7 text-xs font-semibold bg-[#07AC7D] hover:bg-[#06966D] text-white px-2.5"
+                              onClick={() => setSelectedPlaylist(pl)}
+                            >
+                              Manage Videos
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-slate-400 hover:text-red-600 hover:bg-red-50"
+                              onClick={() => handleDeletePlaylist(pl)}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </TabsContent>
       </Tabs>
+
+      {/* =================================================== */}
+      {/* MODAL 1: CREATE / EDIT PLAYLIST DIALOG             */}
+      {/* =================================================== */}
+      <Dialog open={isPlaylistModalOpen} onOpenChange={setIsPlaylistModalOpen}>
+        <DialogContent className="sm:max-w-[500px] border border-slate-200 shadow-xl rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-slate-900">
+              {editingPlaylist ? "Edit Video Playlist" : "Create Video Playlist"}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500">
+              Organize video tutorials into a playlist series for your clients.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="grid gap-1.5">
+              <Label className="text-xs font-semibold text-slate-700">Playlist Title</Label>
+              <Input
+                placeholder="e.g. Cardio Basics"
+                value={playlistFormData.title}
+                onChange={(e) => setPlaylistFormData({ ...playlistFormData, title: e.target.value })}
+                className="border-slate-200 h-9 text-sm"
+              />
+            </div>
+
+            <div className="grid gap-1.5">
+              <Label className="text-xs font-semibold text-slate-700">Description</Label>
+              <Textarea
+                placeholder="Brief summary of what clients will learn in this video series..."
+                value={playlistFormData.description}
+                onChange={(e) => setPlaylistFormData({ ...playlistFormData, description: e.target.value })}
+                className="border-slate-200 text-sm min-h-[80px]"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-1.5">
+                <Label className="text-xs font-semibold text-slate-700">Category</Label>
+                <Select
+                  value={playlistFormData.category}
+                  onValueChange={(v) => setPlaylistFormData({ ...playlistFormData, category: v })}
+                >
+                  <SelectTrigger className="border-slate-200 h-9 text-sm">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Cardio">Cardio</SelectItem>
+                    <SelectItem value="Strength Training">Strength Training</SelectItem>
+                    <SelectItem value="Weight Loss">Weight Loss</SelectItem>
+                    <SelectItem value="Yoga & Flexibility">Yoga & Flexibility</SelectItem>
+                    <SelectItem value="HIIT">HIIT</SelectItem>
+                    <SelectItem value="General">General</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-1.5">
+                <Label className="text-xs font-semibold text-slate-700">Level</Label>
+                <Select
+                  value={playlistFormData.level}
+                  onValueChange={(v) => setPlaylistFormData({ ...playlistFormData, level: v })}
+                >
+                  <SelectTrigger className="border-slate-200 h-9 text-sm">
+                    <SelectValue placeholder="Level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Beginner">Beginner</SelectItem>
+                    <SelectItem value="Intermediate">Intermediate</SelectItem>
+                    <SelectItem value="Advanced">Advanced</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid gap-1.5">
+              <Label className="text-xs font-semibold text-slate-700">Thumbnail Image URL</Label>
+              <Input
+                placeholder="https://images.unsplash.com/..."
+                value={playlistFormData.thumbnail_url}
+                onChange={(e) => setPlaylistFormData({ ...playlistFormData, thumbnail_url: e.target.value })}
+                className="border-slate-200 h-9 text-sm"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 pt-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsPlaylistModalOpen(false)}
+              className="h-9 text-xs border-slate-200"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSavePlaylist}
+              disabled={isPublishing}
+              className="bg-[#07AC7D] hover:bg-[#06966D] text-white h-9 text-xs font-semibold"
+            >
+              {isPublishing ? "Saving..." : editingPlaylist ? "Update Playlist" : "Create Playlist"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* =================================================== */}
+      {/* MODAL 2: ADD VIDEO TO PLAYLIST DIALOG              */}
+      {/* =================================================== */}
+      <Dialog open={isVideoModalOpen} onOpenChange={setIsVideoModalOpen}>
+        <DialogContent className="sm:max-w-[560px] border border-slate-200 shadow-xl rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-slate-900">
+              Add Video to {selectedPlaylist?.title || "Playlist"}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500">
+              Choose existing videos from your Master Video Library or upload a brand new video.
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Mode Switcher Tabs */}
+          <div className="flex border-b border-slate-200 mt-1 mb-3">
+            <button
+              type="button"
+              onClick={() => setAddVideoMode("library")}
+              className={`pb-2.5 px-4 text-xs font-bold border-b-2 transition-all ${
+                addVideoMode === "library"
+                  ? "border-[#07AC7D] text-[#07AC7D]"
+                  : "border-transparent text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              Select from Video Library
+            </button>
+            <button
+              type="button"
+              onClick={() => setAddVideoMode("upload")}
+              className={`pb-2.5 px-4 text-xs font-bold border-b-2 transition-all ${
+                addVideoMode === "upload"
+                  ? "border-[#07AC7D] text-[#07AC7D]"
+                  : "border-transparent text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              + Upload New Video
+            </button>
+          </div>
+
+          {addVideoMode === "library" ? (
+            /* MODE A: SELECT FROM MASTER LIBRARY */
+            <div className="space-y-3">
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                <Input
+                  placeholder="Search video library..."
+                  value={librarySearch}
+                  onChange={(e) => setLibrarySearch(e.target.value)}
+                  className="pl-9 h-9 text-xs border-slate-200"
+                />
+              </div>
+
+              {(() => {
+                const inPlaylistIds = new Set((selectedPlaylist?.videos || []).map((v: any) => String(v.id)));
+                const availableVids = tutorials.filter((t: any) => {
+                  const notInPl = !inPlaylistIds.has(String(t.id));
+                  const matchesSearch = !librarySearch || t.title?.toLowerCase().includes(librarySearch.toLowerCase());
+                  return notInPl && matchesSearch;
+                });
+
+                return (
+                  <ScrollArea className="h-[280px] rounded-xl border border-slate-200 p-2 bg-slate-50/40">
+                    {availableVids.length === 0 ? (
+                      <div className="text-center py-12 text-xs text-slate-400">
+                        No videos available in library to add.
+                      </div>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {availableVids.map((vid: any) => {
+                          const isChecked = selectedLibraryVideoIds.includes(String(vid.id));
+                          return (
+                            <div
+                              key={vid.id}
+                              onClick={() => {
+                                if (isChecked) {
+                                  setSelectedLibraryVideoIds((prev) => prev.filter((id) => id !== String(vid.id)));
+                                } else {
+                                  setSelectedLibraryVideoIds((prev) => [...prev, String(vid.id)]);
+                                }
+                              }}
+                              className={`p-2.5 rounded-lg border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                                isChecked
+                                  ? "bg-emerald-50/80 border-[#07AC7D]"
+                                  : "bg-white border-slate-200/80 hover:border-slate-300"
+                              }`}
+                            >
+                              <div className="flex items-center gap-3 min-w-0 flex-1">
+                                <Checkbox
+                                  checked={isChecked}
+                                  onCheckedChange={() => {}}
+                                />
+
+                                {vid.thumbnail_url ? (
+                                  <img src={vid.thumbnail_url} alt="" className="w-10 h-7 rounded object-cover border border-slate-200 shrink-0" />
+                                ) : (
+                                  <div className="w-10 h-7 rounded bg-slate-900 flex items-center justify-center text-slate-400 text-[8px] shrink-0 font-mono">
+                                    VID
+                                  </div>
+                                )}
+
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-semibold text-xs text-slate-900 truncate">{vid.title}</p>
+                                  <p className="text-[10px] text-slate-400 truncate">{vid.category || "General"} • {vid.level || "Beginner"}</p>
+                                </div>
+                              </div>
+
+                              <span className="text-[10px] font-mono text-slate-500 shrink-0">
+                                {vid.duration || "05:00"}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </ScrollArea>
+                );
+              })()}
+
+              <DialogFooter className="gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsVideoModalOpen(false)}
+                  className="h-9 text-xs border-slate-200"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => handleBatchAddVideosToPlaylist(selectedLibraryVideoIds)}
+                  disabled={isPublishing || selectedLibraryVideoIds.length === 0}
+                  className="bg-[#07AC7D] hover:bg-[#06966D] text-white h-9 text-xs font-semibold"
+                >
+                  {isPublishing ? "Adding..." : `Add Selected Videos (${selectedLibraryVideoIds.length})`}
+                </Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            /* MODE B: UPLOAD NEW VIDEO */
+            <div className="space-y-4 py-1">
+              <div className="grid gap-1.5">
+                <Label className="text-xs font-semibold text-slate-700">Video Title</Label>
+                <Input
+                  placeholder="e.g. Cardio Warm Up"
+                  value={videoFormData.title}
+                  onChange={(e) => setVideoFormData({ ...videoFormData, title: e.target.value })}
+                  className="border-slate-200 h-9 text-sm"
+                />
+              </div>
+
+              <div className="grid gap-1.5">
+                <Label className="text-xs font-semibold text-slate-700">Description</Label>
+                <Textarea
+                  placeholder="Brief instructions or steps for this video lesson..."
+                  value={videoFormData.description}
+                  onChange={(e) => setVideoFormData({ ...videoFormData, description: e.target.value })}
+                  className="border-slate-200 text-sm min-h-[70px]"
+                />
+              </div>
+
+              <div className="grid gap-1.5">
+                <Label className="text-xs font-semibold text-slate-700">Video Link / Embed URL</Label>
+                <Input
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  value={videoFormData.video_url}
+                  onChange={(e) => setVideoFormData({ ...videoFormData, video_url: e.target.value })}
+                  className="border-slate-200 h-9 text-sm"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-1.5">
+                  <Label className="text-xs font-semibold text-slate-700">Duration (MM:SS)</Label>
+                  <Input
+                    placeholder="04:20"
+                    value={videoFormData.duration}
+                    onChange={(e) => setVideoFormData({ ...videoFormData, duration: e.target.value })}
+                    className="border-slate-200 h-9 text-sm"
+                  />
+                </div>
+
+                <div className="grid gap-1.5">
+                  <Label className="text-xs font-semibold text-slate-700">Thumbnail URL</Label>
+                  <Input
+                    placeholder="https://images.unsplash.com/..."
+                    value={videoFormData.thumbnail_url}
+                    onChange={(e) => setVideoFormData({ ...videoFormData, thumbnail_url: e.target.value })}
+                    className="border-slate-200 h-9 text-sm"
+                  />
+                </div>
+              </div>
+
+              <DialogFooter className="gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsVideoModalOpen(false)}
+                  className="h-9 text-xs border-slate-200"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSaveVideoToPlaylist}
+                  disabled={isPublishing}
+                  className="bg-[#07AC7D] hover:bg-[#06966D] text-white h-9 text-xs font-semibold"
+                >
+                  {isPublishing ? "Adding..." : "Create & Add Video"}
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

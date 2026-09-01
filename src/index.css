@@ -129,12 +129,15 @@
   .text-small {
     font-size: 90%;
   }
+
   .text-medium {
     font-size: 100%;
   }
+
   .text-large {
     font-size: 110%;
   }
+
   .text-xlarge {
     font-size: 120%;
   }
@@ -246,6 +249,7 @@
 }
 
 @layer components {
+
   /* Glass Card Effect */
   .glass-card {
     @apply relative overflow-hidden rounded-xl border border-white/10;

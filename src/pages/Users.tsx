@@ -55,6 +55,7 @@ interface UserWithRole {
   avatar_url: string | null;
   created_at: string;
   role: AppRole;
+  coach_id?: string | null;
   coach_name?: string | null;
 }
 
@@ -158,32 +159,37 @@ export default function Users() {
       const [profilesRes, rolesRes, coachClientsRes] = await Promise.all([
         supabase.from("profiles").select("*").order("created_at", { ascending: false }),
         supabase.from("user_roles").select("user_id, role"),
-        supabase.from("coach_clients")
-          .select("client_id, coach_id, profiles:coach_id(full_name)")
-          .order("created_at", { ascending: false })
+        supabase.from("coach_clients").select("client_id, coach_id").order("created_at", { ascending: false })
       ]);
 
       if (profilesRes.error) throw profilesRes.error;
       if (rolesRes.error) throw rolesRes.error;
 
-      const rolesMap = new Map(rolesRes.data.map(r => [r.user_id, r.role]));
-      const coachMap = new Map<string, string | null>();
+      const profileMap = new Map((profilesRes.data || []).map(p => [p.user_id, p.full_name]));
+      const rolesMap = new Map((rolesRes.data || []).map(r => [r.user_id, r.role]));
+      const coachMap = new Map<string, { id: string; name: string | null }>();
+
       for (const cc of (coachClientsRes?.data || []) as any[]) {
         if (!coachMap.has(cc.client_id)) {
-          coachMap.set(cc.client_id, cc.profiles?.full_name ?? null);
+          const coachName = profileMap.get(cc.coach_id) || null;
+          coachMap.set(cc.client_id, { id: cc.coach_id, name: coachName });
         }
       }
 
-      const formattedUsers: UserWithRole[] = (profilesRes.data || []).map((profile) => ({
-        id: profile.id,
-        user_id: profile.user_id,
-        email: profile.email,
-        full_name: profile.full_name,
-        avatar_url: profile.avatar_url,
-        created_at: profile.created_at,
-        role: (rolesMap.get(profile.user_id) as AppRole) || "trial_user",
-        coach_name: coachMap.get(profile.user_id) || null,
-      }));
+      const formattedUsers: UserWithRole[] = (profilesRes.data || []).map((profile) => {
+        const coachInfo = coachMap.get(profile.user_id);
+        return {
+          id: profile.id,
+          user_id: profile.user_id,
+          email: profile.email,
+          full_name: profile.full_name,
+          avatar_url: profile.avatar_url,
+          created_at: profile.created_at,
+          role: (rolesMap.get(profile.user_id) as AppRole) || "trial_user",
+          coach_id: coachInfo?.id || null,
+          coach_name: coachInfo?.name || null,
+        };
+      });
 
       setUsers(formattedUsers);
     } catch (error: any) {
@@ -196,18 +202,30 @@ export default function Users() {
   const fetchCoachesList = async () => {
     setLoadingCoaches(true);
     try {
-      const { data, error } = await supabase
+      const { data: roleData, error: roleError } = await supabase
         .from("user_roles")
-        .select(`
-          user_id,
-          profiles:user_id(full_name, email)
-        `)
+        .select("user_id")
         .eq("role", "coach");
-      if (error) throw error;
-      const formatted = (data || []).map((item: any) => ({
-        id: item.user_id,
-        full_name: item.profiles?.full_name || "Unknown Coach",
-        email: item.profiles?.email || "",
+
+      if (roleError) throw roleError;
+
+      const coachUserIds = (roleData || []).map((r) => r.user_id);
+      if (coachUserIds.length === 0) {
+        setCoachesList([]);
+        return;
+      }
+
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, email")
+        .in("user_id", coachUserIds);
+
+      if (profilesError) throw profilesError;
+
+      const formatted = (profilesData || []).map((p: any) => ({
+        id: p.user_id,
+        full_name: p.full_name || "Unknown Coach",
+        email: p.email || "",
       }));
       setCoachesList(formatted);
     } catch (error: any) {
@@ -243,12 +261,13 @@ export default function Users() {
 
       const assignedCoach = coachesList.find((c) => c.id === coachId);
       const coachName = assignedCoach ? assignedCoach.full_name : null;
+      const finalCoachId = coachId === "none" ? null : coachId;
 
       setUsers((prev) =>
-        prev.map((u) => (u.user_id === clientId ? { ...u, coach_name: coachName } : u))
+        prev.map((u) => (u.user_id === clientId ? { ...u, coach_id: finalCoachId, coach_name: coachName } : u))
       );
 
-      setSelectedProfileUser((prev) => (prev ? { ...prev, coach_name: coachName } : null));
+      setSelectedProfileUser((prev) => (prev ? { ...prev, coach_id: finalCoachId, coach_name: coachName } : null));
 
       fetchUsers();
     } catch (error: any) {
@@ -361,10 +380,11 @@ export default function Users() {
       else if (roleChangeDialog.newRole === 'trial_user') {
         newExpiry.setDate(newExpiry.getDate() + 3);
       }
-      const { error } = await supabase.from("user_roles").update({
+      const { error } = await supabase.from("user_roles").upsert({
+        user_id: roleChangeDialog.user.user_id,
         role: roleChangeDialog.newRole,
         expiry_time: newExpiry
-      }).eq("user_id", roleChangeDialog.user.user_id);
+      }, { onConflict: "user_id" });
 
       if (error) throw error;
       setUsers(prev => prev.map(u => u.user_id === roleChangeDialog.user?.user_id ? { ...u, role: roleChangeDialog.newRole! } : u));
@@ -415,18 +435,18 @@ export default function Users() {
             <Table className="min-w-full table-fixed border-collapse">
               <TableHeader className="bg-[#F5F7F9]">
                 <TableRow>
-                  <TableHead className="w-[200px] pl-6 text-[#475569]">Member Name</TableHead>
-                  <TableHead className="w-[250px] text-[#475569]">Email Address</TableHead>
-                  <TableHead className="w-[120px] text-center text-[#475569]">Current Role</TableHead>
-                  <TableHead className="w-[240px] text-right pr-6 text-[#475569]">Management</TableHead>
+                  <TableHead className="w-[200px] pl-6 text-xs font-bold text-[#475569] uppercase tracking-wider">Member Name</TableHead>
+                  <TableHead className="w-[250px] text-xs font-bold text-[#475569] uppercase tracking-wider">Email Address</TableHead>
+                  <TableHead className="w-[120px] text-center text-xs font-bold text-[#475569] uppercase tracking-wider">Current Role</TableHead>
+                  <TableHead className="w-[240px] text-right pr-6 text-xs font-bold text-[#475569] uppercase tracking-wider">Management</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredUsers.map((user) => (
                   <TableRow key={user.id} className="hover:bg-[#F5F7F9] border-b border-[#E2E8F0] last:border-0 transition-colors duration-150">
-                    <TableCell className="py-2 pl-6">
+                    <TableCell className="py-2.5 pl-6">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-[8px] bg-[#E8F8F8] flex items-center justify-center text-[10px] font-bold text-[#4DB8F5] shrink-0">
+                        <div className="w-8 h-8 rounded-[8px] bg-[#E8F8F8] flex items-center justify-center text-xs font-bold text-[#4DB8F5] shrink-0">
                           {(user.full_name?.[0] || user.email?.[0] || "U").toUpperCase()}
                         </div>
                         <span className="text-sm font-semibold text-[#111827] truncate block max-w-[140px]" title={user.full_name || ""}>
@@ -434,33 +454,33 @@ export default function Users() {
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="py-2 text-sm text-[#64748B]">
+                    <TableCell className="py-2.5 text-sm text-[#64748B]">
                       <span className="truncate block max-w-[220px]" title={user.email || ""}>
                         {user.email || "not set"}
                       </span>
                     </TableCell>
-                    <TableCell className="py-2 text-center">
-                      <Badge variant="outline" className={`${roleConfig[user.role].color} text-[9px] px-2 py-0 h-4 border-none uppercase font-bold`}>
+                    <TableCell className="py-2.5 text-center">
+                      <Badge variant="outline" className={`${(roleConfig[user.role] || roleConfig.user).color} text-[10px] px-2 py-0.5 border-none uppercase font-bold`}>
                         {user.role === 'trial_user' ? 'Trial User' : user.role}
                       </Badge>
                       {user.role === 'user' && (
-                        <span className="block text-[10px] text-[#64748B] mt-1">
+                        <span className="block text-[11px] text-[#64748B] mt-1 font-medium">
                           Coach: {user.coach_name || "Unassigned"}
                         </span>
                       )}
                     </TableCell>
-                    <TableCell className="py-2 text-right pr-6">
+                    <TableCell className="py-2.5 text-right pr-6">
                       <div className="flex items-center gap-2 justify-end">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-7 w-28 text-[10px] bg-white border-[#E2E8F0] text-[#334155] hover:bg-[#F5F7F9] rounded-[8px]"
+                          className="h-8 w-28 text-xs font-semibold bg-white border-[#E2E8F0] text-[#334155] hover:bg-[#F5F7F9] rounded-[8px]"
                           onClick={() => {
                             setSelectedUserId(user.user_id);
                             setIsAssignGroupOpen(true);
                           }}
                         >
-                          <UsersIcon className="w-3 h-3 mr-1" />
+                          <UsersIcon className="w-3.5 h-3.5 mr-1" />
                           Assign Group
                         </Button>
 
@@ -468,7 +488,7 @@ export default function Users() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-7 w-28 text-[10px] bg-white border-[#E2E8F0] text-[#334155] hover:bg-[#F5F7F9] rounded-[8px]"
+                          className="h-8 w-28 text-xs font-semibold bg-white border-[#E2E8F0] text-[#334155] hover:bg-[#F5F7F9] rounded-[8px]"
                           onClick={() => {
                             setSelectedProfileUser(user);
                             setProfileDialogOpen(true);
@@ -482,7 +502,7 @@ export default function Users() {
                           onValueChange={(val: AppRole) => handleRoleChange(user, val)} 
                           disabled={user.role === 'admin' || user.user_id === currentUser?.id || updating}
                         >
-                          <SelectTrigger className="h-7 w-28 text-[10px] bg-white border-[#CBD5E1] rounded-[8px] disabled:opacity-75 disabled:cursor-not-allowed focus:border-[#71D0F7] focus:ring-[3px] focus:ring-[#71D0F7]/[.12]">
+                          <SelectTrigger className="h-8 w-28 text-xs font-semibold bg-white border-[#CBD5E1] rounded-[8px] disabled:opacity-75 disabled:cursor-not-allowed focus:border-[#71D0F7] focus:ring-[3px] focus:ring-[#71D0F7]/[.12]">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -599,9 +619,7 @@ export default function Users() {
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-[#334155]">Assign Coach:</span>
                   <Select
-                    value={
-                      coachesList.find(c => c.full_name === selectedProfileUser?.coach_name)?.id || "none"
-                    }
+                    value={selectedProfileUser?.coach_id || "none"}
                     onValueChange={(coachId) => handleDirectAssignCoach(selectedProfileUser.user_id, coachId)}
                     disabled={assigning}
                   >
