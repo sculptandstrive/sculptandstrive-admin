@@ -13,6 +13,7 @@ import {
   SquarePen,
   UserPlus,
   Users,
+  TrendingUp,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -101,7 +102,7 @@ export default function Fitness() {
     sets: "",
     reps: "",
     weight_kg: "",
-    rest_timer: 30,
+    rest_timer: "30",
     details: ""
   });
 
@@ -424,7 +425,9 @@ export default function Fitness() {
           ? parseFloat(newPlanExercise.weight_kg) / 2.20462
           : parseFloat(newPlanExercise.weight_kg)
         : null,
-      rest_timer: newPlanExercise.rest_timer,
+      rest_timer: newPlanExercise.rest_timer
+        ? parseInt(newPlanExercise.rest_timer, 10)
+        : 30,
       description: newPlanExercise.details,
       display_order: nextOrder
     });
@@ -439,7 +442,7 @@ export default function Fitness() {
       sets: "",
       reps: "",
       weight_kg: "",
-      rest_timer: 30,
+      rest_timer: "30",
       details: ""
     });
     setIsAddPlanExerciseOpen(false);
@@ -731,12 +734,38 @@ export default function Fitness() {
   if (loading)
     return (
       <div className="flex h-[70vh] items-center justify-center">
-        <Loader2 className="animate-spin" />
+        <Loader2 className="animate-spin text-[#2E9D7A]" />
       </div>
     );
 
   return (
     <>
+
+      <style>{`
+  /* Fitness UI: EMERALD GREEN THEME */
+  [data-radix-select-content] [data-highlighted],
+  [data-radix-select-content] [data-state="checked"],
+  [role="option"][data-highlighted],
+  [role="option"][data-state="checked"] {
+    background-color: #07AC7D !important;
+    color: #FFFFFF !important;
+  }
+
+  [data-radix-menu-content] [data-highlighted],
+  [data-radix-menu-content] [data-state="checked"],
+  [role="menuitem"][data-highlighted] {
+    background-color: #07AC7D !important;
+    color: #FFFFFF !important;
+  }
+
+  .bg-accent,
+  .hover\\:bg-accent:hover,
+  .focus\\:bg-accent:focus {
+    background-color: #07AC7D !important;
+    color: #FFFFFF !important;
+  }
+`}</style>
+
       <PageHeader
         title="Fitness Overview"
         description="Monitor system-wide exercise statistics."
@@ -746,41 +775,42 @@ export default function Fitness() {
           onOpenChange={setIsExerciseDialogOpen}
         >
           <DialogTrigger asChild>
-            <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
+            <Button className="gap-2 bg-[#07AC7D] hover:bg-[#07AC7D] text-white rounded-[10px] transition-colors duration-150">
               <Plus className="w-4 h-4" /> Add Exercise
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="rounded-[14px]">
             <DialogHeader>
-              <DialogTitle>Add Exercise</DialogTitle>
+              <DialogTitle className="text-[#111827] font-bold">Add Exercise</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
-                <p className="text-sm font-medium">Exercise Name</p>
+                <p className="text-sm font-semibold text-[#475569]">Exercise Name</p>
                 <Input
                   type="text"
                   maxLength={100}
                   placeholder="e.g. Bench Press"
                   value={addExercise.name}
+                  className="border-[#CBD5E1] rounded-[8px] focus-visible:border-[#07AC7D] focus-visible:ring-[3px] focus-visible:ring-[#07AC7D]/[.12]"
                   onChange={(e) =>
                     setAddExercise({ ...addExercise, name: e.target.value })
                   }
                 />
               </div>
               <div className="space-y-2">
-                <p className="text-sm font-medium">Category</p>
+                <p className="text-sm font-semibold text-[#475569]">Category</p>
                 <Select
                   value={addExercise.category_id}
                   onValueChange={(value) =>
                     setAddExercise({ ...addExercise, category_id: value, sub_category: "" })
                   }
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full border-[#CBD5E1] rounded-[8px] focus:border-[#07AC7D] focus:ring-[3px] focus:ring-[#07AC7D]/[.12]">
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent position="popper" side="bottom">
                     {categories.filter((cat) => !cat.name.includes(" > ")).map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id}>
+                      <SelectItem key={cat.id} value={cat.id} className="focus:bg-[#07AC7D] focus:text-white data-[highlighted]:bg-[#07AC7D] data-[highlighted]:text-white data-[state=checked]:bg-[#07AC7D] data-[state=checked]:text-white">
                         {cat.name}
                       </SelectItem>
                     ))}
@@ -797,7 +827,7 @@ export default function Fitness() {
                 if (subs.length === 0) return null;
                 return (
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Subcategory</p>
+                    <p className="text-sm font-semibold text-[#475569]">Subcategory</p>
                     <Select
                       value={addExercise.sub_category || "none"}
                       onValueChange={(value) =>
@@ -807,15 +837,15 @@ export default function Fitness() {
                         })
                       }
                     >
-                      <SelectTrigger className="w-full">
+                      <SelectTrigger className="w-full border-[#CBD5E1] rounded-[8px] focus:border-[#07AC7D] focus:ring-[3px] focus:ring-[#07AC7D]/[.12]">
                         <SelectValue placeholder="Select a subcategory" />
                       </SelectTrigger>
                       <SelectContent position="popper" side="bottom">
-                        <SelectItem value="none">None</SelectItem>
+                        <SelectItem value="none" className="focus:bg-[#07AC7D] focus:text-white data-[highlighted]:bg-[#07AC7D] data-[highlighted]:text-white data-[state=checked]:bg-[#07AC7D] data-[state=checked]:text-white">None</SelectItem>
                         {subs.map((sub: any) => {
                           const subName = sub.name.split(" > ")[1];
                           return (
-                            <SelectItem key={sub.id} value={subName}>
+                            <SelectItem key={sub.id} value={subName} className="focus:bg-[#07AC7D] focus:text-white data-[highlighted]:bg-[#07AC7D] data-[highlighted]:text-white data-[state=checked]:bg-[#07AC7D] data-[state=checked]:text-white">
                               {subName}
                             </SelectItem>
                           );
@@ -828,7 +858,7 @@ export default function Fitness() {
 
               {/* Difficulty Level selection dropdown */}
               <div className="space-y-2">
-                <p className="text-sm font-medium">Difficulty Level</p>
+                <p className="text-sm font-semibold text-[#475569]">Difficulty Level</p>
                 <Select
                   value={addExercise.difficulty}
                   onValueChange={(value) =>
@@ -838,13 +868,13 @@ export default function Fitness() {
                     })
                   }
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full border-[#CBD5E1] rounded-[8px] focus:border-[#07AC7D] focus:ring-[3px] focus:ring-[#07AC7D]/[.12]">
                     <SelectValue placeholder="Select difficulty" />
                   </SelectTrigger>
                   <SelectContent position="popper" side="bottom">
-                    <SelectItem value="Beginner">Beginner</SelectItem>
-                    <SelectItem value="Intermediate">Intermediate</SelectItem>
-                    <SelectItem value="Advanced">Advanced</SelectItem>
+                    <SelectItem value="Beginner" className="focus:bg-[#07AC7D] focus:text-white data-[highlighted]:bg-[#07AC7D] data-[highlighted]:text-white data-[state=checked]:bg-[#07AC7D] data-[state=checked]:text-white">Beginner</SelectItem>
+                    <SelectItem value="Intermediate" className="focus:bg-[#07AC7D] focus:text-white data-[highlighted]:bg-[#07AC7D] data-[highlighted]:text-white data-[state=checked]:bg-[#07AC7D] data-[state=checked]:text-white">Intermediate</SelectItem>
+                    <SelectItem value="Advanced" className="focus:bg-[#07AC7D] focus:text-white data-[highlighted]:bg-[#07AC7D] data-[highlighted]:text-white data-[state=checked]:bg-[#07AC7D] data-[state=checked]:text-white">Advanced</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -852,13 +882,14 @@ export default function Fitness() {
             <DialogFooter>
               <Button
                 variant="outline"
+                className="border-[#E2E8F0] rounded-[10px]"
                 onClick={() => setIsExerciseDialogOpen(false)}
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleAddExercise}
-                className="bg-emerald-600 text-white"
+                className="bg-[#07AC7D] hover:bg-[#07AC7D] text-white rounded-[10px] disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={!addExercise.name || !addExercise.category_id}
               >
                 Save
@@ -869,7 +900,7 @@ export default function Fitness() {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="min-w-[120px]">
+            <Button variant="outline" className="min-w-[120px] border-[#E2E8F0] rounded-[10px] text-[#334155]">
               <Filter className="w-4 h-4 mr-2" />
               {activeFilter === "All" ? "Filter View" : activeFilter}
               <ChevronDown className="w-4 h-4 ml-2 opacity-50" />
@@ -896,38 +927,42 @@ export default function Fitness() {
           title="Total Exercises"
           value={stats.totalCount}
           icon={Dumbbell}
-          color="gradient-accent"
+          color="bg-white"
+          iconColor="text-[#2E9D7A]"
+          caption="All logged exercises"
         />
         <StatCard
           title="Unique Moves"
           value={stats.uniqueMovements}
           icon={Trophy}
-          color="bg-success/10"
-          iconColor="text-success"
+          color="bg-[#7C5CFC]/10"
+          iconColor="text-[#7C5CFC]"
+          caption="Distinct movements tracked"
         />
         <StatCard
           title="Avg. Sets"
           value={stats.avgSets}
           icon={Timer}
-          color="bg-primary/10"
-          iconColor="text-primary"
+          color="bg-[#4F7CFF]/10"
+          iconColor="text-[#4F7CFF]"
+          caption="Average sets per exercise"
         />
         <StatCard
           title="Rep Volume"
           value={stats.totalRepVolume}
           icon={Flame}
-          color="bg-warning/10"
-          iconColor="text-warning"
+          color="bg-[#F59E0B]/10"
+          iconColor="text-[#F59E0B]"
+          caption="Total reps logged"
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* ── Categories ── */}
 
-
-        <Card className="shadow-card border-none bg-card/60 backdrop-blur-md">
+        <Card className="border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] bg-white">
           <CardHeader className="flex w-full md:flex-row flex-col md:justify-between md:items-center">
-            <CardTitle className="font-display text-base font-semibold text-foreground">
+            <CardTitle className="text-base font-bold text-[#111827]">
               Categories
             </CardTitle>
             <Dialog
@@ -935,17 +970,17 @@ export default function Fitness() {
               onOpenChange={setIsCategoryDialogOpen}
             >
               <DialogTrigger asChild>
-                <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
+                <Button className="gap-2 bg-[#07AC7D] hover:bg-[#06966D] text-white rounded-[10px] transition-colors duration-150">
                   <Plus className="w-4 h-4" /> Add Category
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="rounded-[14px]">
                 <DialogHeader>
-                  <DialogTitle>Add New Category / Subcategory</DialogTitle>
+                  <DialogTitle className="text-[#111827] font-bold">Add New Category / Subcategory</DialogTitle>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">
+                    <p className="text-sm font-semibold text-[#475569]">
                       Category Name
                     </p>
                     <Input
@@ -953,13 +988,14 @@ export default function Fitness() {
                       maxLength={100}
                       placeholder="e.g., Beginner or Hamstrings"
                       value={addCategory}
+                      className="border-[#CBD5E1] rounded-[8px] focus-visible:border-[#07AC7D] focus-visible:ring-[3px] focus-visible:ring-[#07AC7D]/[.12]"
                       onChange={(e) => setAddCategory(e.target.value)}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">
-                      Parent Category <span className="text-slate-500">(Optional - to create a Subcategory)</span>
+                    <p className="text-sm font-semibold text-[#475569]">
+                      Parent Category <span className="text-[#64748B] font-normal">(Optional - to create a Subcategory)</span>
                     </p>
                     <Select
                       value={parentCategoryId || "none"}
@@ -967,15 +1003,15 @@ export default function Fitness() {
                         setParentCategoryId(value === "none" ? "" : value)
                       }
                     >
-                      <SelectTrigger className="w-full">
+                      <SelectTrigger className="w-full border-[#CBD5E1] rounded-[8px] focus:border-[#07AC7D] focus:ring-[3px] focus:ring-[#07AC7D]/[.12]">
                         <SelectValue placeholder="Select parent category (optional)" />
                       </SelectTrigger>
                       <SelectContent position="popper" side="bottom">
-                        <SelectItem value="none">None (Create as Parent Category)</SelectItem>
+                        <SelectItem value="none" className="focus:bg-[#07AC7D] focus:text-white data-[highlighted]:bg-[#07AC7D] data-[highlighted]:text-white data-[state=checked]:bg-[#07AC7D] data-[state=checked]:text-white">None (Create as Parent Category)</SelectItem>
                         {categories
                           .filter((cat: any) => !cat.name.includes(" > "))
                           .map((cat: any) => (
-                            <SelectItem key={cat.id} value={cat.id}>
+                            <SelectItem key={cat.id} value={cat.id} className="focus:bg-[#07AC7D] focus:text-white data-[highlighted]:bg-[#07AC7D] data-[highlighted]:text-white data-[state=checked]:bg-[#07AC7D] data-[state=checked]:text-white">
                               {cat.name}
                             </SelectItem>
                           ))}
@@ -986,6 +1022,7 @@ export default function Fitness() {
                 <DialogFooter>
                   <Button
                     variant="outline"
+                    className="border-[#E2E8F0] rounded-[10px]"
                     onClick={() => {
                       setIsCategoryDialogOpen(false);
                       setAddCategory("");
@@ -996,7 +1033,7 @@ export default function Fitness() {
                   </Button>
                   <Button
                     onClick={handleCreateCategory}
-                    className="bg-emerald-600 text-white"
+                    className="bg-[#07AC7D] hover:bg-[#06966D] text-white rounded-[10px] disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={!addCategory.trim()}
                   >
                     Save Category
@@ -1007,26 +1044,26 @@ export default function Fitness() {
           </CardHeader>
           <CardContent className="space-y-4">
             {categories.length === 0 ? (
-              <div className="text-center py-10 text-muted-foreground text-sm">
+              <div className="text-center py-10 text-[#64748B] text-sm">
                 No categories yet.
               </div>
             ) : (
               groupedCategories.map((parent: any) => {
                 return (
-                  <div key={parent.id} className="py-3 border-b border-slate-100/5 last:border-b-0 space-y-2">
+                  <div key={parent.id} className="py-3 border-b border-[#E2E8F0] last:border-b-0 space-y-2">
                     {/* Parent Category Row */}
                     <div className="flex justify-between text-sm items-center">
-                      <span className="font-medium text-foreground">
+                      <span className="font-semibold text-[#111827]">
                         {parent.name}
                       </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground text-xs">
+                        <span className="text-[#64748B] text-xs">
                           {parent.count} {parent.count === 1 ? "exercise" : "exercises"}
                         </span>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-[#2dd4bf] hover:text-[#14b8a6] hover:bg-slate-50 shrink-0"
+                          className="h-8 w-8 text-[#2E9D7A] hover:text-[#06966D] hover:bg-[#F1FAF6] shrink-0 rounded-[8px]"
                           onClick={() => {
                             setEditCategoryId(parent.id);
                             setEditCategoryName(parent.name);
@@ -1038,7 +1075,7 @@ export default function Fitness() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0"
+                          className="h-8 w-8 text-[#EF4444] hover:text-[#DC2626] hover:bg-[#EF4444]/10 shrink-0 rounded-[8px]"
                           onClick={() => handledeleteCategory(parent.id)}
                         >
                           <Trash2 className="w-4 h-4" />
@@ -1053,27 +1090,27 @@ export default function Fitness() {
                           ? (parent.count / allExercise.length) * 100
                           : 0
                       }
-                      className="h-2 bg-[#f1f5f9] mt-2 [&>div]:bg-[#1e293b]"
+                      className="h-2 bg-[#E2E8F0] mt-2 [&>div]:bg-[#07AC7D]"
                     />
 
                     {/* Subcategories (Indented underneath) */}
                     {parent.subcategories.length > 0 && (
-                      <div className="mt-2 pl-4 border-l-2 border-emerald-500/20 ml-2 space-y-2">
+                      <div className="mt-2 pl-4 border-l-2 border-[#07AC7D]/20 ml-2 space-y-2">
                         {parent.subcategories.map((sub: any) => {
                           const subDisplayName = sub.name.split(" > ")[1] || sub.name;
                           return (
                             <div key={sub.id} className="flex justify-between text-sm items-center py-1">
-                              <span className="text-muted-foreground text-xs">
+                              <span className="text-[#64748B] text-xs">
                                 {subDisplayName}
                               </span>
                               <div className="flex items-center gap-2">
-                                <span className="text-muted-foreground text-[10px]">
+                                <span className="text-[#64748B] text-[10px]">
                                   {sub.count} {sub.count === 1 ? "exercise" : "exercises"}
                                 </span>
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-7 w-7 text-[#2dd4bf] hover:text-[#14b8a6] hover:bg-slate-50 shrink-0"
+                                  className="h-7 w-7 text-[#2E9D7A] hover:text-[#06966D] hover:bg-[#F1FAF6] shrink-0 rounded-[8px]"
                                   onClick={() => {
                                     setEditCategoryId(sub.id);
                                     setEditCategoryName(sub.name);
@@ -1085,7 +1122,7 @@ export default function Fitness() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0"
+                                  className="h-7 w-7 text-[#EF4444] hover:text-[#DC2626] hover:bg-[#EF4444]/10 shrink-0 rounded-[8px]"
                                   onClick={() => handledeleteCategory(sub.id)}
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
@@ -1104,29 +1141,30 @@ export default function Fitness() {
         </Card>
 
         <Dialog open={isEditCategoryOpen} onOpenChange={setIsEditCategoryOpen}>
-          <DialogContent>
+          <DialogContent className="rounded-[14px]">
             <DialogHeader>
-              <DialogTitle>Edit Category / Subcategory</DialogTitle>
+              <DialogTitle className="text-[#111827] font-bold">Edit Category / Subcategory</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
-                <p className="text-sm font-medium">Category Name</p>
+                <p className="text-sm font-semibold text-[#475569]">Category Name</p>
                 <Input
                   type="text"
                   maxLength={100}
                   placeholder="Category name..."
                   value={editCategoryName}
+                  className="border-[#CBD5E1] rounded-[8px] focus-visible:border-[#07AC7D] focus-visible:ring-[3px] focus-visible:ring-[#07AC7D]/[.12]"
                   onChange={(e) => setEditCategoryName(e.target.value)}
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditCategoryOpen(false)}>
+              <Button variant="outline" className="border-[#E2E8F0] rounded-[10px]" onClick={() => setIsEditCategoryOpen(false)}>
                 Cancel
               </Button>
               <Button
                 onClick={handleEditCategory}
-                className="bg-emerald-600 text-white"
+                className="bg-[#07AC7D] hover:bg-[#07AC7D] text-white rounded-[10px] disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={!editCategoryName.trim()}
               >
                 Save Changes
@@ -1136,10 +1174,10 @@ export default function Fitness() {
         </Dialog>
 
         {/* ── Exercises List ── */}
-        <Card className="lg:col-span-2 shadow-card border-none bg-card/60 backdrop-blur-md">
+        <Card className="lg:col-span-2 border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] bg-white">
           <CardHeader>
             <div className="flex flex-col md:flex-row gap-4 justify-between items-center w-full">
-              <CardTitle className="font-display text-xl text-foreground">
+              <CardTitle className="text-xl font-bold text-[#111827]">
                 {activeFilter} Exercises List
               </CardTitle>
               <div className="flex items-center gap-4 w-full md:w-auto">
@@ -1147,9 +1185,9 @@ export default function Fitness() {
                   placeholder="Search exercises..."
                   value={exerciseSearchQuery}
                   onChange={(e) => setExerciseSearchQuery(e.target.value)}
-                  className="max-w-[240px] h-9 text-xs"
+                  className="max-w-[240px] h-9 text-xs border-[#CBD5E1] rounded-[8px] focus-visible:border-[#07AC7D] focus-visible:ring-[3px] focus-visible:ring-[#07AC7D]/[.12]"
                 />
-                <span className="text-xs text-muted-foreground uppercase tracking-widest whitespace-nowrap">
+                <span className="text-xs text-[#64748B] uppercase tracking-widest whitespace-nowrap">
                   Showing {exercisesWithCategory.length} results
                 </span>
               </div>
@@ -1160,34 +1198,34 @@ export default function Fitness() {
               exercisesWithCategory.map((ex: any) => (
                 <div
                   key={ex.id}
-                  className="flex flex-col md:flex-row items-center justify-between gap-2 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all group"
+                  className="flex flex-col md:flex-row items-center justify-between gap-2 p-4 rounded-[14px] bg-[#F5F7F9] hover:bg-[#F5F7F9]/70 transition-all group"
                 >
                   <div className="flex flex-col md:flex-row items-center gap-4 min-w-0">
-                    <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center flex-shrink-0">
-                      <Dumbbell className="w-6 h-6 text-primary-foreground" />
+                    <div className="w-12 h-12 rounded-[10px] bg-[#07AC7D] flex items-center justify-center flex-shrink-0">
+                      <Dumbbell className="w-6 h-6 text-white" />
                     </div>
                     <div className="min-w-0 flex flex-col items-center md:block">
-                      <p className="font-bold text-foreground break-words whitespace-normal">
+                      <p className="font-bold text-[#111827] break-words whitespace-normal">
                         {ex.name}
                       </p>
                       <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                         {ex.category_name && (
                           <Badge
                             variant="outline"
-                            className="text-[9px] bg-[#143A6F] border-slate-700/50 text-slate-300 px-2 py-0.5 font-medium shadow-sm"
+                            className="text-[9px] bg-[#7C5CFC]/10 border-[#7C5CFC]/30 text-[#7C5CFC] px-2 py-0.5 font-medium"
                           >
                             {ex.category_name}
                           </Badge>
                         )}
                         {ex.sub_category && ex.sub_category !== "none" && (
-                          <Badge variant="outline" className="text-[9px] bg-emerald-500/10 border-emerald-500/20 text-emerald-400">
+                          <Badge variant="outline" className="text-[9px] bg-[#10B981]/10 border-[#10B981]/30 text-[#10B981]">
                             {ex.sub_category}
                           </Badge>
                         )}
                         {ex.difficulty && (
-                          <Badge variant="outline" className={`text-[9px] ${ex.difficulty === "Beginner" ? "bg-green-500/10 border-green-500/20 text-green-400" :
-                            ex.difficulty === "Intermediate" ? "bg-yellow-500/10 border-yellow-500/20 text-yellow-400" :
-                              "bg-red-500/10 border-red-500/20 text-red-400"
+                          <Badge variant="outline" className={`text-[9px] ${ex.difficulty === "Beginner" ? "bg-[#10B981]/10 border-[#10B981]/30 text-[#10B981]" :
+                            ex.difficulty === "Intermediate" ? "bg-[#F59E0B]/10 border-[#F59E0B]/30 text-[#F59E0B]" :
+                              "bg-[#EF4444]/10 border-[#EF4444]/30 text-[#EF4444]"
                             }`}>
                             {ex.difficulty}
                           </Badge>
@@ -1196,12 +1234,13 @@ export default function Fitness() {
                     </div>
                   </div>
                   <div className="flex items-center justify-center">
-                    <p className="text-xs text-muted-foreground uppercase tracking-widest">
+                    <p className="text-xs text-[#64748B] uppercase tracking-widest">
                       {ex.category_name || "General"}
                     </p>
                   </div>
                   <div className="flex flex-col md:flex-row items-center gap-2 md:gap-5">
                     <Dialog
+
                       open={isEditExerciseOpen && editExercise.id === ex.id}
                       onOpenChange={(open) => {
                         if (!open) setIsEditExerciseOpen(false);
@@ -1222,23 +1261,24 @@ export default function Fitness() {
                             });
                             setIsEditExerciseOpen(true);
                           }}
-                          className="text-muted-foreground hover:text-blue-500"
+                          className="text-[#64748B] hover:text-[#4F7CFF] hover:bg-[#4F7CFF]/10 rounded-[8px]"
                         >
-                          <SquarePen className="w-4 h-4 text-blue-500" />
+                          <SquarePen className="w-4 h-4 text-[#4F7CFF]" />
                         </Button>
                       </DialogTrigger>
-                      <DialogContent>
+                      <DialogContent className="rounded-[14px]">
                         <DialogHeader>
-                          <DialogTitle>Edit Exercise</DialogTitle>
+                          <DialogTitle className="text-[#111827] font-bold">Edit Exercise</DialogTitle>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                           <div className="space-y-2">
-                            <p className="text-sm font-medium">Exercise Name</p>
+                            <p className="text-sm font-semibold text-[#475569]">Exercise Name</p>
                             <Input
                               type="text"
                               maxLength={100}
                               placeholder="e.g. Bench Press"
                               value={editExercise.name}
+                              className="border-[#CBD5E1] rounded-[8px] focus-visible:border-[#07AC7D] focus-visible:ring-[3px] focus-visible:ring-[#07AC7D]/[.12]"
                               onChange={(e) =>
                                 setEditExercise({
                                   ...editExercise,
@@ -1263,7 +1303,7 @@ export default function Fitness() {
                             />
                           </div> */}
                           <div className="space-y-2">
-                            <p className="text-sm font-medium">Category</p>
+                            <p className="text-sm font-semibold text-[#475569]">Category</p>
                             <Select
                               value={editExercise.category_id}
                               onValueChange={(value) =>
@@ -1274,12 +1314,12 @@ export default function Fitness() {
                                 })
                               }
                             >
-                              <SelectTrigger className="w-full">
+                              <SelectTrigger className="w-full border-[#CBD5E1] rounded-[8px] focus:border-[#07AC7D] focus:ring-[3px] focus:ring-[#07AC7D]/[.12]">
                                 <SelectValue placeholder="Select a category" />
                               </SelectTrigger>
                               <SelectContent position="popper" side="bottom">
                                 {categories.filter((cat) => !cat.name.includes(" > ")).map((cat) => (
-                                  <SelectItem key={cat.id} value={cat.id}>
+                                  <SelectItem key={cat.id} value={cat.id} className="focus:bg-[#07AC7D] focus:text-white data-[highlighted]:bg-[#07AC7D] data-[highlighted]:text-white data-[state=checked]:bg-[#07AC7D] data-[state=checked]:text-white">
                                     {cat.name}
                                   </SelectItem>
                                 ))}
@@ -1296,7 +1336,7 @@ export default function Fitness() {
                             if (subs.length === 0) return null;
                             return (
                               <div className="space-y-2">
-                                <p className="text-sm font-medium">Subcategory</p>
+                                <p className="text-sm font-semibold text-[#475569]">Subcategory</p>
                                 <Select
                                   value={editExercise.sub_category || "none"}
                                   onValueChange={(value) =>
@@ -1306,15 +1346,15 @@ export default function Fitness() {
                                     })
                                   }
                                 >
-                                  <SelectTrigger className="w-full">
+                                  <SelectTrigger className="w-full border-[#CBD5E1] rounded-[8px] focus:border-[#07AC7D] focus:ring-[3px] focus:ring-[#07AC7D]/[.12]">
                                     <SelectValue placeholder="Select a subcategory" />
                                   </SelectTrigger>
                                   <SelectContent position="popper" side="bottom">
-                                    <SelectItem value="none">None</SelectItem>
+                                    <SelectItem value="none" className="focus:bg-[#07AC7D] focus:text-white data-[highlighted]:bg-[#07AC7D] data-[highlighted]:text-white data-[state=checked]:bg-[#07AC7D] data-[state=checked]:text-white">None</SelectItem>
                                     {subs.map((sub: any) => {
                                       const subName = sub.name.split(" > ")[1];
                                       return (
-                                        <SelectItem key={sub.id} value={subName}>
+                                        <SelectItem key={sub.id} value={subName} className="focus:bg-[#07AC7D] focus:text-white data-[highlighted]:bg-[#07AC7D] data-[highlighted]:text-white data-[state=checked]:bg-[#07AC7D] data-[state=checked]:text-white">
                                           {subName}
                                         </SelectItem>
                                       );
@@ -1327,7 +1367,7 @@ export default function Fitness() {
 
                           {/* Difficulty Level selection dropdown */}
                           <div className="space-y-2">
-                            <p className="text-sm font-medium">Difficulty Level</p>
+                            <p className="text-sm font-semibold text-[#475569]">Difficulty Level</p>
                             <Select
                               value={editExercise.difficulty}
                               onValueChange={(value) =>
@@ -1337,13 +1377,13 @@ export default function Fitness() {
                                 })
                               }
                             >
-                              <SelectTrigger className="w-full">
+                              <SelectTrigger className="w-full border-[#CBD5E1] rounded-[8px] focus:border-[#07AC7D] focus:ring-[3px] focus:ring-[#07AC7D]/[.12]">
                                 <SelectValue placeholder="Select difficulty" />
                               </SelectTrigger>
                               <SelectContent position="popper" side="bottom">
-                                <SelectItem value="Beginner">Beginner</SelectItem>
-                                <SelectItem value="Intermediate">Intermediate</SelectItem>
-                                <SelectItem value="Advanced">Advanced</SelectItem>
+                                <SelectItem value="Beginner" className="focus:bg-[#07AC7D] focus:text-white data-[highlighted]:bg-[#07AC7D] data-[highlighted]:text-white data-[state=checked]:bg-[#07AC7D] data-[state=checked]:text-white">Beginner</SelectItem>
+                                <SelectItem value="Intermediate" className="focus:bg-[#07AC7D] focus:text-white data-[highlighted]:bg-[#07AC7D] data-[highlighted]:text-white data-[state=checked]:bg-[#07AC7D] data-[state=checked]:text-white">Intermediate</SelectItem>
+                                <SelectItem value="Advanced" className="focus:bg-[#07AC7D] focus:text-white data-[highlighted]:bg-[#07AC7D] data-[highlighted]:text-white data-[state=checked]:bg-[#07AC7D] data-[state=checked]:text-white">Advanced</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -1351,13 +1391,14 @@ export default function Fitness() {
                         <DialogFooter>
                           <Button
                             variant="outline"
+                            className="border-[#E2E8F0] rounded-[10px]"
                             onClick={() => setIsEditExerciseOpen(false)}
                           >
                             Cancel
                           </Button>
                           <Button
                             onClick={handleEditExercise}
-                            className="bg-emerald-600 text-white"
+                            className="bg-[#07AC7D] hover:bg-[#07AC7D] text-white rounded-[10px] disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={
                               !editExercise.name || !editExercise.category_id
                             }
@@ -1371,7 +1412,7 @@ export default function Fitness() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDeleteExercise(ex.id)}
-                      className="text-muted-foreground hover:text-destructive"
+                      className="text-[#64748B] hover:text-[#EF4444] hover:bg-[#EF4444]/10 rounded-[8px]"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -1379,7 +1420,7 @@ export default function Fitness() {
                 </div>
               ))
             ) : (
-              <div className="text-center py-10 text-muted-foreground">
+              <div className="text-center py-10 text-[#64748B]">
                 No data found.
               </div>
             )}
@@ -1387,27 +1428,28 @@ export default function Fitness() {
         </Card>
 
         {/* ── Workout Plans ── */}
-        <Card className="lg:col-span-full shadow-card border-none bg-card/60 backdrop-blur-md">
+        <Card className="lg:col-span-full border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] bg-white">
           <CardHeader className="flex w-full flex-col md:flex-row md:justify-between md:items-center">
-            <CardTitle className="font-display text-base font-semibold text-foreground">
+            <CardTitle className="text-base font-bold text-[#111827]">
               Workout Plans
             </CardTitle>
             <Dialog open={isPlanDialogOpen} onOpenChange={setIsPlanDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
+                <Button className="gap-2 bg-[#07AC7D] hover:bg-[#07AC7D] text-white rounded-[10px] transition-colors duration-150">
                   <Plus className="w-4 h-4" /> New Plan
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="rounded-[14px]">
                 <DialogHeader>
-                  <DialogTitle>Create Workout Plan</DialogTitle>
+                  <DialogTitle className="text-[#111827] font-bold">Create Workout Plan</DialogTitle>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Plan Name</p>
+                    <p className="text-sm font-semibold text-[#475569]">Plan Name</p>
                     <Input
                       placeholder="e.g. Push Day - Beginner"
                       value={newPlanName}
+                      className="border-[#CBD5E1] rounded-[8px] focus-visible:border-[#07AC7D] focus-visible:ring-[3px] focus-visible:ring-[#07AC7D]/[.12]"
                       onChange={(e) => setNewPlanName(e.target.value)}
                     />
                   </div>
@@ -1415,13 +1457,14 @@ export default function Fitness() {
                 <DialogFooter>
                   <Button
                     variant="outline"
+                    className="border-[#E2E8F0] rounded-[10px]"
                     onClick={() => setIsPlanDialogOpen(false)}
                   >
                     Cancel
                   </Button>
                   <Button
                     onClick={handleCreatePlan}
-                    className="bg-emerald-600 text-white"
+                    className="bg-[#07AC7D] hover:bg-[#07AC7D] text-white rounded-[10px]"
                   >
                     Create Plan
                   </Button>
@@ -1432,7 +1475,7 @@ export default function Fitness() {
 
           <CardContent>
             {allPlans.length === 0 ? (
-              <div className="text-center py-10 text-muted-foreground">
+              <div className="text-center py-10 text-[#64748B]">
                 No workout plans yet.
               </div>
             ) : (
@@ -1440,15 +1483,15 @@ export default function Fitness() {
                 {allPlans.map((plan) => (
                   <div
                     key={plan.id}
-                    className="flex flex-col md:flex-row items-center justify-between gap-2 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all"
+                    className="flex flex-col md:flex-row items-center justify-between gap-2 p-4 rounded-[14px] bg-[#F5F7F9] hover:bg-[#F5F7F9]/70 transition-all"
                   >
                     <div className="flex items-center gap-4 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                        <Dumbbell className="w-4 h-4 text-emerald-700" />
+                      <div className="w-12 h-12 rounded-[10px] bg-[#07AC7D] flex items-center justify-center flex-shrink-0">
+                        <Dumbbell className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <p className="font-bold text-foreground">{plan.name}</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="font-bold text-[#111827]">{plan.name}</p>
+                        <p className="text-xs text-[#64748B]">
                           Created{" "}
                           {new Date(plan.created_at).toLocaleDateString()}
                         </p>
@@ -1467,7 +1510,7 @@ export default function Fitness() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="gap-1 text-emerald-700 border-emerald-300"
+                            className="gap-1 text-[#2E9D7A] border-[#07AC7D]/40 hover:bg-[#07AC7D] rounded-[8px]"
                             onClick={() => {
                               setActivePlan(plan);
                               fetchPlanExercises(plan.id);
@@ -1477,9 +1520,9 @@ export default function Fitness() {
                             <SquarePen className="w-4 h-4" /> Manage
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-2xl">
+                        <DialogContent className="max-w-2xl rounded-[14px]">
                           <DialogHeader>
-                            <DialogTitle>Manage — {plan.name}</DialogTitle>
+                            <DialogTitle className="text-[#111827] font-bold">Manage — {plan.name}</DialogTitle>
                           </DialogHeader>
 
                           <div className="space-y-4 py-2">
@@ -1491,7 +1534,7 @@ export default function Fitness() {
                                 <DialogTrigger asChild>
                                   <Button
                                     size="sm"
-                                    className="gap-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                                    className="gap-1 bg-[#07AC7D] hover:bg-[#07AC7D] text-white rounded-[8px]"
                                     onClick={() => {
                                       setNewPlanExercise({
                                         exercise_id: "",
@@ -1499,7 +1542,7 @@ export default function Fitness() {
                                         sets: "",
                                         reps: "",
                                         weight_kg: "",
-                                        rest_timer: 30,
+                                        rest_timer: "30",
                                         details: "",
                                       });
                                       setIsAddPlanExerciseOpen(true);
@@ -1508,15 +1551,15 @@ export default function Fitness() {
                                     <Plus className="w-4 h-4" /> Add Exercise
                                   </Button>
                                 </DialogTrigger>
-                                <DialogContent>
+                                <DialogContent className="rounded-[14px]">
                                   <DialogHeader>
-                                    <DialogTitle>
+                                    <DialogTitle className="text-[#111827] font-bold">
                                       Add Exercise to Plan
                                     </DialogTitle>
                                   </DialogHeader>
                                   <div className="grid gap-4 py-4">
                                     <div className="space-y-2">
-                                      <p className="text-sm font-medium">
+                                      <p className="text-sm font-semibold text-[#475569]">
                                         Category
                                       </p>
                                       <Select
@@ -1529,7 +1572,7 @@ export default function Fitness() {
                                           })
                                         }
                                       >
-                                        <SelectTrigger>
+                                        <SelectTrigger className="border-[#CBD5E1] rounded-[8px] focus:border-[#07AC7D] focus:ring-[3px] focus:ring-[#07AC7D]/[.12]">
                                           <SelectValue placeholder="Select category" />
                                         </SelectTrigger>
                                         <SelectContent position="popper" side="bottom">
@@ -1549,7 +1592,7 @@ export default function Fitness() {
 
                                     {newPlanExercise.category_id && (
                                       <div className="space-y-2">
-                                        <p className="text-sm font-medium">
+                                        <p className="text-sm font-semibold text-[#475569]">
                                           Exercise
                                         </p>
                                         <Select
@@ -1561,13 +1604,13 @@ export default function Fitness() {
                                             })
                                           }
                                         >
-                                          <SelectTrigger>
+                                          <SelectTrigger className="border-[#CBD5E1] rounded-[8px] focus:border-[#07AC7D] focus:ring-[3px] focus:ring-[#07AC7D]/[.12]">
                                             <SelectValue placeholder="Select exercise" />
                                           </SelectTrigger>
                                           <SelectContent position="popper" side="bottom">
                                             {filteredPlanExercises.length ===
                                               0 ? (
-                                              <SelectItem value="none" disabled>
+                                              <SelectItem value="none" disabled className="focus:bg-[#07AC7D] focus:text-white data-[highlighted]:bg-[#07AC7D] data-[highlighted]:text-white data-[state=checked]:bg-[#07AC7D] data-[state=checked]:text-white">
                                                 No exercises in this category
                                               </SelectItem>
                                             ) : (
@@ -1590,10 +1633,10 @@ export default function Fitness() {
                                     {newPlanExercise.exercise_id && (
                                       <div className="space-y-2">
                                         <div className="flex justify-between items-center mt-2">
-                                          <p className="text-sm font-medium">
+                                          <p className="text-sm font-semibold text-[#475569]">
                                             Sets / Reps / Weight ({adminWeightUnit})
                                           </p>
-                                          <div className="flex gap-1 bg-slate-800 p-0.5 rounded-md border border-slate-700">
+                                          <div className="flex gap-1 bg-[#F5F7F9] p-0.5 rounded-[8px] border border-[#E2E8F0]">
                                             <button
                                               type="button"
                                               onClick={() => {
@@ -1601,8 +1644,8 @@ export default function Fitness() {
                                                 localStorage.setItem("admin_weight_unit", "kg");
                                               }}
                                               className={`text-[9px] px-2 py-0.5 rounded font-bold transition-all ${adminWeightUnit === "kg"
-                                                  ? "bg-slate-700 text-[#2dd4bf]"
-                                                  : "text-slate-400 hover:text-white"
+                                                ? "bg-white text-[#2E9D7A] shadow-sm"
+                                                : "text-[#64748B] hover:text-[#334155]"
                                                 }`}
                                             >
                                               KG
@@ -1614,8 +1657,8 @@ export default function Fitness() {
                                                 localStorage.setItem("admin_weight_unit", "lbs");
                                               }}
                                               className={`text-[9px] px-2 py-0.5 rounded font-bold transition-all ${adminWeightUnit === "lbs"
-                                                  ? "bg-slate-700 text-[#2dd4bf]"
-                                                  : "text-slate-400 hover:text-white"
+                                                ? "bg-white text-[#2E9D7A] shadow-sm"
+                                                : "text-[#64748B] hover:text-[#334155]"
                                                 }`}
                                             >
                                               LBS
@@ -1627,6 +1670,7 @@ export default function Fitness() {
                                             type="number"
                                             placeholder="Sets *"
                                             value={newPlanExercise.sets}
+                                            className="border-[#CBD5E1] rounded-[8px] focus-visible:border-[#07AC7D] focus-visible:ring-[3px] focus-visible:ring-[#07AC7D]/[.12]"
                                             onChange={(e) =>
                                               setNewPlanExercise({
                                                 ...newPlanExercise,
@@ -1638,6 +1682,7 @@ export default function Fitness() {
                                             type="number"
                                             placeholder="Reps"
                                             value={newPlanExercise.reps}
+                                            className="border-[#CBD5E1] rounded-[8px] focus-visible:border-[#07AC7D] focus-visible:ring-[3px] focus-visible:ring-[#07AC7D]/[.12]"
                                             onChange={(e) =>
                                               setNewPlanExercise({
                                                 ...newPlanExercise,
@@ -1649,6 +1694,7 @@ export default function Fitness() {
                                             type="number"
                                             placeholder={`Weight (${adminWeightUnit})`}
                                             value={newPlanExercise.weight_kg}
+                                            className="border-[#CBD5E1] rounded-[8px] focus-visible:border-[#07AC7D] focus-visible:ring-[3px] focus-visible:ring-[#07AC7D]/[.12]"
                                             onChange={(e) =>
                                               setNewPlanExercise({
                                                 ...newPlanExercise,
@@ -1658,13 +1704,13 @@ export default function Fitness() {
                                           />
                                         </div>
 
-                                        <p className="text-sm font-medium">
+                                        <p className="text-sm font-semibold text-[#475569]">
                                           Rest Timer
                                         </p>
                                         <Input
                                           type="number"
                                           placeholder="Rest time (sec)"
-                                          className="min-w-[120px]"
+                                          className="min-w-[120px] border-[#CBD5E1] rounded-[8px] focus-visible:border-[#07AC7D] focus-visible:ring-[3px] focus-visible:ring-[#07AC7D]/[.12]"
                                           value={newPlanExercise.rest_timer}
                                           onChange={(e) =>
                                             setNewPlanExercise({
@@ -1675,13 +1721,14 @@ export default function Fitness() {
                                         />
 
                                         <div className="space-y-2">
-                                          <p className="text-sm font-medium">
+                                          <p className="text-sm font-semibold text-[#475569]">
                                             Exercise Description
                                           </p>
                                           <Textarea
                                             maxLength={300}
                                             placeholder="Max 300 Characters"
                                             value={newPlanExercise.details}
+                                            className="border-[#CBD5E1] rounded-[8px] focus-visible:border-[#07AC7D] focus-visible:ring-[3px] focus-visible:ring-[#07AC7D]/[.12]"
                                             onChange={(e) =>
                                               setNewPlanExercise({
                                                 ...newPlanExercise,
@@ -1696,6 +1743,7 @@ export default function Fitness() {
                                   <DialogFooter>
                                     <Button
                                       variant="outline"
+                                      className="border-[#E2E8F0] rounded-[10px]"
                                       onClick={() =>
                                         setIsAddPlanExerciseOpen(false)
                                       }
@@ -1704,7 +1752,7 @@ export default function Fitness() {
                                     </Button>
                                     <Button
                                       onClick={handleAddExerciseToPlan}
-                                      className="bg-emerald-600 text-white"
+                                      className="bg-[#07AC7D] hover:bg-[#07AC7D] text-white rounded-[10px] disabled:opacity-50 disabled:cursor-not-allowed"
                                       disabled={
                                         !newPlanExercise.exercise_id ||
                                         !newPlanExercise.sets
@@ -1718,7 +1766,7 @@ export default function Fitness() {
                             </div>
 
                             {planExercises.length === 0 ? (
-                              <div className="text-center py-8 text-muted-foreground text-sm">
+                              <div className="text-center py-8 text-[#64748B] text-sm">
                                 No exercises in this plan yet.
                               </div>
                             ) : (
@@ -1726,13 +1774,13 @@ export default function Fitness() {
                                 {planExercises.map((pe, index) => (
                                   <div
                                     key={pe.id}
-                                    className="flex items-center justify-between p-3 rounded-lg bg-muted/30"
+                                    className="flex items-center justify-between p-3 rounded-[10px] bg-[#F5F7F9]"
                                   >
                                     <div>
-                                      <p className="font-medium text-sm">
+                                      <p className="font-medium text-sm text-[#111827]">
                                         {pe.exercises_list?.name}
                                       </p>
-                                      <p className="text-xs text-muted-foreground">
+                                      <p className="text-xs text-[#64748B]">
                                         {(allCategories as any[]).find(
                                           (c: any) =>
                                             c.id ===
@@ -1755,7 +1803,7 @@ export default function Fitness() {
                                         size="icon"
                                         disabled={index === 0}
                                         onClick={() => handleMoveExercise(pe, "up")}
-                                        className="h-8 w-8 text-slate-400 hover:text-slate-200"
+                                        className="h-8 w-8 text-[#94A3B8] hover:text-[#334155] rounded-[8px]"
                                       >
                                         <ChevronUp className="w-4 h-4" />
                                       </Button>
@@ -1764,7 +1812,7 @@ export default function Fitness() {
                                         size="icon"
                                         disabled={index === planExercises.length - 1}
                                         onClick={() => handleMoveExercise(pe, "down")}
-                                        className="h-8 w-8 text-slate-400 hover:text-slate-200"
+                                        className="h-8 w-8 text-[#94A3B8] hover:text-[#334155] rounded-[8px]"
                                       >
                                         <ChevronDown className="w-4 h-4" />
                                       </Button>
@@ -1774,7 +1822,7 @@ export default function Fitness() {
                                         onClick={() =>
                                           handleRemoveExerciseFromPlan(pe.id)
                                         }
-                                        className="text-red-400 hover:text-red-600"
+                                        className="text-[#EF4444] hover:text-[#DC2626] hover:bg-[#EF4444]/10 rounded-[8px]"
                                       >
                                         <Trash2 className="w-4 h-4" />
                                       </Button>
@@ -1787,6 +1835,7 @@ export default function Fitness() {
                           <DialogFooter>
                             <Button
                               variant="outline"
+                              className="border-[#E2E8F0] rounded-[10px]"
                               onClick={() => setIsManagePlanOpen(false)}
                             >
                               Done
@@ -1809,7 +1858,7 @@ export default function Fitness() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="gap-1 text-blue-600 border-blue-300"
+                            className="gap-1 text-[#4F7CFF] border-[#4F7CFF]/40 hover:bg-[#4F7CFF]/10 rounded-[8px]"
                             onClick={() => {
                               setActivePlan(plan);
                               fetchPlanAssignments(plan.id);
@@ -1820,10 +1869,10 @@ export default function Fitness() {
                             <Users className="w-4 h-4" /> Users
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-lg">
+                        <DialogContent className="max-w-lg rounded-[14px]">
                           <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
-                              <Users className="w-4 h-4 text-blue-500" />
+                            <DialogTitle className="flex items-center gap-2 text-[#111827] font-bold">
+                              <Users className="w-4 h-4 text-[#4F7CFF]" />
                               Assigned Users — {plan.name}
                             </DialogTitle>
                           </DialogHeader>
@@ -1831,7 +1880,7 @@ export default function Fitness() {
                           <div className="space-y-5 py-2">
                             {/* Assign new user */}
                             <div className="space-y-2">
-                              <p className="text-sm font-medium">
+                              <p className="text-sm font-semibold text-[#475569]">
                                 Assign a User
                               </p>
                               <div className="flex gap-2">
@@ -1839,7 +1888,7 @@ export default function Fitness() {
                                   value={assignUserId}
                                   onValueChange={setAssignUserId}
                                 >
-                                  <SelectTrigger className="flex-1">
+                                  <SelectTrigger className="flex-1 border-[#CBD5E1] rounded-[8px] focus:border-[#07AC7D] focus:ring-[3px] focus:ring-[#07AC7D]/[.12]">
                                     <SelectValue
                                       placeholder={
                                         unassignedUsers.length === 0
@@ -1850,14 +1899,14 @@ export default function Fitness() {
                                   </SelectTrigger>
                                   <SelectContent position="popper" side="bottom">
                                     {unassignedUsers.length === 0 ? (
-                                      <SelectItem value="none" disabled>
+                                      <SelectItem value="none" disabled className="focus:bg-[#07AC7D] focus:text-white data-[highlighted]:bg-[#07AC7D] data-[highlighted]:text-white data-[state=checked]:bg-[#07AC7D] data-[state=checked]:text-white">
                                         No unassigned users
                                       </SelectItem>
                                     ) : (
                                       unassignedUsers.map((u) => (
-                                        <SelectItem key={u.id} value={u.id}>
+                                        <SelectItem key={u.id} value={u.id} className="focus:bg-[#07AC7D] focus:text-white data-[highlighted]:bg-[#07AC7D] data-[highlighted]:text-white data-[state=checked]:bg-[#07AC7D] data-[state=checked]:text-white">
                                           {u.full_name}
-                                          <span className="ml-1 text-xs focus:bg-accent focus:text-accent-foreground text-slate-500">
+                                          <span className="ml-1 text-xs focus:bg-[#07AC7D] focus:text-white text-[#64748B]">
                                             ({u.email})
                                           </span>
                                         </SelectItem>
@@ -1866,7 +1915,7 @@ export default function Fitness() {
                                   </SelectContent>
                                 </Select>
                                 <Button
-                                  className="gap-1 bg-emerald-600 hover:bg-emerald-700 text-white shrink-0"
+                                  className="gap-1 bg-[#07AC7D] hover:bg-[#07AC7D] text-white shrink-0 rounded-[10px] disabled:opacity-50 disabled:cursor-not-allowed"
                                   disabled={!assignUserId}
                                   onClick={() =>
                                     handleAssignPlan(assignUserId, plan.id)
@@ -1879,17 +1928,17 @@ export default function Fitness() {
 
                             {/* Currently assigned users */}
                             <div className="space-y-2">
-                              <p className="text-sm font-medium">
+                              <p className="text-sm font-semibold text-[#475569]">
                                 Currently Assigned
                                 {planAssignments.length > 0 && (
-                                  <Badge variant="secondary" className="ml-2">
+                                  <Badge variant="secondary" className="ml-2 bg-[#E2E8F0] text-[#334155]">
                                     {planAssignments.length}
                                   </Badge>
                                 )}
                               </p>
 
                               {planAssignments.length === 0 ? (
-                                <div className="text-center py-6 text-muted-foreground text-sm rounded-lg border border-dashed">
+                                <div className="text-center py-6 text-[#64748B] text-sm rounded-[10px] border border-dashed border-[#E2E8F0]">
                                   No users assigned to this plan yet.
                                 </div>
                               ) : (
@@ -1897,21 +1946,21 @@ export default function Fitness() {
                                   {planAssignments.map((assignment) => (
                                     <div
                                       key={assignment.id}
-                                      className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-all"
+                                      className="flex items-center justify-between p-3 rounded-[10px] bg-[#F5F7F9] hover:bg-[#F5F7F9]/70 transition-all"
                                     >
                                       <div className="flex items-center gap-3 min-w-0">
-                                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                                          <span className="text-xs font-bold text-blue-700">
+                                        <div className="w-8 h-8 rounded-full bg-[#4F7CFF]/10 flex items-center justify-center flex-shrink-0">
+                                          <span className="text-xs font-bold text-[#4F7CFF]">
                                             {assignment.full_name
                                               .charAt(0)
                                               .toUpperCase()}
                                           </span>
                                         </div>
                                         <div className="min-w-0">
-                                          <p className="text-sm font-medium truncate">
+                                          <p className="text-sm font-medium text-[#111827] truncate">
                                             {assignment.full_name}
                                           </p>
-                                          <p className="text-xs text-muted-foreground truncate">
+                                          <p className="text-xs text-[#64748B] truncate">
                                             {assignment.email}
                                           </p>
                                         </div>
@@ -1925,7 +1974,7 @@ export default function Fitness() {
                                             plan.id,
                                           )
                                         }
-                                        className="text-red-400 hover:text-red-600 shrink-0"
+                                        className="text-[#EF4444] hover:text-[#DC2626] hover:bg-[#EF4444]/10 shrink-0 rounded-[8px]"
                                         title="Remove user from plan"
                                       >
                                         <Trash2 className="w-4 h-4" />
@@ -1940,6 +1989,7 @@ export default function Fitness() {
                           <DialogFooter>
                             <Button
                               variant="outline"
+                              className="border-[#E2E8F0] rounded-[10px]"
                               onClick={() => setIsAssignUsersOpen(false)}
                             >
                               Done
@@ -1963,20 +2013,21 @@ export default function Fitness() {
                               setEditPlan({ id: plan.id, name: plan.name });
                               setIsEditPlanOpen(true);
                             }}
-                            className="text-blue-500"
+                            className="text-[#4F7CFF] hover:bg-[#4F7CFF]/10 rounded-[8px]"
                           >
                             <SquarePen className="w-4 h-4" />
                           </Button>
                         </DialogTrigger>
-                        <DialogContent>
+                        <DialogContent className="rounded-[14px]">
                           <DialogHeader>
-                            <DialogTitle>Edit Plan Name</DialogTitle>
+                            <DialogTitle className="text-[#111827] font-bold">Edit Plan Name</DialogTitle>
                           </DialogHeader>
                           <div className="grid gap-4 py-4">
                             <div className="space-y-2">
-                              <p className="text-sm font-medium">Plan Name</p>
+                              <p className="text-sm font-semibold text-[#475569]">Plan Name</p>
                               <Input
                                 value={editPlan.name}
+                                className="border-[#CBD5E1] rounded-[8px] focus-visible:border-[#07AC7D] focus-visible:ring-[3px] focus-visible:ring-[#07AC7D]/[.12]"
                                 onChange={(e) =>
                                   setEditPlan({
                                     ...editPlan,
@@ -1989,13 +2040,14 @@ export default function Fitness() {
                           <DialogFooter>
                             <Button
                               variant="outline"
+                              className="border-[#E2E8F0] rounded-[10px]"
                               onClick={() => setIsEditPlanOpen(false)}
                             >
                               Cancel
                             </Button>
                             <Button
                               onClick={handleEditPlan}
-                              className="bg-emerald-600 text-white"
+                              className="bg-[#07AC7D] hover:bg-[#07AC7D] text-white rounded-[10px]"
                             >
                               Save
                             </Button>
@@ -2008,7 +2060,7 @@ export default function Fitness() {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleDeletePlan(plan.id)}
-                        className="text-red-400 hover:text-red-600"
+                        className="text-[#EF4444] hover:text-[#DC2626] hover:bg-[#EF4444]/10 rounded-[8px]"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -2021,13 +2073,13 @@ export default function Fitness() {
         </Card>
 
         {/* ── User Exercises (logged) ── */}
-        <Card className="lg:col-span-full shadow-card border-none bg-card/60 backdrop-blur-md">
+        <Card className="lg:col-span-full border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] bg-white">
           <CardHeader>
             <div className="flex flex-col md:flex-row gap-2 justify-between items-center">
-              <CardTitle className="font-display text-xl text-foreground">
+              <CardTitle className="text-xl font-bold text-[#111827]">
                 {activeFilter} Exercises
               </CardTitle>
-              <span className="text-xs text-muted-foreground uppercase tracking-widest">
+              <span className="text-xs text-[#64748B] uppercase tracking-widest">
                 Showing {filteredExercises.length} results
               </span>
             </div>
@@ -2037,28 +2089,28 @@ export default function Fitness() {
               filteredExercises.map((ex) => (
                 <div
                   key={ex.id}
-                  className="flex flex-col md:flex-row items-center justify-between gap-2 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all group"
+                  className="flex flex-col md:flex-row items-center justify-between gap-2 p-4 rounded-[14px] bg-[#F5F7F9] hover:bg-[#F5F7F9]/70 transition-all group"
                 >
                   <div className="flex flex-col md:flex-row items-center gap-4 min-w-0">
-                    <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center flex-shrink-0">
-                      <Dumbbell className="w-6 h-6 text-primary-foreground" />
+                    <div className="w-12 h-12 rounded-[10px] bg-[#07AC7D] flex items-center justify-center flex-shrink-0">
+                      <Dumbbell className="w-6 h-6 text-white" />
                     </div>
                     <div className="min-w-0 flex flex-col items-center md:block">
-                      <p className="font-bold text-foreground break-words whitespace-normal">
+                      <p className="font-bold text-[#111827] break-words whitespace-normal">
                         {ex.name}
                       </p>
-                      <p className="text-xs text-muted-foreground uppercase tracking-widest">
+                      <p className="text-xs text-[#64748B] uppercase tracking-widest">
                         {ex.category || "General"} • {ex.sets} Sets
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center justify-center">
-                    <p className="text-primary font-semibold">{ex.full_name}</p>
+                    <p className="text-[#2E9D7A] font-semibold">{ex.full_name}</p>
                   </div>
                   <div className="flex flex-col md:flex-row items-center gap-2 md:gap-5">
                     <div className="flex justify-between gap-4 items-center md:block text-right">
-                      <p className="font-bold text-accent">{ex.reps} reps</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="font-bold text-[#2E9D7A]">{ex.reps} reps</p>
+                      <p className="text-xs text-[#64748B]">
                         Total: {ex.sets * ex.reps}
                       </p>
                     </div>
@@ -2074,7 +2126,7 @@ export default function Fitness() {
                 </div>
               ))
             ) : (
-              <div className="text-center py-10 text-muted-foreground">
+              <div className="text-center py-10 text-[#64748B]">
                 No data found.
               </div>
             )}
@@ -2087,18 +2139,18 @@ export default function Fitness() {
 
 function StatCard({ title, value, icon: Icon, color, iconColor }: any) {
   return (
-    <Card className="shadow-card border-none">
+    <Card className="border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] bg-white">
       <CardContent className="pt-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+            <p className="text-xs font-bold text-[#64748B] uppercase tracking-wider">
               {title}
             </p>
-            <p className="text-3xl font-black text-foreground">{value}</p>
+            <p className="text-3xl font-black text-[#111827]">{value}</p>
           </div>
-          <div className={`p-3 rounded-xl ${color}`}>
+          <div className={`p-3 rounded-[10px] ${color}`}>
             <Icon
-              className={`w-6 h-6 ${iconColor || "text-accent-foreground"}`}
+              className={`w-6 h-6 ${iconColor || "text-[#2E9D7A]"}`}
             />
           </div>
         </div>

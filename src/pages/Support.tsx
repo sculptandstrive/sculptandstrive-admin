@@ -1,22 +1,19 @@
 import { useState, useEffect } from "react";
-import { 
-  HelpCircle, MessageCircle, Book, FileQuestion, Clock, 
-  CheckCircle, AlertCircle, Plus, Trash2, ExternalLink, 
-  RefreshCw, MessageSquare, Eye 
+import {
+  MessageCircle, Clock,
+  CheckCircle, AlertCircle, Trash2,
+  RefreshCw, MessageSquare, Eye
 } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 
 export default function Support() {
   const [tickets, setTickets] = useState<any[]>([]);
-  const [tutorials, setTutorials] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newVideo, setNewVideo] = useState({ title: "", url: "", duration: "" });
 
   const fetchData = async () => {
     setLoading(true);
@@ -25,14 +22,8 @@ export default function Support() {
         .from("tickets")
         .select("*")
         .order("created_at", { ascending: false });
-      
-      const { data: tutorialData } = await supabase
-        .from("tutorials")
-        .select("*")
-        .order("created_at", { ascending: false });
 
       if (ticketData) setTickets(ticketData);
-      if (tutorialData) setTutorials(tutorialData);
     } catch (err) {
       console.error("Sync Error:", err);
     } finally {
@@ -68,144 +59,101 @@ export default function Support() {
     if (!error) fetchData();
   };
 
-  // Validation Logic
-  const handleAddTutorial = async () => {
-    //  Basic empty check
-    if (!newVideo.title || !newVideo.url || !newVideo.duration) {
-      alert("Please fill in all fields.");
-      return;
-    }
-
-    //  URL Validation 
-    const urlPattern = new RegExp(/^(https?:\/\/)?([\w\d\-_]+\.+[A-Za-z]{2,}).*$/);
-    if (!urlPattern.test(newVideo.url)) {
-      alert("Please enter a valid URL (e.g., https://youtube.com/...).");
-      return;
-    }
-
-    //  Duration Validation 
-      const lowerDuration = newVideo.duration.toLowerCase().trim(); // Added .trim() to ignore accidental spaces
-      const isValidDuration = lowerDuration.includes("min") || lowerDuration.includes("hour") || lowerDuration.includes("hr"); // Added 'hr' just in case
-      if (!isValidDuration) {
-      alert("Duration must specify 'min' or 'hour' (e.g., '15 min' or '1 hour').");
-      return;
-    }
-
-    const { error } = await supabase.from("tutorials").insert([newVideo]);
-    if (!error) {
-      setNewVideo({ title: "", url: "", duration: "" });
-      fetchData();
-    } else {
-      alert("Database Error: " + error.message); // This will pop up a message telling us exactly what's wrong
-    }
-  };
-
-  const handleDeleteTutorial = async (id: string) => {
-  const { error } = await supabase.from("tutorials").delete().eq("id", id);
-  if (!error) {
-    fetchData();
-  } else {
-    // YOU ARE MISSING THIS:
-    console.error("Delete failed:", error.message);
-    alert("Delete failed: " + error.message);
-  }
-};
-
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "open": return <Badge variant="destructive">Open</Badge>;
-      case "in_progress": return <Badge className="bg-yellow-500 text-white border-none">Viewing</Badge>;
-      case "resolved": return <Badge className="bg-green-500 text-white border-none">Closed</Badge>;
-      default: return <Badge variant="secondary">{status}</Badge>;
+      case "open": return <Badge className="bg-[#EF4444] text-white border-none">Open</Badge>;
+      case "in_progress": return <Badge className="bg-[#F59E0B] text-white border-none">Viewing</Badge>;
+      case "resolved": return <Badge className="bg-[#10B981] text-white border-none">Closed</Badge>;
+      default: return <Badge variant="secondary" className="bg-[#E2E8F0] text-[#64748B] border-none">{status}</Badge>;
     }
   };
 
   const getPriorityIcon = (priority: string) => {
     switch (priority) {
-      case "high": return <AlertCircle className="w-4 h-4 text-destructive" />;
-      case "medium": return <Clock className="w-4 h-4 text-yellow-500" />;
-      case "low": return <CheckCircle className="w-4 h-4 text-green-500" />;
-      default: return <MessageCircle className="w-4 h-4 text-primary" />;
+      case "high": return <AlertCircle className="w-4 h-4 text-[#EF4444]" />;
+      case "medium": return <Clock className="w-4 h-4 text-[#F59E0B]" />;
+      case "low": return <CheckCircle className="w-4 h-4 text-[#10B981]" />;
+      default: return <MessageCircle className="w-4 h-4 text-[#07AC7D]" />;
     }
   };
 
   return (
     <>
-      <PageHeader 
-        title="Admin Support Dashboard" 
-        description="Monitor live user tickets and manage video tutorials."
+      <PageHeader
+        title="Admin Support Dashboard"
+        description="Monitor and respond to live user support tickets."
       />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
-        <Card className="shadow-sm border-l-4 border-l-red-500">
+        <Card className="border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] border-l-4 border-l-[#EF4444] bg-white">
           <CardContent className="pt-5 flex justify-between items-center">
             <div>
-              <p className="text-xs text-muted-foreground font-semibold">NEW TICKETS</p>
-              <p className="text-2xl font-bold">{tickets.filter(t => t.status === 'open').length}</p>
+              <p className="text-xs text-[#64748B] font-semibold">NEW TICKETS</p>
+              <p className="text-2xl font-bold text-[#111827]">{tickets.filter(t => t.status === 'open').length}</p>
             </div>
-            <div className="p-2.5 rounded-[10px] bg-red-50 text-red-500"><AlertCircle className="w-4 h-4" /></div>
+            <div className="p-2.5 rounded-[10px] bg-[#EF4444]/10 text-[#EF4444]"><AlertCircle className="w-4 h-4" /></div>
           </CardContent>
         </Card>
-        <Card className="shadow-sm border-l-4 border-l-yellow-500">
+        <Card className="border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] border-l-4 border-l-[#F59E0B] bg-white">
           <CardContent className="pt-5 flex justify-between items-center">
             <div>
-              <p className="text-xs text-muted-foreground font-semibold">BEING VIEWED</p>
-              <p className="text-2xl font-bold">{tickets.filter(t => t.status === 'in_progress').length}</p>
+              <p className="text-xs text-[#64748B] font-semibold">BEING VIEWED</p>
+              <p className="text-2xl font-bold text-[#111827]">{tickets.filter(t => t.status === 'in_progress').length}</p>
             </div>
-            <div className="p-2.5 rounded-[10px] bg-yellow-50 text-yellow-500"><Eye className="w-4 h-4" /></div>
+            <div className="p-2.5 rounded-[10px] bg-[#F59E0B]/10 text-[#F59E0B]"><Eye className="w-4 h-4" /></div>
           </CardContent>
         </Card>
-        <Card className="shadow-sm border-l-4 border-l-green-500">
+        <Card className="border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] border-l-4 border-l-[#10B981] bg-white">
           <CardContent className="pt-5 flex justify-between items-center">
             <div>
-              <p className="text-xs text-muted-foreground font-semibold">CLOSED / SOLVED</p>
-              <p className="text-2xl font-bold">{tickets.filter(t => t.status === 'resolved').length}</p>
+              <p className="text-xs text-[#64748B] font-semibold">CLOSED / SOLVED</p>
+              <p className="text-2xl font-bold text-[#111827]">{tickets.filter(t => t.status === 'resolved').length}</p>
             </div>
-            <div className="p-2.5 rounded-[10px] bg-green-50 text-green-500"><CheckCircle className="w-4 h-4" /></div>
+            <div className="p-2.5 rounded-[10px] bg-[#10B981]/10 text-[#10B981]"><CheckCircle className="w-4 h-4" /></div>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Support Tickets Column */}
-        <Card className="lg:col-span-2 shadow-card">
-          <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
-            <CardTitle className="font-display">Live Support Tickets</CardTitle>
-            <Button variant="ghost" size="sm" onClick={fetchData} disabled={loading}>
+        <Card className="lg:col-span-3 border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] bg-white">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-[#E2E8F0] pb-4">
+            <CardTitle className="text-[#111827] font-bold">Live Support Tickets</CardTitle>
+            <Button variant="ghost" size="sm" onClick={fetchData} disabled={loading} className="text-[#64748B] hover:bg-[#07AC7D]/10 rounded-[8px]">
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </Button>
           </CardHeader>
           <CardContent className="pt-6">
             <div className="space-y-4">
               {tickets.length === 0 ? (
-                <div className="text-center py-10 text-muted-foreground">No active tickets.</div>
+                <div className="text-center py-10 text-[#64748B]">No active tickets.</div>
               ) : (
                 tickets.map((ticket) => (
-                  <div key={ticket.id} className="p-4 rounded-xl border bg-muted/10 space-y-3 hover:shadow-md transition-shadow">
+                  <div key={ticket.id} className="p-4 rounded-[14px] border border-[#E2E8F0] bg-[#F5F7F9] space-y-3 hover:shadow-[0_4px_18px_rgba(15,23,42,0.08)] transition-shadow duration-150">
                     <div className="flex justify-between items-start">
                       <div className="flex gap-3">
                         {getPriorityIcon(ticket.priority || "high")}
                         <div>
-                          <p className="font-bold text-foreground">{ticket.user_name}</p>
-                          <p className="text-xs text-muted-foreground">{new Date(ticket.created_at).toLocaleString()}</p>
+                          <p className="font-bold text-[#111827]">{ticket.user_name}</p>
+                          <p className="text-xs text-[#64748B]">{new Date(ticket.created_at).toLocaleString()}</p>
                         </div>
                       </div>
                       <div className="flex gap-2">{getStatusBadge(ticket.status)}</div>
                     </div>
-                    <div className="p-3 bg-background rounded-lg border text-sm italic break-words overflow-hidden">
+                    <div className="p-3 bg-white rounded-[8px] border border-[#E2E8F0] text-sm italic text-[#334155] break-words overflow-hidden">
                       "{ticket.message}"
                     </div>
                     <div className="flex justify-between items-center pt-2">
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={() => updateStatus(ticket.id, "in_progress")}>View</Button>
-                        <Button variant="outline" size="sm" className="text-green-600" onClick={() => updateStatus(ticket.id, "resolved")}>Close</Button>
+                        <Button variant="outline" size="sm" className="border-[#E2E8F0] text-[#334155] hover:bg-[#07AC7D]/10 hover:text-[#07AC7D] rounded-[8px]" onClick={() => updateStatus(ticket.id, "in_progress")}>View</Button>
+                        <Button variant="outline" size="sm" className="text-[#07AC7D] border-[#07AC7D]/30 hover:bg-[#07AC7D]/10 rounded-[8px]" onClick={() => updateStatus(ticket.id, "resolved")}>Close</Button>
                       </div>
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="icon" className="text-red-500" onClick={() => deleteTicket(ticket.id)}>
+                        <Button variant="ghost" size="icon" className="text-[#EF4444] hover:bg-[#EF4444]/10 rounded-[8px]" onClick={() => deleteTicket(ticket.id)}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
-                        <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => openWhatsApp(ticket)}>
+                        <Button size="sm" className="bg-[#07AC7D] hover:bg-[#07AC7D]/90 text-white rounded-[8px] transition-colors duration-150" onClick={() => openWhatsApp(ticket)}>
                           <MessageSquare className="w-4 h-4 mr-2" /> Admin WP
                         </Button>
                       </div>
@@ -217,69 +165,6 @@ export default function Support() {
           </CardContent>
         </Card>
 
-        {/* Tutorial Management Column */}
-        <div className="space-y-6">
-          <Card className="shadow-card border-primary/20 bg-primary/5">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold">Add New Tutorial</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Input 
-                placeholder="Title" 
-                value={newVideo.title} 
-                onChange={e => setNewVideo({...newVideo, title: e.target.value})} 
-              />
-              <Input 
-                type="url"
-                placeholder="URL (https://...)" 
-                value={newVideo.url} 
-                onChange={e => setNewVideo({...newVideo, url: e.target.value})} 
-              />
-              <div className="flex gap-2">
-                <Input 
-                  placeholder="Duration (e.g. 10 min)" 
-                  value={newVideo.duration} 
-                  onChange={e => setNewVideo({...newVideo, duration: e.target.value})} 
-                />
-                <Button onClick={handleAddTutorial} size="icon"><Plus className="w-4 h-4" /></Button>
-              </div>
-              <p className="text-[10px] text-muted-foreground italic">
-                *Duration must include 'min' or 'hour'.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-card">
-            <CardHeader><CardTitle className="font-display">Live Tutorials</CardTitle></CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {tutorials.map((video) => (
-                  <div key={video.id} className="flex items-start justify-between p-3 rounded-lg border bg-muted/20 group gap-2">
-                    <div className="flex items-start gap-3 min-w-0 flex-1">
-                      <Book className="w-4 h-4 text-primary mt-1 shrink-0" />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium break-words whitespace-normal leading-tight">
-                          {video.title}
-                        </p>
-                        <p className="text-xs text-muted-foreground break-all whitespace-normal mt-1">
-                          {video.duration} 
-                        </p>
-                      </div>
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity shrink-0" 
-                      onClick={() => handleDeleteTutorial(video.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </>
   );

@@ -60,10 +60,10 @@ interface UserWithRole {
 
 
 const roleConfig: Record<AppRole, { label: string; color: string; icon: typeof Shield }> = {
-  admin: { label: "Admin", color: "bg-destructive/10 text-destructive border-destructive/20", icon: ShieldAlert },
-  user: { label: "User", color: "bg-muted text-muted-foreground border-border", icon: UserCog },
-  trial_user: { label: 'Trial User', color: "bg-muted text-muted-foreground border-border", icon: UserCog },
-  coach: { label: 'Coach', color: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20", icon: ShieldCheck }
+  admin: { label: "Admin", color: "bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/20", icon: ShieldAlert },
+  user: { label: "User", color: "bg-[#F5F7F9] text-[#64748B] border-[#E2E8F0]", icon: UserCog },
+  trial_user: { label: 'Trial User', color: "bg-[#F5F7F9] text-[#64748B] border-[#E2E8F0]", icon: UserCog },
+  coach: { label: 'Coach', color: "bg-[#7C5CFC]/10 text-[#7C5CFC] border-[#7C5CFC]/20", icon: ShieldCheck }
 };
 
 export default function Users() {
@@ -158,7 +158,6 @@ export default function Users() {
       const [profilesRes, rolesRes, coachClientsRes] = await Promise.all([
         supabase.from("profiles").select("*").order("created_at", { ascending: false }),
         supabase.from("user_roles").select("user_id, role"),
-        // Fix 3: ORDER BY created_at DESC so latest assignment wins
         supabase.from("coach_clients")
           .select("client_id, coach_id, profiles:coach_id(full_name)")
           .order("created_at", { ascending: false })
@@ -168,7 +167,6 @@ export default function Users() {
       if (rolesRes.error) throw rolesRes.error;
 
       const rolesMap = new Map(rolesRes.data.map(r => [r.user_id, r.role]));
-      // Fix 3: only take the first (most-recent) coach per client_id
       const coachMap = new Map<string, string | null>();
       for (const cc of (coachClientsRes?.data || []) as any[]) {
         if (!coachMap.has(cc.client_id)) {
@@ -222,7 +220,6 @@ export default function Users() {
   const handleDirectAssignCoach = async (clientId: string, coachId: string) => {
     try {
       setAssigning(true);
-      // Fix 5: throw if DELETE fails to prevent orphaned rows
       const { error: deleteError } = await supabase
         .from("coach_clients")
         .delete()
@@ -231,7 +228,6 @@ export default function Users() {
       if (deleteError) throw deleteError;
 
       if (coachId && coachId !== "none") {
-        // Insert new assignment
         const { error } = await supabase
           .from("coach_clients")
           .insert({
@@ -245,7 +241,6 @@ export default function Users() {
         toast({ title: "Success", description: "Coach unassigned successfully." });
       }
 
-      // Fix 4: resolve coach name, then optimistically update both list card and dialog
       const assignedCoach = coachesList.find((c) => c.id === coachId);
       const coachName = assignedCoach ? assignedCoach.full_name : null;
 
@@ -253,10 +248,9 @@ export default function Users() {
         prev.map((u) => (u.user_id === clientId ? { ...u, coach_name: coachName } : u))
       );
 
-      // Update selected profile dialog state
       setSelectedProfileUser((prev) => (prev ? { ...prev, coach_name: coachName } : null));
 
-      fetchUsers(); // Refresh full list in background
+      fetchUsers();
     } catch (error: any) {
       toast({
         title: "Failed to assign coach",
@@ -287,7 +281,6 @@ export default function Users() {
     
     setAssigning(true);
     try {
-      // Check if user is already in a group
       const { data: existing } = await supabase
         .from("group_members")
         .select("id")
@@ -295,7 +288,6 @@ export default function Users() {
         .maybeSingle();
 
       if (existing) {
-        // Update existing membership
         const { error } = await supabase
           .from("group_members")
           .update({ group_id: selectedGroupId })
@@ -304,7 +296,6 @@ export default function Users() {
         if (error) throw error;
         toast({ title: "Success", description: "User's group updated." });
       } else {
-        // Add new membership
         const { error } = await supabase
           .from("group_members")
           .insert({ user_id: selectedUserId, group_id: selectedGroupId });
@@ -316,7 +307,7 @@ export default function Users() {
       setIsAssignGroupOpen(false);
       setSelectedUserId("");
       setSelectedGroupId("");
-      fetchUsers(); // Refresh user list
+      fetchUsers();
     } catch (error: any) {
       toast({
         title: "Failed to assign user",
@@ -387,63 +378,63 @@ export default function Users() {
   };
 
   if (adminLoading) return <div className="p-4"><Skeleton className="h-64 w-full" /></div>;
-  if (!isAdmin) return <div className="p-20 text-center"><ShieldAlert className="mx-auto h-12 w-12 text-destructive/50" /></div>;
+  if (!isAdmin) return <div className="p-20 text-center"><ShieldAlert className="mx-auto h-12 w-12 text-[#EF4444]/50" /></div>;
 
   return (
     <>
       <PageHeader title="User Management" description="Real-time access control.">
         <div className="relative max-w-xs w-full">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-[#64748B]" />
           <Input
             placeholder="Search users..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8 bg-background text-xs"
+            className="pl-8 bg-white text-xs border-[#CBD5E1] rounded-[8px] focus-visible:border-[#71D0F7] focus-visible:ring-[3px] focus-visible:ring-[#71D0F7]/[.12]"
           />
         </div>
       </PageHeader>
 
-      <Card className="border-muted shadow-none overflow-hidden">
-        <CardHeader className="p-5 border-b flex flex-row items-center justify-between space-y-0 bg-muted/10">
-          <CardTitle className="flex items-center gap-2">
-            <UsersIcon className="w-4 h-4 text-primary" />
+      <Card className="border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] overflow-hidden bg-white">
+        <CardHeader className="p-5 border-b border-[#E2E8F0] flex flex-row items-center justify-between space-y-0 bg-[#F5F7F9]">
+          <CardTitle className="flex items-center gap-2 text-[#111827] font-bold">
+            <UsersIcon className="w-4 h-4 text-[#71D0F7]" />
             Registry ({filteredUsers.length})
           </CardTitle>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
             <Input
               placeholder="Filter by name/email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-9 w-64 text-sm rounded-[10px] bg-background border"
+              className="pl-9 h-9 w-64 text-sm rounded-[10px] bg-white border-[#CBD5E1] focus-visible:border-[#71D0F7] focus-visible:ring-[3px] focus-visible:ring-[#71D0F7]/[.12]"
             />
           </div>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table className="min-w-full table-fixed border-collapse">
-              <TableHeader className="bg-muted/30">
+              <TableHeader className="bg-[#F5F7F9]">
                 <TableRow>
-                  <TableHead className="w-[200px] pl-6">Member Name</TableHead>
-                  <TableHead className="w-[250px]">Email Address</TableHead>
-                  <TableHead className="w-[120px] text-center">Current Role</TableHead>
-                  <TableHead className="w-[240px] text-right pr-6">Management</TableHead>
+                  <TableHead className="w-[200px] pl-6 text-[#475569]">Member Name</TableHead>
+                  <TableHead className="w-[250px] text-[#475569]">Email Address</TableHead>
+                  <TableHead className="w-[120px] text-center text-[#475569]">Current Role</TableHead>
+                  <TableHead className="w-[240px] text-right pr-6 text-[#475569]">Management</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredUsers.map((user) => (
-                  <TableRow key={user.id} className="hover:bg-muted/20 border-b last:border-0 transition-colors">
+                  <TableRow key={user.id} className="hover:bg-[#F5F7F9] border-b border-[#E2E8F0] last:border-0 transition-colors duration-150">
                     <TableCell className="py-2 pl-6">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center text-[10px] font-bold shrink-0">
+                        <div className="w-8 h-8 rounded-[8px] bg-[#E8F8F8] flex items-center justify-center text-[10px] font-bold text-[#4DB8F5] shrink-0">
                           {(user.full_name?.[0] || user.email?.[0] || "U").toUpperCase()}
                         </div>
-                        <span className="text-sm font-semibold truncate block max-w-[140px]" title={user.full_name || ""}>
+                        <span className="text-sm font-semibold text-[#111827] truncate block max-w-[140px]" title={user.full_name || ""}>
                           {user.full_name || "Unnamed User"}
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="py-2 text-sm text-slate-500">
+                    <TableCell className="py-2 text-sm text-[#64748B]">
                       <span className="truncate block max-w-[220px]" title={user.email || ""}>
                         {user.email || "not set"}
                       </span>
@@ -453,7 +444,7 @@ export default function Users() {
                         {user.role === 'trial_user' ? 'Trial User' : user.role}
                       </Badge>
                       {user.role === 'user' && (
-                        <span className="block text-[10px] text-muted-foreground mt-1">
+                        <span className="block text-[10px] text-[#64748B] mt-1">
                           Coach: {user.coach_name || "Unassigned"}
                         </span>
                       )}
@@ -463,7 +454,7 @@ export default function Users() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-7 w-28 text-[10px] bg-background"
+                          className="h-7 w-28 text-[10px] bg-white border-[#E2E8F0] text-[#334155] hover:bg-[#F5F7F9] rounded-[8px]"
                           onClick={() => {
                             setSelectedUserId(user.user_id);
                             setIsAssignGroupOpen(true);
@@ -477,7 +468,7 @@ export default function Users() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-7 w-28 text-[10px] bg-background"
+                          className="h-7 w-28 text-[10px] bg-white border-[#E2E8F0] text-[#334155] hover:bg-[#F5F7F9] rounded-[8px]"
                           onClick={() => {
                             setSelectedProfileUser(user);
                             setProfileDialogOpen(true);
@@ -491,14 +482,14 @@ export default function Users() {
                           onValueChange={(val: AppRole) => handleRoleChange(user, val)} 
                           disabled={user.role === 'admin' || user.user_id === currentUser?.id || updating}
                         >
-                          <SelectTrigger className="h-7 w-28 text-[10px] bg-background disabled:opacity-75 disabled:cursor-not-allowed">
+                          <SelectTrigger className="h-7 w-28 text-[10px] bg-white border-[#CBD5E1] rounded-[8px] disabled:opacity-75 disabled:cursor-not-allowed focus:border-[#71D0F7] focus:ring-[3px] focus:ring-[#71D0F7]/[.12]">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="admin" className="text-xs font-bold text-destructive" disabled>ADMIN</SelectItem>
+                            <SelectItem value="admin" className="text-xs font-bold text-[#EF4444]" disabled>ADMIN</SelectItem>
                             <SelectItem value="user" className="text-xs font-medium">USER</SelectItem>
                             <SelectItem value="trial_user" className="text-xs font-medium">TRIAL USER</SelectItem>
-                            <SelectItem value="coach" className="text-xs font-medium text-indigo-600">COACH</SelectItem>
+                            <SelectItem value="coach" className="text-xs font-medium text-[#7C5CFC]">COACH</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -514,30 +505,30 @@ export default function Users() {
 
       {/* ── Assign Group Dialog ── */}
       <Dialog open={isAssignGroupOpen} onOpenChange={setIsAssignGroupOpen}>
-        <DialogContent>
+        <DialogContent className="rounded-[14px]">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-[#111827] font-bold">
               Assign User to Group
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-[#64748B]">
               Select a group to assign this user to.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <p className="text-sm font-medium text-slate-300">Select Group</p>
+              <p className="text-sm font-semibold text-[#475569]">Select Group</p>
               <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
-                <SelectTrigger>
+                <SelectTrigger className="border-[#CBD5E1] rounded-[8px] focus:border-[#71D0F7] focus:ring-[3px] focus:ring-[#71D0F7]/[.12]">
                   <SelectValue placeholder="Choose a group..." />
                 </SelectTrigger>
                 <SelectContent>
                   {groups.length === 0 ? (
-                    <SelectItem value="none" disabled className="text-slate-500">
+                    <SelectItem value="none" disabled className="text-[#94A3B8]">
                       No groups available
                     </SelectItem>
                   ) : (
                     groups.map((g) => (
-                      <SelectItem key={g.id} value={g.id} className="hover:bg-[#2dd4bf]/10">
+                      <SelectItem key={g.id} value={g.id} className="hover:bg-[#E8F8F8]">
                         {g.name}
                       </SelectItem>
                     ))
@@ -549,6 +540,7 @@ export default function Users() {
           <DialogFooter className="gap-2">
             <Button
               variant="outline"
+              className="border-[#E2E8F0] rounded-[10px]"
               onClick={() => setIsAssignGroupOpen(false)}
             >
               Cancel
@@ -556,7 +548,7 @@ export default function Users() {
             <Button
               onClick={handleAssignGroup}
               disabled={!selectedGroupId || assigning}
-              className="bg-emerald-600 text-white"
+              className="bg-[#71D0F7] hover:bg-[#4DB8F5] text-white rounded-[10px] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {assigning ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -574,38 +566,38 @@ export default function Users() {
 
 
       <AlertDialog open={roleChangeDialog.open} onOpenChange={(o) => !updating && setRoleChangeDialog(prev => ({ ...prev, open: o }))}>
-        <AlertDialogContent className="max-w-xs rounded-lg">
+        <AlertDialogContent className="max-w-xs rounded-[14px]">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-sm">Modify Permissions?</AlertDialogTitle>
-            <AlertDialogDescription className="text-xs">
-              Assign <b>{roleChangeDialog.newRole?.toUpperCase()}</b> access to this account?
+            <AlertDialogTitle className="text-sm text-[#111827] font-bold">Modify Permissions?</AlertDialogTitle>
+            <AlertDialogDescription className="text-xs text-[#64748B]">
+              Assign <b className="text-[#111827]">{roleChangeDialog.newRole?.toUpperCase()}</b> access to this account?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row gap-2">
-            <AlertDialogCancel className="text-xs h-8 flex-1">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmRoleChange} className="text-xs h-8 flex-1">Confirm</AlertDialogAction>
+            <AlertDialogCancel className="text-xs h-8 flex-1 border-[#E2E8F0] rounded-[8px]">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRoleChange} className="text-xs h-8 flex-1 bg-[#71D0F7] hover:bg-[#4DB8F5] rounded-[8px]">Confirm</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       {/* ── Client Profile Dialog ── */}
       <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto bg-background border border-border text-foreground rounded-xl p-5 custom-scrollbar">
-          <DialogHeader className="border-b border-border pb-4 mb-4">
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto bg-white border border-[#E2E8F0] text-[#111827] rounded-[14px] p-5 custom-scrollbar">
+          <DialogHeader className="border-b border-[#E2E8F0] pb-4 mb-4">
             <DialogTitle className="text-base font-semibold flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-[#1e293b]/10 flex items-center justify-center text-xs font-black text-[#1e293b]">
+              <div className="w-9 h-9 rounded-full bg-[#E8F8F8] flex items-center justify-center text-xs font-black text-[#4DB8F5]">
                 {(selectedProfileUser?.full_name?.[0] || selectedProfileUser?.email?.[0] || "U").toUpperCase()}
               </div>
               <div>
-                <span className="text-foreground block">{selectedProfileUser?.full_name || "Client Profile"}</span>
-                <span className="text-xs text-muted-foreground font-normal">{selectedProfileUser?.email}</span>
+                <span className="text-[#111827] block">{selectedProfileUser?.full_name || "Client Profile"}</span>
+                <span className="text-xs text-[#64748B] font-normal">{selectedProfileUser?.email}</span>
               </div>
             </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+            <DialogDescription className="text-xs text-[#64748B] flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
               <span>Joined on {selectedProfileUser?.created_at ? new Date(selectedProfileUser.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}</span>
               {selectedProfileUser?.role === 'user' && (
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-[#1e293b] dark:text-slate-300">Assign Coach:</span>
+                  <span className="font-semibold text-[#334155]">Assign Coach:</span>
                   <Select
                     value={
                       coachesList.find(c => c.full_name === selectedProfileUser?.coach_name)?.id || "none"
@@ -613,7 +605,7 @@ export default function Users() {
                     onValueChange={(coachId) => handleDirectAssignCoach(selectedProfileUser.user_id, coachId)}
                     disabled={assigning}
                   >
-                    <SelectTrigger className="h-8 text-xs w-48 bg-background border-border text-foreground font-semibold px-2.5">
+                    <SelectTrigger className="h-8 text-xs w-48 bg-white border-[#CBD5E1] text-[#111827] font-semibold px-2.5 rounded-[8px] focus:border-[#71D0F7] focus:ring-[3px] focus:ring-[#71D0F7]/[.12]">
                       <SelectValue placeholder="No Coach assigned" />
                     </SelectTrigger>
                     <SelectContent>
@@ -632,55 +624,55 @@ export default function Users() {
 
           {profileLoading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
-              <Loader2 className="w-8 h-8 animate-spin text-[#1e293b]" />
-              <p className="text-sm text-muted-foreground font-medium">Retrieving client record...</p>
+              <Loader2 className="w-8 h-8 animate-spin text-[#71D0F7]" />
+              <p className="text-sm text-[#64748B] font-medium">Retrieving client record...</p>
             </div>
           ) : !profileData ? (
-            <p className="text-center py-20 text-muted-foreground text-sm">Failed to load profile details.</p>
+            <p className="text-center py-20 text-[#64748B] text-sm">Failed to load profile details.</p>
           ) : (
             <div className="space-y-6">
               {/* Stats Summary Panel */}
-              <div className="grid grid-cols-3 gap-4 p-4 rounded-xl bg-muted/30 border border-border/80">
+              <div className="grid grid-cols-3 gap-4 p-4 rounded-[14px] bg-[#F5F7F9] border border-[#E2E8F0]">
                 <div className="text-center">
-                  <span className="text-[10px] text-muted-foreground font-black uppercase tracking-wider block mb-1">Workouts Assigned</span>
-                  <span className="text-xl font-bold text-foreground">{profileData.workoutsSummary.totalCount}</span>
+                  <span className="text-[10px] text-[#64748B] font-black uppercase tracking-wider block mb-1">Workouts Assigned</span>
+                  <span className="text-xl font-bold text-[#111827]">{profileData.workoutsSummary.totalCount}</span>
                 </div>
-                <div className="text-center border-x border-border/80">
-                  <span className="text-[10px] text-muted-foreground font-black uppercase tracking-wider block mb-1">Sessions Done</span>
-                  <span className="text-xl font-bold text-emerald-600">{profileData.workoutsSummary.completedCount}</span>
+                <div className="text-center border-x border-[#E2E8F0]">
+                  <span className="text-[10px] text-[#64748B] font-black uppercase tracking-wider block mb-1">Sessions Done</span>
+                  <span className="text-xl font-bold text-[#10B981]">{profileData.workoutsSummary.completedCount}</span>
                 </div>
                 <div className="text-center">
-                  <span className="text-[10px] text-muted-foreground font-black uppercase tracking-wider block mb-1">Est. Kcal Burned</span>
-                  <span className="text-xl font-bold text-orange-600">{profileData.workoutsSummary.totalCalories.toLocaleString()}</span>
+                  <span className="text-[10px] text-[#64748B] font-black uppercase tracking-wider block mb-1">Est. Kcal Burned</span>
+                  <span className="text-xl font-bold text-[#F59E0B]">{profileData.workoutsSummary.totalCalories.toLocaleString()}</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {/* Column 1: Health History */}
                 <div className="space-y-4">
-                  <h4 className="font-bold text-sm text-foreground uppercase tracking-widest border-b border-border pb-1.5">Health Questionnaire</h4>
-                  <div className="space-y-4 bg-muted/20 border border-border/60 p-4 rounded-xl text-xs">
+                  <h4 className="font-bold text-sm text-[#111827] uppercase tracking-widest border-b border-[#E2E8F0] pb-1.5">Health Questionnaire</h4>
+                  <div className="space-y-4 bg-[#F5F7F9] border border-[#E2E8F0] p-4 rounded-[14px] text-xs">
                     <div>
-                      <span className="text-muted-foreground font-bold block mb-1">Medical Conditions</span>
-                      <p className="text-foreground bg-background p-2.5 rounded border border-border min-h-[40px]">
+                      <span className="text-[#64748B] font-bold block mb-1">Medical Conditions</span>
+                      <p className="text-[#111827] bg-white p-2.5 rounded-[8px] border border-[#E2E8F0] min-h-[40px]">
                         {profileData.healthHistory?.medical_conditions || "None declared."}
                       </p>
                     </div>
                     <div>
-                      <span className="text-muted-foreground font-bold block mb-1">Injuries</span>
-                      <p className="text-foreground bg-background p-2.5 rounded border border-border min-h-[40px]">
+                      <span className="text-[#64748B] font-bold block mb-1">Injuries</span>
+                      <p className="text-[#111827] bg-white p-2.5 rounded-[8px] border border-[#E2E8F0] min-h-[40px]">
                         {profileData.healthHistory?.injuries || "None declared."}
                       </p>
                     </div>
                     <div>
-                      <span className="text-muted-foreground font-bold block mb-1">Allergies</span>
-                      <p className="text-foreground bg-background p-2.5 rounded border border-border min-h-[40px]">
+                      <span className="text-[#64748B] font-bold block mb-1">Allergies</span>
+                      <p className="text-[#111827] bg-white p-2.5 rounded-[8px] border border-[#E2E8F0] min-h-[40px]">
                         {profileData.healthHistory?.allergies || "None declared."}
                       </p>
                     </div>
                     <div>
-                      <span className="text-muted-foreground font-bold block mb-1">Medications</span>
-                      <p className="text-foreground bg-background p-2.5 rounded border border-border min-h-[40px]">
+                      <span className="text-[#64748B] font-bold block mb-1">Medications</span>
+                      <p className="text-[#111827] bg-white p-2.5 rounded-[8px] border border-[#E2E8F0] min-h-[40px]">
                         {profileData.healthHistory?.medications || "None declared."}
                       </p>
                     </div>
@@ -689,34 +681,34 @@ export default function Users() {
 
                 {/* Column 2: Weekly Check-ins */}
                 <div className="space-y-4">
-                  <h4 className="font-bold text-sm text-foreground uppercase tracking-widest border-b border-border pb-1.5">Weekly Check-in Log</h4>
+                  <h4 className="font-bold text-sm text-[#111827] uppercase tracking-widest border-b border-[#E2E8F0] pb-1.5">Weekly Check-in Log</h4>
                   {profileData.checkins.length === 0 ? (
-                    <p className="text-xs text-muted-foreground italic py-8 text-center bg-muted/20 rounded-xl border border-border">No check-ins submitted yet.</p>
+                    <p className="text-xs text-[#64748B] italic py-8 text-center bg-[#F5F7F9] rounded-[14px] border border-[#E2E8F0]">No check-ins submitted yet.</p>
                   ) : (
                     <div className="space-y-3 max-h-[360px] overflow-y-auto pr-2 custom-scrollbar">
                       {profileData.checkins.map((c) => (
-                        <div key={c.id} className="p-3 rounded-xl bg-card border border-border/80 space-y-2 text-xs">
-                          <div className="flex justify-between items-center border-b border-border pb-1.5">
-                            <span className="text-foreground font-bold">{new Date(c.checkin_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
-                            <span className="text-foreground font-bold bg-muted px-2 py-0.5 rounded border border-border">{c.weight_kg} kg</span>
+                        <div key={c.id} className="p-3 rounded-[14px] bg-white border border-[#E2E8F0] space-y-2 text-xs">
+                          <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-1.5">
+                            <span className="text-[#111827] font-bold">{new Date(c.checkin_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                            <span className="text-[#111827] font-bold bg-[#F5F7F9] px-2 py-0.5 rounded-[8px] border border-[#E2E8F0]">{c.weight_kg} kg</span>
                           </div>
                           <div className="grid grid-cols-3 gap-2 text-[11px]">
                             <div>
-                              <span className="text-muted-foreground block">Energy</span>
-                              <span className="text-foreground font-semibold">{c.energy_level}/5</span>
+                              <span className="text-[#64748B] block">Energy</span>
+                              <span className="text-[#111827] font-semibold">{c.energy_level}/5</span>
                             </div>
                             <div>
-                              <span className="text-muted-foreground block">Mood</span>
-                              <span className="text-foreground font-semibold capitalize">{c.mood}</span>
+                              <span className="text-[#64748B] block">Mood</span>
+                              <span className="text-[#111827] font-semibold capitalize">{c.mood}</span>
                             </div>
                             <div>
-                              <span className="text-muted-foreground block">Sleep</span>
-                              <span className="text-foreground font-semibold">{c.sleep_hours ? `${c.sleep_hours} hrs` : "—"}</span>
+                              <span className="text-[#64748B] block">Sleep</span>
+                              <span className="text-[#111827] font-semibold">{c.sleep_hours ? `${c.sleep_hours} hrs` : "—"}</span>
                             </div>
                           </div>
                           {c.notes && (
-                            <div className="bg-muted/40 p-2 rounded border border-border text-[11px] text-muted-foreground">
-                              <span className="text-[10px] text-muted-foreground block font-bold mb-0.5">Notes:</span>
+                            <div className="bg-[#F5F7F9] p-2 rounded-[8px] border border-[#E2E8F0] text-[11px] text-[#64748B]">
+                              <span className="text-[10px] text-[#64748B] block font-bold mb-0.5">Notes:</span>
                               {c.notes}
                             </div>
                           )}
@@ -728,22 +720,22 @@ export default function Users() {
               </div>
 
               {/* Progress Photos Row */}
-              <div className="space-y-4 pt-4 border-t border-border">
-                <h4 className="font-bold text-sm text-foreground uppercase tracking-widest border-b border-border pb-1.5">Progress Photos</h4>
+              <div className="space-y-4 pt-4 border-t border-[#E2E8F0]">
+                <h4 className="font-bold text-sm text-[#111827] uppercase tracking-widest border-b border-[#E2E8F0] pb-1.5">Progress Photos</h4>
                 {profileData.photos.length === 0 ? (
-                  <p className="text-xs text-muted-foreground italic py-8 text-center bg-muted/20 rounded-xl border border-border">No progress photos uploaded yet.</p>
+                  <p className="text-xs text-[#64748B] italic py-8 text-center bg-[#F5F7F9] rounded-[14px] border border-[#E2E8F0]">No progress photos uploaded yet.</p>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {profileData.photos.map((p) => (
-                      <div key={p.id} className="relative rounded-xl overflow-hidden border border-border bg-card flex flex-col group">
-                        <div className="aspect-[3/4] w-full overflow-hidden bg-slate-100 flex items-center justify-center">
+                      <div key={p.id} className="relative rounded-[14px] overflow-hidden border border-[#E2E8F0] bg-white flex flex-col group">
+                        <div className="aspect-[3/4] w-full overflow-hidden bg-[#F5F7F9] flex items-center justify-center">
                           <img
                             src={p.image_path}
                             alt={`Progress photo ${p.taken_at}`}
                             className="w-full h-full object-cover transition-transform group-hover:scale-105"
                           />
                         </div>
-                        <div className="p-2 bg-muted/40 text-center text-[10px] font-bold text-muted-foreground border-t border-border/80">
+                        <div className="p-2 bg-[#F5F7F9] text-center text-[10px] font-bold text-[#64748B] border-t border-[#E2E8F0]">
                           {new Date(p.taken_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                         </div>
                       </div>

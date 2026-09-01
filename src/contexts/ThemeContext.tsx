@@ -9,8 +9,8 @@ export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState("light");
   const [fontSize, setFontSize] = useState("medium");
   const [contrast, setContrast] = useState("normal");
-  const [primaryColor, setPrimaryColor] = useState("#1a365d");
-  const [accentColor, setAccentColor] = useState("#1c9ebe");
+  const [primaryColor, setPrimaryColor] = useState("#07AC7D");
+  const [accentColor, setAccentColor] = useState("#F59E0B");
 
   const {user} = useAuth();
 
@@ -19,8 +19,8 @@ export const ThemeProvider = ({ children }) => {
     setTheme(localStorage.getItem("app-theme") || "light");
     setFontSize(localStorage.getItem("app-fontSize") || "medium");
     setContrast(localStorage.getItem("app-contrast") || "normal");
-    setPrimaryColor(localStorage.getItem("app-primary") || "#1a365d");
-    setAccentColor(localStorage.getItem("app-accent") || "#1c9ebe");
+    setPrimaryColor(localStorage.getItem("app-primary") || "#07AC7D");
+    setAccentColor(localStorage.getItem("app-accent") || "#F59E0B");
   }, []);
 
   // Apply theme + save whenever changed
@@ -49,20 +49,6 @@ export const ThemeProvider = ({ children }) => {
     localStorage.setItem("app-contrast", contrast);
     localStorage.setItem("app-primary", primaryColor);
     localStorage.setItem("app-accent", accentColor);
-
-    const handleAppearance = async() => {
-          await supabase.from("admin_appearance").upsert({
-            user_id: user.id,
-            theme,
-            font_size: fontSize,
-            contrast,
-            primary_color: primaryColor,
-            accent_color: accentColor,
-            updated_at: new Date().toISOString(),
-          });
-        }
-    
-    handleAppearance();
   }, [theme, fontSize, contrast, primaryColor, accentColor]);
 
   return (

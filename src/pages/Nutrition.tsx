@@ -13,7 +13,8 @@ import {
   UserMinus,
   Trash2,
   RefreshCw,
-  ChevronDown
+  ChevronDown,
+  Calculator as CalculatorIcon,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { PageHeader } from "@/components/PageHeader";
@@ -218,7 +219,7 @@ export default function NutritionAdmin() {
         .from("workout_groups")
         .select("id, name")
         .order("name", { ascending: true });
-      
+
       if (error) throw error;
       setGroups(data || []);
     } catch (error: any) {
@@ -426,269 +427,239 @@ export default function NutritionAdmin() {
   const pctTotal =
     macroMode === "percentage"
       ? (Number(newPlan.protein) || 0) +
-        (Number(newPlan.fats) || 0) +
-        (Number(newPlan.carbs) || 0)
+      (Number(newPlan.fats) || 0) +
+      (Number(newPlan.carbs) || 0)
       : 100;
 
   return (
-    <>
+    <div className="min-w-0 w-full bg-white min-h-screen">
+
       <PageHeader
         title="Nutrition Admin"
-        description="System monitoring and assignment."
+        description="Manage meal plans, nutrition metrics, and member assignments."
       >
-        <div className="flex flex-col md:flex-row gap-2">
+        <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end lg:w-auto">
+          <div className="relative order-2 w-full sm:order-1 sm:w-[220px] lg:w-[240px]">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#64748B]" />
+            <Input
+              placeholder="Search plans..."
+              aria-label="Search meal plans"
+              className="h-10 w-full rounded-[10px] border-[#E2E8F0] bg-white pl-9 text-sm shadow-none focus-visible:border-[#07AC7D] focus-visible:ring-[#07AC7D]/15"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          <Button
+            variant="outline"
+            onClick={fetchAdminDashboardData}
+            className="order-3 h-10 w-full gap-2 rounded-[10px] border-[#E2E8F0] bg-white px-4 text-[#334155] shadow-none hover:border-[#07AC7D] hover:bg-[#F1FAF6] hover:text-[#06966D] sm:order-2 sm:w-auto"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            <span>Sync Data</span>
+          </Button>
+
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
-                <Plus className="w-4 h-4" /> Create New Plan
+              <Button className="order-1 h-10 w-full gap-2 rounded-[10px] bg-[#07AC7D] px-4 text-white shadow-none hover:bg-[#06966D] sm:order-3 sm:w-auto">
+                <Plus className="h-4 w-4" />
+                <span>Create New Plan</span>
               </Button>
             </DialogTrigger>
 
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-h-[90vh] w-[calc(100%-1rem)] max-w-lg overflow-y-auto rounded-[14px] border-[#E2E8F0] bg-white p-4 sm:p-6">
               <DialogHeader>
-                <DialogTitle>Add New Meal Plan</DialogTitle>
+                <DialogTitle className="text-xl font-bold text-[#111827]">
+                  Add New Meal Plan
+                </DialogTitle>
               </DialogHeader>
 
-              <div className="grid gap-4 py-4">
-                {/* Plan Title */}
+              <div className="grid gap-4 py-2">
                 <div className="space-y-2">
-                  <p className="text-sm font-medium">
-                    Plan Title (Max 20 chars)
+                  <p className="text-xs font-semibold text-[#475569]">
+                    Plan Title <span className="font-normal text-[#64748B]">(Max 20 chars)</span>
                   </p>
                   <Input
                     maxLength={20}
                     placeholder="e.g., Vegan Shred"
                     value={newPlan.name}
-                    onChange={(e) =>
-                      setNewPlan({ ...newPlan, name: e.target.value })
-                    }
+                    onChange={(e) => setNewPlan({ ...newPlan, name: e.target.value })}
+                    className="h-11 rounded-[10px] border-[#CBD5E1] focus-visible:border-[#07AC7D] focus-visible:ring-[#07AC7D]/15"
                   />
                 </div>
 
-                {/* Macro Mode Dropdown — full width, below title */}
-                <div className="space-y-1.5">
-                  <p className="text-sm font-medium">Macro Input Mode</p>
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-[#475569]">Macro Input Mode</p>
                   <div className="relative w-full">
                     <button
                       type="button"
                       onClick={() => setMacroModeOpen((v) => !v)}
-                      className="w-full flex items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm hover:bg-accent transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
+                      className="flex h-11 w-full items-center justify-between rounded-[10px] border border-[#CBD5E1] bg-white px-3 text-sm font-medium text-[#334155] shadow-none transition-colors hover:border-[#07AC7D] focus:outline-none focus:ring-2 focus:ring-[#07AC7D]/15"
                     >
-                      <span className="font-medium">
+                      <span>
                         {macroMode === "values"
                           ? "Enter by Value (grams)"
                           : "Enter by Percentage (%)"}
                       </span>
                       <ChevronDown
-                        className={`w-4 h-4 text-muted-foreground transition-transform ${
-                          macroModeOpen ? "rotate-180" : ""
-                        }`}
+                        className={`h-4 w-4 text-[#64748B] transition-transform ${macroModeOpen ? "rotate-180" : ""
+                          }`}
                       />
                     </button>
 
                     {macroModeOpen && (
-                      <div className="absolute z-50 mt-1 w-full rounded-md border border-input bg-popover shadow-md overflow-hidden">
-                        {(["values", "percentage"] as MacroMode[]).map(
-                          (mode) => (
-                            <button
-                              key={mode}
-                              type="button"
-                              onClick={() => {
-                                setMacroMode(mode);
-                                setMacroModeOpen(false);
-                                // Reset macro fields to sensible defaults on mode switch
-                                setNewPlan((p) => ({
-                                  ...p,
-                                  protein: mode === "percentage" ? "30" : "150",
-                                  fats: mode === "percentage" ? "25" : "40",
-                                  carbs: mode === "percentage" ? "45" : "140",
-                                }));
-                              }}
-                              className={`w-full flex items-center justify-between px-3 py-2.5 text-sm hover:bg-accent transition-colors ${
-                                macroMode === mode
-                                  ? "bg-accent font-medium text-white"
-                                  : ""
+                      <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-[10px] border border-[#E2E8F0] bg-white shadow-lg">
+                        {(["values", "percentage"] as MacroMode[]).map((mode) => (
+                          <button
+                            key={mode}
+                            type="button"
+                            onClick={() => {
+                              setMacroMode(mode);
+                              setMacroModeOpen(false);
+                              setNewPlan((p) => ({
+                                ...p,
+                                protein: mode === "percentage" ? "30" : "150",
+                                fats: mode === "percentage" ? "25" : "40",
+                                carbs: mode === "percentage" ? "45" : "140",
+                              }));
+                            }}
+                            className={`flex w-full items-center justify-between px-3 py-3 text-left text-sm transition-colors hover:bg-[#F1FAF6] ${macroMode === mode ? "bg-[#F1FAF6] font-semibold text-[#2E9D7A]" : "text-[#334155]"
                               }`}
-                            >
-                              <span>
-                                {mode === "values"
-                                  ? "Enter by Value (grams)"
-                                  : "Enter by Percentage (%)"}
-                              </span>
-                              {macroMode === mode && (
-                                <Check className="w-4 h-4 text-emerald-500" />
-                              )}
-                            </button>
-                          ),
-                        )}
+                          >
+                            <span>
+                              {mode === "values"
+                                ? "Enter by Value (grams)"
+                                : "Enter by Percentage (%)"}
+                            </span>
+                            {macroMode === mode && <Check className="h-4 w-4 text-[#06966D]" />}
+                          </button>
+                        ))}
                       </div>
                     )}
                   </div>
-
-                  {/* Subtle hint */}
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs leading-5 text-[#64748B]">
                     {macroMode === "percentage"
-                      ? "Enter macro split as % of total calories. Must sum to 100%. Values will be converted to grams on save."
+                      ? "Enter macro split as % of total calories. Must sum to 100%."
                       : "Enter macro amounts directly in grams."}
                   </p>
                 </div>
 
-                {/* ── NEW: Assign To Dropdown ── */}
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Assign To</p>
-                  <Select
-                    value={assignType}
-                    onValueChange={(v) => setAssignType(v as "individual" | "group")}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select assignment type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="individual">👤 Individual</SelectItem>
-                      <SelectItem value="group">👥 Group</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* ── User selector for Individual ── */}
-                {assignType === "individual" && (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Select User</p>
-                    <Select value={selectedUserForPlan} onValueChange={setSelectedUserForPlan}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Choose a user..." />
+                    <p className="text-xs font-semibold text-[#475569]">Assign To</p>
+                    <Select
+                      value={assignType}
+                      onValueChange={(v) => setAssignType(v as "individual" | "group")}
+                    >
+                      <SelectTrigger className="h-11 w-full rounded-[10px] border-[#CBD5E1]">
+                        <SelectValue placeholder="Select assignment type" />
                       </SelectTrigger>
                       <SelectContent>
-                        {users.map((u) => (
-                          <SelectItem key={u.id} value={u.id}>
-                            {u.full_name}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value="individual">Individual</SelectItem>
+                        <SelectItem value="group">Group</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                )}
 
-                {/* ── Group selector for Group ── */}
-                {assignType === "group" && (
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">Select Group</p>
-                    <Select value={selectedGroupForPlan} onValueChange={setSelectedGroupForPlan}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Choose a group..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {groups.length === 0 ? (
-                          <SelectItem value="none" disabled>
-                            No groups available
-                          </SelectItem>
-                        ) : (
-                          groups.map((g) => (
-                            <SelectItem key={g.id} value={g.id}>
-                              {g.name}
+                  {assignType === "individual" ? (
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-[#475569]">Select User</p>
+                      <Select value={selectedUserForPlan} onValueChange={setSelectedUserForPlan}>
+                        <SelectTrigger className="h-11 w-full rounded-[10px] border-[#CBD5E1]">
+                          <SelectValue placeholder="Choose a user..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {users.map((u) => (
+                            <SelectItem key={u.id} value={u.id}>
+                              {u.full_name}
                             </SelectItem>
-                          ))
-                        )}
-                      </SelectContent>
-    </Select>
-  </div>
-)}
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-[#475569]">Select Group</p>
+                      <Select value={selectedGroupForPlan} onValueChange={setSelectedGroupForPlan}>
+                        <SelectTrigger className="h-11 w-full rounded-[10px] border-[#CBD5E1]">
+                          <SelectValue placeholder="Choose a group..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {groups.length === 0 ? (
+                            <SelectItem value="none" disabled>
+                              No groups available
+                            </SelectItem>
+                          ) : (
+                            groups.map((g) => (
+                              <SelectItem key={g.id} value={g.id}>
+                                {g.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
 
-
-                {/* Daily Calories */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Daily Calories</p>
+                    <p className="text-xs font-semibold text-[#475569]">Daily Calories</p>
                     <Input
                       type="number"
                       value={newPlan.calories}
-                      onChange={(e) =>
-                        setNewPlan({ ...newPlan, calories: e.target.value })
-                      }
+                      onChange={(e) => setNewPlan({ ...newPlan, calories: e.target.value })}
+                      className="h-11 rounded-[10px] border-[#CBD5E1]"
                     />
                   </div>
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Water (ml)</p>
+                    <p className="text-xs font-semibold text-[#475569]">Water (ml)</p>
                     <Input
                       type="number"
                       value={newPlan.water}
-                      onChange={(e) =>
-                        setNewPlan({ ...newPlan, water: e.target.value })
-                      }
+                      onChange={(e) => setNewPlan({ ...newPlan, water: e.target.value })}
+                      className="h-11 rounded-[10px] border-[#CBD5E1]"
                     />
                   </div>
                 </div>
 
-                {/* Macro Fields */}
-                <div className="grid grid-cols-3 gap-3">
-                  {/* Protein */}
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">
-                      Protein {macroMode === "percentage" ? "(%)" : "(g)"}
-                    </p>
-                    <Input
-                      type="number"
-                      value={newPlan.protein}
-                      onChange={(e) =>
-                        setNewPlan({ ...newPlan, protein: e.target.value })
-                      }
-                    />
-                    {macroMode === "percentage" && previewProteinG !== null && (
-                      <p className="text-xs text-muted-foreground">
-                        ≈ {previewProteinG}g
+                <div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-3">
+                  {[
+                    { key: "protein", label: "Protein" },
+                    { key: "fats", label: "Fats" },
+                    { key: "carbs", label: "Carbs" },
+                  ].map(({ key, label }) => (
+                    <div key={key} className="space-y-2">
+                      <p className="text-xs font-semibold text-[#475569]">
+                        {label} {macroMode === "percentage" ? "(%)" : "(g)"}
                       </p>
-                    )}
-                  </div>
-
-                  {/* Fats */}
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">
-                      Fats {macroMode === "percentage" ? "(%)" : "(g)"}
-                    </p>
-                    <Input
-                      type="number"
-                      value={newPlan.fats}
-                      onChange={(e) =>
-                        setNewPlan({ ...newPlan, fats: e.target.value })
-                      }
-                    />
-                    {macroMode === "percentage" && previewFatsG !== null && (
-                      <p className="text-xs text-muted-foreground">
-                        ≈ {previewFatsG}g
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Carbs */}
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">
-                      Carbs {macroMode === "percentage" ? "(%)" : "(g)"}
-                    </p>
-                    <Input
-                      type="number"
-                      value={newPlan.carbs}
-                      onChange={(e) =>
-                        setNewPlan({ ...newPlan, carbs: e.target.value })
-                      }
-                    />
-                    {macroMode === "percentage" && previewCarbsG !== null && (
-                      <p className="text-xs text-muted-foreground">
-                        ≈ {previewCarbsG}g
-                      </p>
-                    )}
-                  </div>
+                      <Input
+                        type="number"
+                        value={newPlan[key as keyof typeof newPlan] as string | number}
+                        onChange={(e) => setNewPlan({ ...newPlan, [key]: e.target.value })}
+                        className="h-11 rounded-[10px] border-[#CBD5E1]"
+                      />
+                      {macroMode === "percentage" && key === "protein" && previewProteinG !== null && (
+                        <p className="text-xs text-[#64748B]">≈ {previewProteinG}g</p>
+                      )}
+                      {macroMode === "percentage" && key === "fats" && previewFatsG !== null && (
+                        <p className="text-xs text-[#64748B]">≈ {previewFatsG}g</p>
+                      )}
+                      {macroMode === "percentage" && key === "carbs" && previewCarbsG !== null && (
+                        <p className="text-xs text-[#64748B]">≈ {previewCarbsG}g</p>
+                      )}
+                    </div>
+                  ))}
                 </div>
 
-                {/* Percentage total indicator */}
                 {macroMode === "percentage" && (
                   <div
-                    className={`flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium ${
-                      pctTotal === 100
-                        ? "bg-emerald-50 text-emerald-700"
-                        : pctTotal > 100
-                          ? "bg-red-50 text-red-600"
-                          : "bg-amber-50 text-amber-600"
-                    }`}
+                    className={`flex items-center justify-between rounded-[10px] border px-3 py-2.5 text-sm font-medium ${pctTotal === 100
+                      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                      : pctTotal > 100
+                        ? "border-red-200 bg-red-50 text-red-600"
+                        : "border-amber-200 bg-amber-50 text-amber-600"
+                      }`}
                   >
                     <span>Total</span>
                     <span>
@@ -703,255 +674,257 @@ export default function NutritionAdmin() {
                 )}
               </div>
 
-              <DialogFooter>
+              <DialogFooter className="flex-col gap-2 sm:flex-row">
                 <Button
                   variant="outline"
                   onClick={() => setIsDialogOpen(false)}
+                  className="h-10 w-full rounded-[10px] border-[#E2E8F0] sm:w-auto"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleCreatePlan}
-                  className="bg-emerald-600 text-white"
+                  className="h-10 w-full rounded-[10px] bg-[#07AC7D] text-white hover:bg-[#06966D] sm:w-auto"
                 >
                   Save Plan
                 </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
-
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search plans..."
-              className="w-[200px] pl-9"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <Button
-            variant="outline"
-            onClick={fetchAdminDashboardData}
-            className="gap-2"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />{" "}
-            Sync Data
-          </Button>
         </div>
       </PageHeader>
 
-      {/* ── Stats Grid ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 mt-6">
-        <Card className="border-none shadow-sm">
-          <CardContent className="p-2 md:p-6 flex flex-col-reverse gap-3 md:flex-row justify-between items-center">
-            <div className="flex flex-col md:flex-col items-center md:items-start">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                Live Meal Plans
-              </p>
-              <p className="text-3xl font-bold mt-1">{mealPlans.length}</p>
-            </div>
-            <div className="bg-purple-100 p-3 rounded-xl text-purple-600">
-              <Utensils className="w-6 h-6" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-sm">
-          <CardContent className="p-2 md:p-6 flex flex-col-reverse gap-3 md:flex-row justify-between items-center">
-            <div className="flex flex-col items-center md:items-start">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                Total Recipes
-              </p>
-              <p className="text-3xl font-bold mt-1">{recipeCount}</p>
-            </div>
-            <div className="bg-emerald-50 p-3 rounded-xl text-emerald-600">
-              <Apple className="w-6 h-6" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-sm">
-          <CardContent className="p-2 md:p-6 flex flex-col-reverse gap-3 md:flex-row justify-between items-center">
-            <div className="flex flex-col items-center md:items-start">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                Global Avg Cals
-              </p>
-              <p className="text-3xl font-bold mt-1">{globalAvgCals}</p>
-            </div>
-            <div className="bg-orange-50 p-3 rounded-xl text-orange-500">
-              <Flame className="w-6 h-6" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-sm">
-          <CardContent className="p-2 md:p-6 flex flex-col-reverse gap-3 md:flex-row justify-between items-center">
-            <div className="flex flex-col items-center md:items-start">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                Water Intake Avg
-              </p>
-              <p className="text-3xl font-bold mt-1">{globalWaterAvg}%</p>
-            </div>
-            <div className="bg-blue-50 p-3 rounded-xl text-blue-500">
-              <Droplets className="w-6 h-6" />
-            </div>
-          </CardContent>
-        </Card>
+      {/* KPI cards */}
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          { label: "Live Meal Plans", value: mealPlans.length, icon: Utensils, iconClass: "bg-[#F1FAF6] text-[#06966D]" },
+          { label: "Total Recipes", value: recipeCount, icon: Apple, iconClass: "bg-[#ECFDF5] text-[#10B981]" },
+          { label: "Global Avg Cals", value: globalAvgCals, icon: Flame, iconClass: "bg-[#FFF7ED] text-[#F59E0B]" },
+          { label: "Water Intake Avg", value: `${globalWaterAvg}%`, icon: Droplets, iconClass: "bg-[#EFF6FF] text-[#4F7CFF]" },
+        ].map(({ label, value, icon: Icon, iconClass }) => (
+          <Card
+            key={label}
+            className="rounded-[14px] border border-[#E2E8F0] bg-white shadow-[0_4px_18px_rgba(15,23,42,.05)]"
+          >
+            <CardContent className="flex min-h-[126px] items-center justify-between p-5 sm:p-6">
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#64748B]">
+                  {label}
+                </p>
+                <p className="mt-2 text-[30px] font-bold leading-none text-[#111827] sm:text-[32px]">
+                  {value}
+                </p>
+              </div>
+              <div className={`ml-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] ${iconClass}`}>
+                <Icon className="h-5 w-5" strokeWidth={2} />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      <h3 className="flex items-center gap-2 text-xl font-bold mb-6 text-foreground">
-        <Utensils className="w-5 h-5 text-indigo-600" /> Active Meal Plans
-      </h3>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {loading ? (
-          <div className="col-span-full flex justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      {/* Meal plans */}
+      <section className="mt-8 bg-white">
+        <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="flex items-center gap-2 text-lg font-bold text-[#111827] sm:text-xl">
+              <Utensils className="h-5 w-5 text-[#06966D]" />
+              Active Meal Plans
+            </h3>
+            <p className="mt-1 text-sm text-[#64748B]">
+              Review nutrition targets and manage member access.
+            </p>
           </div>
+          <Badge className="w-fit rounded-full border border-[#C6EFE2] bg-[#F1FAF6] px-3 py-1 text-[#2E9D7A] hover:bg-[#F1FAF6]">
+            {filteredPlans.length} {filteredPlans.length === 1 ? "plan" : "plans"}
+          </Badge>
+        </div>
+
+        {loading ? (
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+            {[1, 2].map((item) => (
+              <Card
+                key={item}
+                className="rounded-[14px] border border-[#E2E8F0] bg-white shadow-[0_4px_18px_rgba(15,23,42,.05)]"
+              >
+                <CardContent className="space-y-5 p-5 sm:p-6">
+                  <div className="h-6 w-1/2 animate-pulse rounded bg-slate-100" />
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    {Array.from({ length: 6 }).map((_, index) => (
+                      <div key={index} className="h-20 animate-pulse rounded-[10px] bg-slate-100" />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : filteredPlans.length === 0 ? (
+          <Card className="rounded-[14px] border border-dashed border-[#CBD5E1] bg-white shadow-[0_4px_18px_rgba(15,23,42,.05)]">
+            <CardContent className="flex flex-col items-center justify-center px-6 py-12 text-center">
+              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#F1FAF6] text-[#06966D]">
+                <Utensils className="h-5 w-5" />
+              </div>
+              <h4 className="text-base font-semibold text-[#111827]">No meal plans found</h4>
+              <p className="mt-1 max-w-sm text-sm text-[#64748B]">
+                Try a different search or create a new nutrition plan.
+              </p>
+            </CardContent>
+          </Card>
         ) : (
-          filteredPlans.map((plan) => (
-            <Card
-              key={plan.id}
-              className="border-none shadow-md overflow-hidden"
-            >
-              <CardContent className="p-3 md:p-6">
-                <div className="flex justify-between items-start flex-col md:flex-row gap-2 mb-6">
-                  <div>
-                    <div className="flex items-start gap-2">
-                      <h4 className="text-2xl font-bold text-muted-foreground max-w-[150px] md:max-w-[250px] break-words leading-snug">
-                        {plan.name}
-                      </h4>
+          <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+            {filteredPlans.map((plan) => (
+              <Card
+                key={plan.id}
+                className="group overflow-hidden rounded-[14px] border border-[#E2E8F0] bg-white shadow-[0_4px_18px_rgba(15,23,42,.05)] transition-shadow duration-150 hover:shadow-[0_8px_24px_rgba(15,23,42,.08)]"
+              >
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex flex-col gap-4 border-b border-[#E2E8F0] pb-5">
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#F1FAF6] text-[#06966D]">
+                            <Utensils className="h-4 w-4" />
+                          </span>
+                          <h4 className="min-w-0 break-words text-lg font-bold leading-snug text-[#111827] sm:text-xl">
+                            {plan.name}
+                          </h4>
+                        </div>
+                        <Badge
+                          variant="secondary"
+                          className="mt-2 rounded-full bg-[#F5F7F9] px-2.5 py-1 text-[10px] font-medium text-[#64748B]"
+                        >
+                          ID: {plan.id.slice(0, 8)}
+                        </Badge>
+                      </div>
+
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0"
+                        aria-label={`Delete ${plan.name}`}
+                        title="Delete meal plan"
+                        className="h-9 w-9 shrink-0 rounded-[10px] text-[#EF4444] hover:bg-red-50 hover:text-[#DC2626]"
                         onClick={() => handleDeletePlan(plan.id)}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                    <Badge
-                      variant="secondary"
-                      className="bg-slate-100 text-[10px] text-slate-500 mt-1"
-                    >
-                      ID: {plan.id.slice(0, 8)}
-                    </Badge>
-                  </div>
 
-                  <div className="flex gap-2">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2 px-4 h-9">
-                          <UserMinus className="w-4 h-4" /> Revoke
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56">
-                        <DropdownMenuLabel>Revoke User</DropdownMenuLabel>
-                        <div className="max-h-[300px] overflow-y-auto overflow-x-hidden p-1">
-                          {users
-                            .filter((u) => u.active_plan_name === plan.name)
-                            .map((u) => (
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="h-10 w-full justify-center gap-2 rounded-[10px] border-[#B8E4D4] bg-[#F1FAF6] px-3 text-[#06966D] hover:border-[#06966D] hover:bg-[#F1FAF6] hover:text-[#06966D]"
+                          >
+                            <UserMinus className="h-4 w-4" strokeWidth={2} />
+                            <span>Revoke</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-[min(280px,calc(100vw-32px))] rounded-[10px] border-[#E2E8F0] bg-white p-1 shadow-lg">
+                          <DropdownMenuLabel className="px-3 py-2 text-xs font-semibold text-[#64748B]">
+                            Revoke User Access
+                          </DropdownMenuLabel>
+                          <div className="max-h-[300px] overflow-y-auto">
+                            {users.filter((u) => u.active_plan_name === plan.name).length === 0 ? (
+                              <div className="px-3 py-3 text-sm text-[#64748B]">
+                                No users are assigned to this plan.
+                              </div>
+                            ) : (
+                              users
+                                .filter((u) => u.active_plan_name === plan.name)
+                                .map((u) => (
+                                  <DropdownMenuItem
+                                    key={u.id}
+                                    onClick={() => handleRemovePlan(u.id, plan.id)}
+                                    className="rounded-[8px] px-3 py-2.5 focus:bg-[#F1FAF6] focus:text-[#2E9D7A]"
+                                  >
+                                    <span className="truncate">{u.full_name}</span>
+                                  </DropdownMenuItem>
+                                ))
+                            )}
+                          </div>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="h-10 w-full justify-center gap-2 rounded-[10px] border-[#E2E8F0] bg-white px-3 text-[#334155] hover:border-[#07AC7D] hover:bg-[#F1FAF6] hover:text-[#06966D]"
+                          >
+                            <UserPlus className="h-4 w-4" />
+                            <span>Assign</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-[min(280px,calc(100vw-32px))] rounded-[10px] border-[#E2E8F0] bg-white p-1 shadow-lg">
+                          <DropdownMenuLabel className="px-3 py-2 text-xs font-semibold text-[#64748B]">
+                            Assign User
+                          </DropdownMenuLabel>
+                          <div className="max-h-[300px] overflow-y-auto">
+                            {users.map((u) => (
                               <DropdownMenuItem
                                 key={u.id}
-                                onClick={() => handleRemovePlan(u.id, plan.id)}
+                                onClick={() => handleAssignPlan(u.id, plan.id)}
+                                className="rounded-[8px] px-3 py-2.5 focus:bg-[#F1FAF6] focus:text-[#2E9D7A]"
                               >
-                                <span className="truncate">{u.full_name}</span>
+                                <span className="min-w-0 flex-1 truncate">{u.full_name}</span>
+                                {u.active_plan_name === plan.name && (
+                                  <Check className="ml-2 h-4 w-4 shrink-0 text-[#10B981]" />
+                                )}
                               </DropdownMenuItem>
                             ))}
-                        </div>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                          </div>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
 
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="gap-2 border-slate-200 px-4 h-9"
-                        >
-                          <UserPlus className="w-4 h-4" /> Assign
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56">
-                        <DropdownMenuLabel>Assign User</DropdownMenuLabel>
-                        <div className="max-h-[300px] overflow-y-auto overflow-x-hidden p-1">
-                          {users.map((u) => (
-                            <DropdownMenuItem
-                              key={u.id}
-                              onClick={() => handleAssignPlan(u.id, plan.id)}
-                            >
-                              <span className="truncate flex-1">
-                                {u.full_name}
-                              </span>
-                              {u.active_plan_name === plan.name && (
-                                <Check className="ml-2 h-4 w-4 text-emerald-500" />
-                              )}
-                            </DropdownMenuItem>
-                          ))}
+                  <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    {[
+                      { label: "Calories", value: `${plan.calories}`, unit: "kcal", tone: "bg-[#F8FAFC] text-[#334155]" },
+                      { label: "Protein", value: `${plan.protein}`, unit: "g", tone: "bg-[#F8FAFC] text-[#334155]" },
+                      { label: "Fats", value: `${plan.fats}`, unit: "g", tone: "bg-[#F8FAFC] text-[#334155]" },
+                      { label: "Carbs", value: `${plan.carbs}`, unit: "g", tone: "bg-[#F8FAFC] text-[#334155]" },
+                      { label: "Water", value: `${plan.water}`, unit: "ml", tone: "bg-[#F8FAFC] text-[#334155]" },
+                      { label: "Active Users", value: `${plan.members}`, unit: "members", tone: "bg-[#F1FAF6] text-[#2E9D7A]" },
+                    ].map(({ label, value, unit, tone }) => (
+                      <div
+                        key={label}
+                        className={`min-w-0 rounded-[10px] border border-[#E2E8F0] p-3.5 ${tone}`}
+                      >
+                        <p className="truncate text-[10px] font-semibold uppercase tracking-[0.06em] opacity-70">
+                          {label}
+                        </p>
+                        <div className="mt-1 flex min-w-0 items-baseline gap-1">
+                          <p className="truncate text-xl font-bold leading-tight">{value}</p>
+                          <span className="shrink-0 text-[10px] font-medium opacity-70">{unit}</span>
                         </div>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                      </div>
+                    ))}
                   </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="bg-slate-50 rounded-lg p-3 text-center">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
-                      Calories
-                    </p>
-                    <p className="text-xl font-bold text-slate-700">
-                      {plan.calories}
-                    </p>
-                  </div>
-                  <div className="bg-slate-50 rounded-lg p-3 text-center">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
-                      Protein
-                    </p>
-                    <p className="text-xl font-bold text-slate-700">
-                      {plan.protein}g
-                    </p>
-                  </div>
-                  <div className="bg-slate-50 rounded-lg p-3 text-center">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
-                      Fats
-                    </p>
-                    <p className="text-xl font-bold text-slate-700">
-                      {plan.fats}g
-                    </p>
-                  </div>
-                  <div className="bg-slate-50 rounded-lg p-3 text-center">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
-                      Carbs
-                    </p>
-                    <p className="text-xl font-bold text-slate-700">
-                      {plan.carbs}g
-                    </p>
-                  </div>
-                  <div className="bg-slate-50 rounded-lg p-3 text-center">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
-                      Water
-                    </p>
-                    <p className="text-xl font-bold text-slate-700">
-                      {plan.water}ml
-                    </p>
-                  </div>
-                  <div className="bg-indigo-50 rounded-lg p-3 text-center">
-                    <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-tight">
-                      Active Users
-                    </p>
-                    <p className="text-xl font-bold text-indigo-700">
-                      {plan.members}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         )}
-      </div>
-      
-      <section className="pt-8">
-        <Calculator/>
       </section>
-    </>
+
+      {/* Calculators — wrapped in a card so BMR/Macro/TDEE sit inside the same
+          visual container as the rest of the page instead of floating loose */}
+      <section className="mt-8 pb-6">
+        <div className="mb-5">
+          <h3 className="flex items-center gap-2 text-lg font-bold text-[#111827] sm:text-xl">
+            <CalculatorIcon className="h-5 w-5 text-[#06966D]" />
+            Nutrition Calculators
+          </h3>
+          <p className="mt-1 text-sm text-[#64748B]">
+            BMR, macro, and calorie tools for quick member reference.
+          </p>
+        </div>
+
+        <Calculator />
+      </section>
+    </div>
   );
+
 }

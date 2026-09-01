@@ -219,7 +219,7 @@ return (
       <Button
         variant="outline"
         onClick={() => window.history.back()}
-        className="border-[#F5F7F9] text-gray-500 hover:bg-[#F5F7F9] hover:text-gray-700"
+        className="border-slate-200 text-gray-700 hover:bg-slate-50 shadow-sm rounded-xl"
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
         Back
@@ -228,25 +228,25 @@ return (
 
     {/* Stats Grid */}
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <Card className="bg-white border-[#F5F7F9] shadow-sm">
+      <Card className="bg-white border border-slate-200/80 shadow-sm rounded-2xl">
         <CardContent className="pt-6">
           <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Total Members</p>
           <p className="text-2xl font-bold text-gray-900 mt-1">{stats.totalMembers}</p>
         </CardContent>
       </Card>
-      <Card className="bg-white border-[#F5F7F9] shadow-sm">
+      <Card className="bg-white border border-slate-200/80 shadow-sm rounded-2xl">
         <CardContent className="pt-6">
           <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Avg Completion</p>
           <p className="text-2xl font-bold text-emerald-600 mt-1">{stats.avgCompletion}%</p>
         </CardContent>
       </Card>
-      <Card className="bg-white border-[#F5F7F9] shadow-sm">
+      <Card className="bg-white border border-slate-200/80 shadow-sm rounded-2xl">
         <CardContent className="pt-6">
           <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Avg Weight Loss</p>
           <p className="text-2xl font-bold text-emerald-600 mt-1">{stats.avgWeightLoss} kg</p>
         </CardContent>
       </Card>
-      <Card className="bg-white border-[#F5F7F9] shadow-sm">
+      <Card className="bg-white border border-slate-200/80 shadow-sm rounded-2xl">
         <CardContent className="pt-6">
           <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Check-ins</p>
           <p className="text-2xl font-bold text-gray-900 mt-1">
@@ -257,7 +257,7 @@ return (
     </div>
 
     {/* Members Section */}
-    <Card className="bg-white border-[#F5F7F9] shadow-sm">
+    <Card className="bg-white border border-slate-200/80 shadow-sm rounded-2xl">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-gray-900 text-base font-semibold flex items-center gap-2">
           <Users className="w-4 h-4 text-emerald-600" />
@@ -265,7 +265,7 @@ return (
         </CardTitle>
         <Button
           onClick={() => setIsAssignOpen(true)}
-          className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+          className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-sm"
         >
           <UserPlus className="w-4 h-4" />
           Add Member
@@ -281,7 +281,7 @@ return (
             {group.members.map((member) => (
               <div
                 key={member.id}
-                className="flex items-center justify-between p-3 rounded-xl bg-[#F5F7F9] border border-[#F5F7F9]"
+                className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50/70 border border-slate-200/80 hover:bg-slate-100/60 transition-colors"
               >
                 <div>
                   <p className="text-sm font-semibold text-gray-900">{member.full_name}</p>
@@ -291,7 +291,7 @@ return (
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-gray-300 hover:text-red-500 hover:bg-red-50 h-8 w-8 rounded-lg transition-colors"
+                    className="text-gray-400 hover:text-red-500 hover:bg-red-50 h-8 w-8 rounded-lg transition-colors"
                     onClick={() => handleRemoveMember(member.id, member.full_name)}
                   >
                     <Trash2 className="w-4 h-4" />
@@ -306,18 +306,18 @@ return (
  
     {/* Assign User Dialog */}
     <Dialog open={isAssignOpen} onOpenChange={setIsAssignOpen}>
-      <DialogContent className="bg-white border-[#F5F7F9] shadow-lg max-w-md">
+      <DialogContent className="bg-white border border-slate-200 shadow-xl rounded-2xl max-w-md">
         <DialogHeader>
-          <DialogTitle>Add Member to Group</DialogTitle>
+          <DialogTitle className="text-gray-900 text-lg font-bold">Add Member to Group</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
-            <p className="text-base font-medium text-gray-700">Select User</p>
+            <p className="text-sm font-medium text-gray-700">Select User</p>
             <Select value={selectedUser} onValueChange={setSelectedUser}>
-              <SelectTrigger className="bg-[#F5F7F9] border-[#F5F7F9] text-gray-900 focus:border-emerald-500 focus:ring-emerald-500/20">
+              <SelectTrigger className="bg-slate-50 border border-slate-200 text-gray-900 rounded-xl">
                 <SelectValue placeholder="Choose a user..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white border border-slate-200 shadow-md rounded-xl">
                 {availableUsers.length === 0 ? (
                   <SelectItem value="none" disabled className="text-gray-400">
                     No available users
@@ -337,13 +337,14 @@ return (
           <Button
             variant="outline"
             onClick={() => setIsAssignOpen(false)}
+            className="rounded-xl border-slate-200"
           >
             Cancel
           </Button>
           <Button
             onClick={handleAssignUser}
             disabled={!selectedUser}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl disabled:opacity-50"
           >
             <UserPlus className="w-4 h-4 mr-2" />
             Add to Group

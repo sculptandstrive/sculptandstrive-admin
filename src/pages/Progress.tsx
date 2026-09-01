@@ -50,7 +50,6 @@ export default function ProgressPage() {
         setIsLoading(true);
         setError(null);
 
-        // Fetch progress records with member name from profiles
         const { data: progressData, error: progressError } = await supabase
           .from("progress_records")
           .select("*, profiles:user_id(full_name)");
@@ -58,7 +57,6 @@ export default function ProgressPage() {
         if (progressError) throw progressError;
         setAllMembers(progressData || []);
 
-        // Fetch user roles (only users with role = 'user')
         const { data: rolesData, error: rolesError } = await supabase
           .from("user_roles")
           .select("*")
@@ -68,7 +66,6 @@ export default function ProgressPage() {
         if (rolesError) throw rolesError;
         setUserRoles(rolesData || []);
 
-        // Calculate member growth data
         if (rolesData && rolesData.length > 0) {
           const growthData = calculateMemberGrowth(rolesData);
           setMemberGrowthData(growthData);
@@ -84,11 +81,9 @@ export default function ProgressPage() {
     fetchSupabaseData();
   }, []);
 
-  // Calculate member growth over time
   const calculateMemberGrowth = (roles: UserRole[]): MemberGrowthData[] => {
     if (roles.length === 0) return [];
 
-    // Group by date
     const dateGroups: { [key: string]: number } = {};
 
     roles.forEach((role) => {
@@ -102,7 +97,6 @@ export default function ProgressPage() {
       dateGroups[dateKey] = (dateGroups[dateKey] || 0) + 1;
     });
 
-    // Convert to array and calculate cumulative count
     const sortedDates = Object.keys(dateGroups).sort((a, b) => {
       return new Date(a).getTime() - new Date(b).getTime();
     });
@@ -119,7 +113,6 @@ export default function ProgressPage() {
       };
     });
 
-    // If we have more than 30 data points, aggregate by week
     if (growthData.length > 30) {
       return aggregateByWeek(roles);
     }
@@ -127,7 +120,6 @@ export default function ProgressPage() {
     return growthData;
   };
 
-  // Aggregate data by week for better visualization
   const aggregateByWeek = (roles: UserRole[]): MemberGrowthData[] => {
     const weekGroups: { [key: string]: { count: number; newMembers: number } } =
       {};
@@ -140,7 +132,6 @@ export default function ProgressPage() {
 
     sortedRoles.forEach((role) => {
       const date = new Date(role.created_at);
-      // Get the Monday of the week
       const monday = new Date(date);
       monday.setDate(date.getDate() - date.getDay() + 1);
       const weekKey = monday.toLocaleDateString("en-US", {
@@ -164,7 +155,6 @@ export default function ProgressPage() {
     }));
   };
 
-  // Calculate growth statistics
   const memberGrowthStats = useMemo(() => {
     if (userRoles.length === 0)
       return { total: 0, thisMonth: 0, thisWeek: 0, growthRate: 0 };
@@ -181,7 +171,6 @@ export default function ProgressPage() {
       (role) => new Date(role.created_at) >= oneWeekAgo,
     ).length;
 
-    // Calculate growth rate (new members this month vs last month)
     const twoMonthsAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
     const lastMonthMembers = userRoles.filter((role) => {
       const createdAt = new Date(role.created_at);
@@ -237,7 +226,7 @@ export default function ProgressPage() {
     return (
       <>
         <div className="flex h-[80vh] items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-accent" />
+          <Loader2 className="h-8 w-8 animate-spin text-[#71D0F7]" />
         </div>
       </>
     );
@@ -255,21 +244,21 @@ export default function ProgressPage() {
         {stats.map((stat) => (
           <Card
             key={stat.title}
-            className="shadow-card border-none bg-card/50 backdrop-blur"
+            className="border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] bg-white"
           >
             <CardContent className="pt-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-muted-foreground">{stat.title}</p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-xs text-[#64748B]">{stat.title}</p>
+                  <p className="text-2xl font-bold text-[#111827]">
                     {stat.value.toLocaleString()}
                   </p>
-                  <p className="text-xs font-medium text-success">
+                  <p className="text-xs font-medium text-[#10B981]">
                     {stat.change}
                   </p>
                 </div>
-                <div className="gradient-accent rounded-xl p-3">
-                  <stat.icon className="h-6 w-6 text-accent-foreground" />
+                <div className="bg-[#E8F8F8] rounded-[10px] p-3">
+                  <stat.icon className="h-6 w-6 text-[#71D0F7]" />
                 </div>
               </div>
             </CardContent>
@@ -279,25 +268,25 @@ export default function ProgressPage() {
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         {/* Member Growth Chart */}
-        <Card className="shadow-card">
+        <Card className="border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] bg-white">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-accent" />
+            <CardTitle className="flex items-center gap-2 text-[#111827] font-bold">
+              <Users className="h-4 w-4 text-[#71D0F7]" />
               Member Growth
             </CardTitle>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-[#64748B]">
               Total members with 'user' role over time
             </p>
           </CardHeader>
           <CardContent>
             {memberGrowthData.length === 0 ? (
-              <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-muted-foreground/30 bg-muted/10">
+              <div className="flex h-64 items-center justify-center rounded-[10px] border border-dashed border-[#E2E8F0] bg-[#F5F7F9]">
                 <div className="text-center">
-                  <Users className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-                  <p className="text-muted-foreground italic">
+                  <Users className="h-12 w-12 mx-auto text-[#CBD5E1] mb-3" />
+                  <p className="text-[#64748B] italic">
                     No member data found in user_roles table.
                   </p>
-                  <p className="text-xs text-muted-foreground/60 mt-2">
+                  <p className="text-xs text-[#94A3B8] mt-2">
                     Members will appear as they sign up.
                   </p>
                 </div>
@@ -317,43 +306,44 @@ export default function ProgressPage() {
                         >
                           <stop
                             offset="5%"
-                            stopColor="hsl(var(--accent))"
-                            stopOpacity={0.3}
+                            stopColor="#71D0F7"
+                            stopOpacity={0.25}
                           />
                           <stop
                             offset="95%"
-                            stopColor="hsl(var(--accent))"
+                            stopColor="#71D0F7"
                             stopOpacity={0}
                           />
                         </linearGradient>
                       </defs>
                       <CartesianGrid
                         strokeDasharray="3 3"
-                        stroke="hsl(var(--muted-foreground) / 0.2)"
+                        stroke="#E2E8F0"
                         vertical={false}
                       />
                       <XAxis
                         dataKey="date"
-                        stroke="hsl(var(--muted-foreground))"
+                        stroke="#64748B"
                         tick={{
-                          fill: "hsl(var(--muted-foreground))",
+                          fill: "#64748B",
                           fontSize: 12,
                         }}
                       />
                       <YAxis
-                        stroke="hsl(var(--muted-foreground))"
+                        stroke="#64748B"
                         tick={{
-                          fill: "hsl(var(--muted-foreground))",
+                          fill: "#64748B",
                           fontSize: 12,
                         }}
                       />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "hsl(var(--card))",
-                          border: "1px solid hsl(var(--border))",
+                          backgroundColor: "#FFFFFF",
+                          border: "1px solid #E2E8F0",
                           borderRadius: "8px",
+                          boxShadow: "0 4px 18px rgba(15,23,42,0.08)",
                         }}
-                        labelStyle={{ color: "hsl(var(--foreground))" }}
+                        labelStyle={{ color: "#111827" }}
                         formatter={(value: any, name: string) => {
                           if (name === "count") return [value, "Total Members"];
                           if (name === "newMembers")
@@ -364,62 +354,36 @@ export default function ProgressPage() {
                       <Area
                         type="monotone"
                         dataKey="count"
-                        stroke="hsl(var(--accent))"
+                        stroke="#71D0F7"
                         strokeWidth={3}
                         fill="url(#memberGradient)"
                       />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
-
-                {/* Growth Summary */}
-                {/* <div className="grid grid-cols-3 gap-4 pt-4 border-t border-border">
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground mb-1">Total</p>
-                    <p className="text-2xl font-bold text-accent">
-                      {memberGrowthStats.total}
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground mb-1">
-                      This Month
-                    </p>
-                    <p className="text-2xl font-bold text-success">
-                      +{memberGrowthStats.thisMonth}
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground mb-1">
-                      This Week
-                    </p>
-                    <p className="text-2xl font-bold text-success">
-                      +{memberGrowthStats.thisWeek}
-                    </p>
-                  </div>
-                </div> */}
               </div>
             )}
           </CardContent>
         </Card>
 
-        <Card className="shadow-card">
+        <Card className="border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] bg-white">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <LineChart className="h-5 w-5 text-accent" />
+            <CardTitle className="flex items-center gap-2 text-[#111827] font-bold">
+              <LineChart className="h-5 w-5 text-[#71D0F7]" />
               Growth Rate Trends
             </CardTitle>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-[#64748B]">
               New member signups per period
             </p>
           </CardHeader>
           <CardContent>
             {memberGrowthData.length === 0 ? (
-              <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-muted-foreground/30 bg-muted/10">
+              <div className="flex h-64 items-center justify-center rounded-[10px] border border-dashed border-[#E2E8F0] bg-[#F5F7F9]">
                 <div className="text-center">
-                  <p className="text-muted-foreground italic">
+                  <p className="text-[#64748B] italic">
                     No growth data available yet.
                   </p>
-                  <p className="text-xs text-muted-foreground/60 mt-2">
+                  <p className="text-xs text-[#94A3B8] mt-2">
                     Charts will render as members join.
                   </p>
                 </div>
@@ -430,38 +394,39 @@ export default function ProgressPage() {
                   <RechartsLineChart data={memberGrowthData}>
                     <CartesianGrid
                       strokeDasharray="3 3"
-                      stroke="hsl(var(--muted-foreground) / 0.2)"
+                      stroke="#E2E8F0"
                       vertical={false}
                     />
                     <XAxis
                       dataKey="date"
-                      stroke="hsl(var(--muted-foreground))"
+                      stroke="#64748B"
                       tick={{
-                        fill: "hsl(var(--muted-foreground))",
+                        fill: "#64748B",
                         fontSize: 12,
                       }}
                     />
                     <YAxis
-                      stroke="hsl(var(--muted-foreground))"
+                      stroke="#64748B"
                       tick={{
-                        fill: "hsl(var(--muted-foreground))",
+                        fill: "#64748B",
                         fontSize: 12,
                       }}
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
+                        backgroundColor: "#FFFFFF",
+                        border: "1px solid #E2E8F0",
                         borderRadius: "8px",
+                        boxShadow: "0 4px 18px rgba(15,23,42,0.08)",
                       }}
                       formatter={(value: any) => [value, "New Members"]}
                     />
                     <Line
                       type="monotone"
                       dataKey="newMembers"
-                      stroke="hsl(var(--accent))"
+                      stroke="#71D0F7"
                       strokeWidth={3}
-                      dot={{ fill: "hsl(var(--accent))", strokeWidth: 2 }}
+                      dot={{ fill: "#71D0F7", strokeWidth: 2 }}
                     />
                   </RechartsLineChart>
                 </ResponsiveContainer>
@@ -473,14 +438,14 @@ export default function ProgressPage() {
 
       {/* Additional Stats Row */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mt-6">
-        <Card className="shadow-card">
+        <Card className="border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] bg-white">
           <CardHeader>
-            <CardTitle>Member Goal Progress</CardTitle>
+            <CardTitle className="text-[#111827] font-bold">Member Goal Progress</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
               {allMembers.length === 0 ? (
-                <p className="text-center py-10 text-muted-foreground italic">
+                <p className="text-center py-10 text-[#64748B] italic">
                   No records found in progress_records table.
                 </p>
               ) : (
@@ -489,15 +454,15 @@ export default function ProgressPage() {
                   return (
                     <div key={member.id} className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <p className="font-medium">
+                        <p className="font-medium text-[#111827]">
                           {member.profiles?.full_name || member.user_name || "Member"}
                         </p>
-                        <span className="font-bold text-accent">
+                        <span className="font-bold text-[#71D0F7]">
                           {progressValue}%
                         </span>
                       </div>
-                      <Progress value={progressValue} className="h-2" />
-                      <p className="text-xs text-muted-foreground italic">
+                      <Progress value={progressValue} className="h-2 bg-[#E2E8F0] [&>div]:bg-[#71D0F7]" />
+                      <p className="text-xs text-[#64748B] italic">
                         {member.target_weight
                           ? `${member.start_weight}kg → ${member.current_weight}kg (Target: ${member.target_weight}kg)`
                           : member.milestone_note || "Milestone goal"}
