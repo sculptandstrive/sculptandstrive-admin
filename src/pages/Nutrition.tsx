@@ -12,6 +12,7 @@ import {
   Plus,
   UserMinus,
   Trash2,
+  Pencil,
   RefreshCw,
   ChevronDown,
   Calculator as CalculatorIcon,
@@ -92,7 +93,7 @@ function pctToGrams(
 
 export default function NutritionAdmin() {
   const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
-  const [assignType, setAssignType] = useState<"individual" | "group">("individual");
+  const [assignType, setAssignType] = useState<"individual" | "group" | "all">("individual");
   const [selectedGroupForPlan, setSelectedGroupForPlan] = useState("");
   const [groups, setGroups] = useState<any[]>([]);
   const [selectedUserForPlan, setSelectedUserForPlan] = useState("");
@@ -107,6 +108,7 @@ export default function NutritionAdmin() {
   const [macroMode, setMacroMode] = useState<MacroMode>("values");
   const [macroModeOpen, setMacroModeOpen] = useState(false);
   const [newPlan, setNewPlan] = useState(DEFAULT_PLAN);
+  const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -126,6 +128,11 @@ export default function NutritionAdmin() {
     if (!isDialogOpen) {
       setNewPlan(DEFAULT_PLAN);
       setMacroMode("values");
+      setMacroModeOpen(false);
+      setAssignType("individual");
+      setSelectedUserForPlan("");
+      setSelectedGroupForPlan("");
+      setEditingPlanId(null);
     }
   }, [isDialogOpen]);
 
@@ -227,11 +234,11 @@ export default function NutritionAdmin() {
     }
   };
 
-  const handleCreatePlan = async () => {
+  const handleSavePlan = async () => {
     const calVal = Number(newPlan.calories);
     const waterVal = Number(newPlan.water);
 
-    // ── Resolve macro values ───────────────────────────────────────────────
+    // Resolve macro values.
     let proVal: number;
     let fatsVal: number;
     let carbsVal: number;
@@ -240,17 +247,17 @@ export default function NutritionAdmin() {
       const proteinPct = Number(newPlan.protein);
       const fatsPct = Number(newPlan.fats);
       const carbsPct = Number(newPlan.carbs);
+      const percentageTotal = proteinPct + fatsPct + carbsPct;
 
-      // Percentage validations
-      if (proteinPct + fatsPct + carbsPct !== 100) {
+      if (percentageTotal !== 100) {
         toast({
           title: "Validation Error",
-          description:
-            "Protein, Fats and Carbs percentages must add up to 100%.",
+          description: "Protein, Fats and Carbs percentages must add up to 100%.",
           variant: "destructive",
         });
         return;
       }
+
       if (proteinPct < 0 || fatsPct < 0 || carbsPct < 0) {
         toast({
           title: "Validation Error",
@@ -269,7 +276,7 @@ export default function NutritionAdmin() {
       carbsVal = Number(newPlan.carbs);
     }
 
-    // ── Common validations ─────────────────────────────────────────────────
+    // Common validations.
     if (!newPlan.name.trim()) {
       toast({
         title: "Validation Error",
@@ -278,6 +285,7 @@ export default function NutritionAdmin() {
       });
       return;
     }
+
     if (calVal > 6000 || calVal < 1200) {
       toast({
         title: "Validation Error",
@@ -286,6 +294,7 @@ export default function NutritionAdmin() {
       });
       return;
     }
+
     if (macroMode === "values") {
       if (proVal > 400 || proVal < 0) {
         toast({
@@ -295,6 +304,7 @@ export default function NutritionAdmin() {
         });
         return;
       }
+
       if (fatsVal > 400 || fatsVal < 0) {
         toast({
           title: "Validation Error",
@@ -303,6 +313,7 @@ export default function NutritionAdmin() {
         });
         return;
       }
+
       if (carbsVal > 600 || carbsVal < 100) {
         toast({
           title: "Validation Error",
@@ -312,6 +323,7 @@ export default function NutritionAdmin() {
         return;
       }
     }
+
     if (waterVal > 12000 || waterVal < 1000) {
       toast({
         title: "Validation Error",
@@ -321,30 +333,169 @@ export default function NutritionAdmin() {
       return;
     }
 
-    try {
-      const { error } = await (supabase as any).from("meal_plans").insert([
-        {
-          name: newPlan.name.trim(),
-          meals: newPlan.meals,
-          calories: calVal,
-          protein: proVal,
-          fats: fatsVal,
-          carbs: carbsVal,
-          water: waterVal,
-        },
-      ]);
-      if (error) throw error;
+    if (assignType === "individual" && !selectedUserForPlan && !editingPlanId) {
+      toast({
+        title: "Assignment Required",
+        description: "Select a user, choose Group, or choose All Users before saving the plan.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-      toast({ title: "Plan Created", description: "New plan is now live." });
+    if (assignType === "group" && !selectedGroupForPlan) {
+      toast({
+        title: "Group Required",
+        description: "Select a group to assign this plan to all group members.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const planPayload = {
+        name: newPlan.name.trim(),
+        meals: newPlan.meals,
+        calories: calVal,
+        protein: proVal,
+        fats: fatsVal,
+        carbs: carbsVal,
+        water: waterVal,
+      };
+
+      let planId = editingPlanId;
+
+      if (editingPlanId) {
+        const { error } = await (supabase as any)
+          .from("meal_plans")
+          .update(planPayload)
+          .eq("id", editingPlanId);
+
+        if (error) throw error;
+      } else {
+        const { data, error } = await (supabase as any)
+          .from("meal_plans")
+          .insert([planPayload])
+          .select("id")
+          .single();
+
+        if (error) throw error;
+        planId = data.id;
+      }
+
+      // Assignment is intentionally handled after the plan exists.
+      // For Group, every member returned from workout_group_members gets the plan.
+      if (planId && assignType === "individual" && selectedUserForPlan) {
+        const { error } = await (supabase as any)
+          .from("user_meal_plans")
+          .upsert(
+            { user_id: selectedUserForPlan, plan_id: planId },
+            { onConflict: "user_id" },
+          );
+
+        if (error) throw error;
+      }
+
+      if (planId && assignType === "group") {
+        const { data: groupMembers, error: membersError } = await (supabase as any)
+          .from("workout_group_members")
+          .select("user_id")
+          .eq("group_id", selectedGroupForPlan);
+
+        if (membersError) throw membersError;
+
+        const memberIds = (groupMembers || [])
+          .map((member: any) => member.user_id)
+          .filter(Boolean);
+
+        if (memberIds.length === 0) {
+          throw new Error("The selected group has no members to assign.");
+        }
+
+        const assignments = memberIds.map((userId: string) => ({
+          user_id: userId,
+          plan_id: planId,
+        }));
+
+        const { error: assignmentError } = await (supabase as any)
+          .from("user_meal_plans")
+          .upsert(assignments, { onConflict: "user_id" });
+
+        if (assignmentError) throw assignmentError;
+
+        toast({
+          title: editingPlanId ? "Plan Updated & Group Assigned" : "Plan Created & Group Assigned",
+          description: `${memberIds.length} group member${memberIds.length === 1 ? "" : "s"} now have this meal plan.`,
+        });
+      } else if (planId && assignType === "all") {
+        const { data: allProfiles, error: profilesError } = await (supabase as any)
+          .from("profiles")
+          .select("user_id")
+          .not("user_id", "is", null);
+
+        if (profilesError) throw profilesError;
+
+        const allUserIds = (allProfiles || [])
+          .map((profile: any) => profile.user_id)
+          .filter(Boolean);
+
+        if (allUserIds.length === 0) {
+          throw new Error("No users are available to assign this meal plan.");
+        }
+
+        const assignments = allUserIds.map((userId: string) => ({
+          user_id: userId,
+          plan_id: planId,
+        }));
+
+        const { error: assignmentError } = await (supabase as any)
+          .from("user_meal_plans")
+          .upsert(assignments, { onConflict: "user_id" });
+
+        if (assignmentError) throw assignmentError;
+
+        toast({
+          title: editingPlanId
+            ? "Plan Updated & Assigned to All Users"
+            : "Plan Created & Assigned to All Users",
+          description: `${allUserIds.length} user${allUserIds.length === 1 ? "" : "s"} now have this meal plan.`,
+        });
+      } else {
+        toast({
+          title: editingPlanId ? "Plan Updated" : "Plan Created",
+          description: editingPlanId
+            ? "Meal plan details have been updated successfully."
+            : "New plan is now live.",
+        });
+      }
+
       setIsDialogOpen(false);
-      fetchAdminDashboardData();
+      await fetchAdminDashboardData();
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message,
+        description: error?.message || "Unable to save the meal plan.",
         variant: "destructive",
       });
     }
+  };
+
+  const handleEditPlan = (plan: MealPlan) => {
+    setEditingPlanId(plan.id);
+    setNewPlan({
+      name: plan.name,
+      calories: String(plan.calories),
+      protein: String(plan.protein),
+      meals: Number(plan.meals) || 4,
+      fats: String(plan.fats),
+      carbs: String(plan.carbs),
+      water: String(plan.water),
+    });
+    setMacroMode("values");
+    setAssignType("individual");
+    setSelectedUserForPlan("");
+    setSelectedGroupForPlan("");
+    setMacroModeOpen(false);
+    setIsDialogOpen(true);
   };
 
   const handleDeletePlan = async (planId: string) => {
@@ -549,7 +700,11 @@ export default function NutritionAdmin() {
                     <p className="text-xs font-semibold text-[#475569]">Assign To</p>
                     <Select
                       value={assignType}
-                      onValueChange={(v) => setAssignType(v as "individual" | "group")}
+                      onValueChange={(v) => {
+                        setAssignType(v as "individual" | "group" | "all");
+                        if (v !== "individual") setSelectedUserForPlan("");
+                        if (v !== "group") setSelectedGroupForPlan("");
+                      }}
                     >
                       <SelectTrigger className="h-11 w-full rounded-[10px] border-[#CBD5E1]">
                         <SelectValue placeholder="Select assignment type" />
@@ -557,8 +712,14 @@ export default function NutritionAdmin() {
                       <SelectContent>
                         <SelectItem value="individual">Individual</SelectItem>
                         <SelectItem value="group">Group</SelectItem>
+                        <SelectItem value="all">All Users</SelectItem>
                       </SelectContent>
                     </Select>
+                    {assignType === "all" && (
+                      <p className="mt-2 text-[11px] font-medium text-[#06966D]">
+                        This plan will be automatically assigned to every user.
+                      </p>
+                    )}
                   </div>
 
                   {assignType === "individual" ? (
@@ -577,9 +738,10 @@ export default function NutritionAdmin() {
                         </SelectContent>
                       </Select>
                     </div>
-                  ) : (
+                  ) : assignType === "group" ? (
                     <div className="space-y-2">
                       <p className="text-xs font-semibold text-[#475569]">Select Group</p>
+                      <p className="text-[11px] text-[#64748B]">All members of this group will receive the plan.</p>
                       <Select value={selectedGroupForPlan} onValueChange={setSelectedGroupForPlan}>
                         <SelectTrigger className="h-11 w-full rounded-[10px] border-[#CBD5E1]">
                           <SelectValue placeholder="Choose a group..." />
@@ -598,6 +760,11 @@ export default function NutritionAdmin() {
                           )}
                         </SelectContent>
                       </Select>
+                    </div>
+                  ) : (
+                    <div className="flex h-11 items-center rounded-[10px] border border-[#B8E4D4] bg-[#F1FAF6] px-3">
+                      <Users className="mr-2 h-4 w-4 text-[#06966D]" />
+                      <span className="text-sm font-semibold text-[#06966D]">All Users</span>
                     </div>
                   )}
                 </div>
@@ -683,10 +850,10 @@ export default function NutritionAdmin() {
                   Cancel
                 </Button>
                 <Button
-                  onClick={handleCreatePlan}
+                  onClick={handleSavePlan}
                   className="h-10 w-full rounded-[10px] bg-[#07AC7D] text-white hover:bg-[#06966D] sm:w-auto"
                 >
-                  Save Plan
+                  {editingPlanId ? "Update Plan" : "Save Plan"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -797,16 +964,29 @@ export default function NutritionAdmin() {
                         </Badge>
                       </div>
 
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={`Delete ${plan.name}`}
-                        title="Delete meal plan"
-                        className="h-9 w-9 shrink-0 rounded-[10px] text-[#EF4444] hover:bg-red-50 hover:text-[#DC2626]"
-                        onClick={() => handleDeletePlan(plan.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`Edit ${plan.name}`}
+                          title="Edit meal plan"
+                          className="h-9 w-9 rounded-[10px] text-[#06966D] hover:bg-[#F1FAF6] hover:text-[#057A5A]"
+                          onClick={() => handleEditPlan(plan)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`Delete ${plan.name}`}
+                          title="Delete meal plan"
+                          className="h-9 w-9 rounded-[10px] text-[#EF4444] hover:bg-red-50 hover:text-[#DC2626]"
+                          onClick={() => handleDeletePlan(plan.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
