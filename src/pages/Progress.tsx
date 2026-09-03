@@ -50,12 +50,29 @@ export default function ProgressPage() {
         setIsLoading(true);
         setError(null);
 
-        const { data: progressData, error: progressError } = await supabase
+        let progressRecords: any[] = [];
+        const { data: rawProgress, error: progressError } = await supabase
           .from("progress_records")
-          .select("*, profiles:user_id(full_name)");
+          .select("*");
 
-        if (progressError) throw progressError;
-        setAllMembers(progressData || []);
+        if (!progressError && rawProgress) {
+          const userIds = [...new Set(rawProgress.map((r: any) => r.user_id).filter(Boolean))];
+          if (userIds.length > 0) {
+            const { data: profiles } = await supabase
+              .from("profiles")
+              .select("user_id, full_name")
+              .in("user_id", userIds);
+
+            const profileMap = new Map(profiles?.map((p: any) => [p.user_id, p]) || []);
+            progressRecords = rawProgress.map((r: any) => ({
+              ...r,
+              profiles: profileMap.get(r.user_id) || null,
+            }));
+          } else {
+            progressRecords = rawProgress;
+          }
+        }
+        setAllMembers(progressRecords);
 
         const { data: rolesData, error: rolesError } = await supabase
           .from("user_roles")
@@ -249,8 +266,8 @@ export default function ProgressPage() {
             <CardContent className="pt-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-[#64748B]">{stat.title}</p>
-                  <p className="text-2xl font-bold text-[#111827]">
+                  <p className="text-sm font-medium text-[#64748B]">{stat.title}</p>
+                  <p className="text-[30px] sm:text-[32px] font-bold leading-none text-[#111827]">
                     {stat.value.toLocaleString()}
                   </p>
                   <p className="text-xs font-medium text-[#10B981]">
@@ -270,7 +287,7 @@ export default function ProgressPage() {
         {/* Member Growth Chart */}
         <Card className="border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] bg-white">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-[#111827] font-bold">
+            <CardTitle className="flex items-center gap-2 text-[18px] font-semibold text-[#111827]">
               <Users className="h-4 w-4 text-[#71D0F7]" />
               Member Growth
             </CardTitle>
@@ -368,7 +385,7 @@ export default function ProgressPage() {
 
         <Card className="border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] bg-white">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-[#111827] font-bold">
+            <CardTitle className="flex items-center gap-2 text-[18px] font-semibold text-[#111827]">
               <LineChart className="h-5 w-5 text-[#71D0F7]" />
               Growth Rate Trends
             </CardTitle>
@@ -440,7 +457,7 @@ export default function ProgressPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mt-6">
         <Card className="border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] bg-white">
           <CardHeader>
-            <CardTitle className="text-[#111827] font-bold">Member Goal Progress</CardTitle>
+            <CardTitle className="text-[18px] font-semibold text-[#111827]">Member Goal Progress</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
@@ -457,7 +474,7 @@ export default function ProgressPage() {
                         <p className="font-medium text-[#111827]">
                           {member.profiles?.full_name || member.user_name || "Member"}
                         </p>
-                        <span className="font-bold text-[#71D0F7]">
+                        <span className="text-sm font-medium text-[#71D0F7]">
                           {progressValue}%
                         </span>
                       </div>

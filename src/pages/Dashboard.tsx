@@ -119,8 +119,8 @@ function StatCardVisual({
           </div>
           <MiniSparkline stroke={t.sparkStroke} fill={t.sparkFill} />
         </div>
-        <p className="text-sm text-muted-foreground font-medium">{title}</p>
-        <p className="text-3xl font-bold text-foreground mt-1">{value}</p>
+        <p className="text-sm font-medium text-[#64748B]">{title}</p>
+        <p className="text-[30px] sm:text-[32px] font-bold text-[#111827] mt-1 leading-tight">{value}</p>
         <div className={`flex items-center gap-1 mt-2 text-xs font-semibold ${t.trendColor}`}>
           <TrendingUp className="w-3.5 h-3.5" />
           <span>{caption}</span>
@@ -332,7 +332,7 @@ export default function Dashboard() {
         <div className="lg:col-span-8 space-y-6">
           <Card className="border border-border rounded-2xl shadow-sm bg-card">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-[20px] font-bold text-foreground leading-[1.3]">
+              <CardTitle className="text-[20px] font-semibold text-[#111827] leading-[1.3]">
                 Recent Activity
               </CardTitle>
               {activities.length > 5 && (
@@ -393,7 +393,7 @@ export default function Dashboard() {
           {/* Platform Overview graph — placed here, same column, below Recent Activity */}
           <Card className="border border-border rounded-2xl shadow-sm bg-card">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-[20px] font-bold text-foreground leading-[1.3]">
+              <CardTitle className="text-[20px] font-semibold text-[#111827] leading-[1.3]">
                 Platform Overview
               </CardTitle>
               <span className="text-xs font-medium text-muted-foreground border border-border rounded-md px-2.5 py-1">
@@ -448,7 +448,7 @@ export default function Dashboard() {
         <div className="lg:col-span-4 space-y-6">
           <Card className="border border-border rounded-2xl shadow-sm bg-card">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-[18px] font-bold text-foreground">Upcoming Sessions</CardTitle>
+              <CardTitle className="text-[18px] font-semibold text-[#111827]">Upcoming Sessions</CardTitle>
               <button
                 onClick={() => navigate("/sessions")}
                 className="text-xs font-semibold text-accent hover:underline"
@@ -505,7 +505,7 @@ export default function Dashboard() {
 
           <Card className="border border-border rounded-2xl shadow-sm bg-card">
             <CardHeader>
-              <CardTitle className="text-[18px] font-bold text-foreground">Quick Actions</CardTitle>
+              <CardTitle className="text-[18px] font-semibold text-[#111827]">Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-1">
               {[
@@ -541,7 +541,7 @@ export default function Dashboard() {
 
           <Card className="border border-border rounded-2xl shadow-sm bg-card">
             <CardHeader>
-              <CardTitle className="text-[18px] font-bold text-foreground">Platform Usage</CardTitle>
+              <CardTitle className="text-[18px] font-semibold text-[#111827]">Platform Usage</CardTitle>
             </CardHeader>
             <CardContent>
               {loading ? (

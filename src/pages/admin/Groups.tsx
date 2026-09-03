@@ -207,7 +207,7 @@ export default function Groups() {
         </DialogTrigger>
         <DialogContent className="bg-white border border-slate-200 shadow-xl rounded-2xl max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-gray-900 text-xl font-bold">
+            <DialogTitle className="text-[18px] font-semibold text-[#111827]">
               Create New Group
             </DialogTitle>
           </DialogHeader>
@@ -308,12 +308,12 @@ export default function Groups() {
                     <Users className="w-4 h-4 text-emerald-600" />
                   </div>
                   <div className="min-w-0">
-                    <h4 className="text-base font-semibold text-gray-900 truncate">
+                    <h3 className="text-[18px] font-semibold text-[#111827] truncate">
                       {group.name}
-                    </h4>
+                    </h3>
                   </div>
                 </div>
-                <Badge className="bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-medium px-2.5 py-1 rounded-lg">
+                <Badge className="bg-slate-100 text-slate-600 border border-slate-200 text-xs font-semibold px-2.5 py-1 rounded-lg">
                   {group.member_count} {group.member_count === 1 ? 'member' : 'members'}
                 </Badge>
               </div>

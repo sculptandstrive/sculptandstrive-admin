@@ -47,6 +47,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { EXERCISE_CATEGORIES } from "@/utils/ExerciseCategories";
 
 export default function Fitness() {
   const [exercises, setExercises] = useState<any[]>([]);
@@ -276,10 +277,18 @@ export default function Fitness() {
     const { data, error } = await supabase
       .from("exercise_category")
       .select("*");
-    setAllCategories(data);
-    if (error) {
-      toast({ variant: "destructive", title: "Fetch Category Error" });
-    }
+    
+    const dbCats = data ?? [];
+    const dbCatNames = new Set(dbCats.map((c: any) => c.name?.toLowerCase()));
+    
+    const staticCats = EXERCISE_CATEGORIES.filter(
+      (cat) => !dbCatNames.has(cat.name.toLowerCase())
+    ).map((cat) => ({
+      id: `static-${cat.id}`,
+      name: cat.name,
+    }));
+
+    setAllCategories([...dbCats, ...staticCats] as any);
   };
 
   const handledeleteCategory = async (categoryId: string) => {
@@ -781,7 +790,7 @@ export default function Fitness() {
           </DialogTrigger>
           <DialogContent className="rounded-[14px]">
             <DialogHeader>
-              <DialogTitle className="text-[#111827] font-bold">Add Exercise</DialogTitle>
+              <DialogTitle className="text-[18px] font-semibold text-[#111827]">Add Exercise</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
@@ -962,7 +971,7 @@ export default function Fitness() {
 
         <Card className="border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] bg-white">
           <CardHeader className="flex w-full md:flex-row flex-col md:justify-between md:items-center">
-            <CardTitle className="text-base font-bold text-[#111827]">
+            <CardTitle className="text-[18px] font-semibold text-[#111827]">
               Categories
             </CardTitle>
             <Dialog
@@ -976,7 +985,7 @@ export default function Fitness() {
               </DialogTrigger>
               <DialogContent className="rounded-[14px]">
                 <DialogHeader>
-                  <DialogTitle className="text-[#111827] font-bold">Add New Category / Subcategory</DialogTitle>
+                  <DialogTitle className="text-[18px] font-semibold text-[#111827]">Add New Category / Subcategory</DialogTitle>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="space-y-2">
@@ -1143,7 +1152,7 @@ export default function Fitness() {
         <Dialog open={isEditCategoryOpen} onOpenChange={setIsEditCategoryOpen}>
           <DialogContent className="rounded-[14px]">
             <DialogHeader>
-              <DialogTitle className="text-[#111827] font-bold">Edit Category / Subcategory</DialogTitle>
+              <DialogTitle className="text-[18px] font-semibold text-[#111827]">Edit Category / Subcategory</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
@@ -1177,7 +1186,7 @@ export default function Fitness() {
         <Card className="lg:col-span-2 border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] bg-white">
           <CardHeader>
             <div className="flex flex-col md:flex-row gap-4 justify-between items-center w-full">
-              <CardTitle className="text-xl font-bold text-[#111827]">
+              <CardTitle className="text-[20px] font-semibold text-[#111827]">
                 {activeFilter} Exercises List
               </CardTitle>
               <div className="flex items-center gap-4 w-full md:w-auto">
@@ -1205,25 +1214,25 @@ export default function Fitness() {
                       <Dumbbell className="w-6 h-6 text-white" />
                     </div>
                     <div className="min-w-0 flex flex-col items-center md:block">
-                      <p className="font-bold text-[#111827] break-words whitespace-normal">
+                      <p className="text-sm font-medium text-[#111827] break-words whitespace-normal">
                         {ex.name}
                       </p>
                       <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                         {ex.category_name && (
                           <Badge
                             variant="outline"
-                            className="text-[9px] bg-[#7C5CFC]/10 border-[#7C5CFC]/30 text-[#7C5CFC] px-2 py-0.5 font-medium"
+                            className="text-xs bg-[#7C5CFC]/10 border-[#7C5CFC]/30 text-[#7C5CFC] px-2 py-0.5 font-semibold"
                           >
                             {ex.category_name}
                           </Badge>
                         )}
                         {ex.sub_category && ex.sub_category !== "none" && (
-                          <Badge variant="outline" className="text-[9px] bg-[#10B981]/10 border-[#10B981]/30 text-[#10B981]">
+                          <Badge variant="outline" className="text-xs bg-[#10B981]/10 border-[#10B981]/30 text-[#10B981] font-semibold">
                             {ex.sub_category}
                           </Badge>
                         )}
                         {ex.difficulty && (
-                          <Badge variant="outline" className={`text-[9px] ${ex.difficulty === "Beginner" ? "bg-[#10B981]/10 border-[#10B981]/30 text-[#10B981]" :
+                          <Badge variant="outline" className={`text-xs font-semibold ${ex.difficulty === "Beginner" ? "bg-[#10B981]/10 border-[#10B981]/30 text-[#10B981]" :
                             ex.difficulty === "Intermediate" ? "bg-[#F59E0B]/10 border-[#F59E0B]/30 text-[#F59E0B]" :
                               "bg-[#EF4444]/10 border-[#EF4444]/30 text-[#EF4444]"
                             }`}>
@@ -1268,7 +1277,7 @@ export default function Fitness() {
                       </DialogTrigger>
                       <DialogContent className="rounded-[14px]">
                         <DialogHeader>
-                          <DialogTitle className="text-[#111827] font-bold">Edit Exercise</DialogTitle>
+                          <DialogTitle className="text-[18px] font-semibold text-[#111827]">Edit Exercise</DialogTitle>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                           <div className="space-y-2">
@@ -1430,7 +1439,7 @@ export default function Fitness() {
         {/* ── Workout Plans ── */}
         <Card className="lg:col-span-full border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] bg-white">
           <CardHeader className="flex w-full flex-col md:flex-row md:justify-between md:items-center">
-            <CardTitle className="text-base font-bold text-[#111827]">
+            <CardTitle className="text-[18px] font-semibold text-[#111827]">
               Workout Plans
             </CardTitle>
             <Dialog open={isPlanDialogOpen} onOpenChange={setIsPlanDialogOpen}>
@@ -1441,7 +1450,7 @@ export default function Fitness() {
               </DialogTrigger>
               <DialogContent className="rounded-[14px]">
                 <DialogHeader>
-                  <DialogTitle className="text-[#111827] font-bold">Create Workout Plan</DialogTitle>
+                  <DialogTitle className="text-[18px] font-semibold text-[#111827]">Create Workout Plan</DialogTitle>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="space-y-2">
@@ -1490,7 +1499,7 @@ export default function Fitness() {
                         <Dumbbell className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <p className="font-bold text-[#111827]">{plan.name}</p>
+                        <p className="text-sm font-medium text-[#111827]">{plan.name}</p>
                         <p className="text-xs text-[#64748B]">
                           Created{" "}
                           {new Date(plan.created_at).toLocaleDateString()}
@@ -1522,7 +1531,7 @@ export default function Fitness() {
                         </DialogTrigger>
                         <DialogContent className="max-w-2xl rounded-[14px]">
                           <DialogHeader>
-                            <DialogTitle className="text-[#111827] font-bold">Manage — {plan.name}</DialogTitle>
+                            <DialogTitle className="text-[18px] font-semibold text-[#111827]">Manage — {plan.name}</DialogTitle>
                           </DialogHeader>
 
                           <div className="space-y-4 py-2">
@@ -1553,7 +1562,7 @@ export default function Fitness() {
                                 </DialogTrigger>
                                 <DialogContent className="rounded-[14px]">
                                   <DialogHeader>
-                                    <DialogTitle className="text-[#111827] font-bold">
+                                    <DialogTitle className="text-[18px] font-semibold text-[#111827]">
                                       Add Exercise to Plan
                                     </DialogTitle>
                                   </DialogHeader>
@@ -1871,7 +1880,7 @@ export default function Fitness() {
                         </DialogTrigger>
                         <DialogContent className="max-w-lg rounded-[14px]">
                           <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2 text-[#111827] font-bold">
+                            <DialogTitle className="flex items-center gap-2 text-[18px] font-semibold text-[#111827]">
                               <Users className="w-4 h-4 text-[#4F7CFF]" />
                               Assigned Users — {plan.name}
                             </DialogTitle>
@@ -1950,7 +1959,7 @@ export default function Fitness() {
                                     >
                                       <div className="flex items-center gap-3 min-w-0">
                                         <div className="w-8 h-8 rounded-full bg-[#4F7CFF]/10 flex items-center justify-center flex-shrink-0">
-                                          <span className="text-xs font-bold text-[#4F7CFF]">
+                                          <span className="text-xs font-semibold text-[#4F7CFF]">
                                             {assignment.full_name
                                               .charAt(0)
                                               .toUpperCase()}
@@ -2020,7 +2029,7 @@ export default function Fitness() {
                         </DialogTrigger>
                         <DialogContent className="rounded-[14px]">
                           <DialogHeader>
-                            <DialogTitle className="text-[#111827] font-bold">Edit Plan Name</DialogTitle>
+                            <DialogTitle className="text-[18px] font-semibold text-[#111827]">Edit Plan Name</DialogTitle>
                           </DialogHeader>
                           <div className="grid gap-4 py-4">
                             <div className="space-y-2">
@@ -2076,7 +2085,7 @@ export default function Fitness() {
         <Card className="lg:col-span-full border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] bg-white">
           <CardHeader>
             <div className="flex flex-col md:flex-row gap-2 justify-between items-center">
-              <CardTitle className="text-xl font-bold text-[#111827]">
+              <CardTitle className="text-[20px] font-semibold text-[#111827]">
                 {activeFilter} Exercises
               </CardTitle>
               <span className="text-xs text-[#64748B] uppercase tracking-widest">
@@ -2096,7 +2105,7 @@ export default function Fitness() {
                       <Dumbbell className="w-6 h-6 text-white" />
                     </div>
                     <div className="min-w-0 flex flex-col items-center md:block">
-                      <p className="font-bold text-[#111827] break-words whitespace-normal">
+                      <p className="text-sm font-medium text-[#111827] break-words whitespace-normal">
                         {ex.name}
                       </p>
                       <p className="text-xs text-[#64748B] uppercase tracking-widest">
@@ -2109,7 +2118,7 @@ export default function Fitness() {
                   </div>
                   <div className="flex flex-col md:flex-row items-center gap-2 md:gap-5">
                     <div className="flex justify-between gap-4 items-center md:block text-right">
-                      <p className="font-bold text-[#2E9D7A]">{ex.reps} reps</p>
+                      <p className="text-sm font-medium text-[#07AC7D]">{ex.reps} reps</p>
                       <p className="text-xs text-[#64748B]">
                         Total: {ex.sets * ex.reps}
                       </p>
@@ -2143,10 +2152,10 @@ function StatCard({ title, value, icon: Icon, color, iconColor }: any) {
       <CardContent className="pt-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-bold text-[#64748B] uppercase tracking-wider">
+            <p className="text-sm font-medium text-[#64748B]">
               {title}
             </p>
-            <p className="text-3xl font-black text-[#111827]">{value}</p>
+            <p className="text-[30px] sm:text-[32px] font-bold text-[#111827] leading-none">{value}</p>
           </div>
           <div className={`p-3 rounded-[10px] ${color}`}>
             <Icon

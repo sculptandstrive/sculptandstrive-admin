@@ -469,7 +469,7 @@ export default function NutritionAdmin() {
 
             <DialogContent className="max-h-[90vh] w-[calc(100%-1rem)] max-w-lg overflow-y-auto rounded-[14px] border-[#E2E8F0] bg-white p-4 sm:p-6">
               <DialogHeader>
-                <DialogTitle className="text-xl font-bold text-[#111827]">
+                <DialogTitle className="text-[18px] font-semibold text-[#111827]">
                   Add New Meal Plan
                 </DialogTitle>
               </DialogHeader>
@@ -708,7 +708,7 @@ export default function NutritionAdmin() {
           >
             <CardContent className="flex min-h-[126px] items-center justify-between p-5 sm:p-6">
               <div className="min-w-0">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#64748B]">
+                <p className="text-sm font-medium text-[#64748B]">
                   {label}
                 </p>
                 <p className="mt-2 text-[30px] font-bold leading-none text-[#111827] sm:text-[32px]">
@@ -727,10 +727,10 @@ export default function NutritionAdmin() {
       <section className="mt-8 bg-white">
         <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h3 className="flex items-center gap-2 text-lg font-bold text-[#111827] sm:text-xl">
+            <h2 className="flex items-center gap-2 text-[20px] font-semibold text-[#111827]">
               <Utensils className="h-5 w-5 text-[#06966D]" />
               Active Meal Plans
-            </h3>
+            </h2>
             <p className="mt-1 text-sm text-[#64748B]">
               Review nutrition targets and manage member access.
             </p>
@@ -764,7 +764,7 @@ export default function NutritionAdmin() {
               <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#F1FAF6] text-[#06966D]">
                 <Utensils className="h-5 w-5" />
               </div>
-              <h4 className="text-base font-semibold text-[#111827]">No meal plans found</h4>
+              <h4 className="text-[18px] font-semibold text-[#111827]">No meal plans found</h4>
               <p className="mt-1 max-w-sm text-sm text-[#64748B]">
                 Try a different search or create a new nutrition plan.
               </p>
@@ -785,13 +785,13 @@ export default function NutritionAdmin() {
                           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#F1FAF6] text-[#06966D]">
                             <Utensils className="h-4 w-4" />
                           </span>
-                          <h4 className="min-w-0 break-words text-lg font-bold leading-snug text-[#111827] sm:text-xl">
+                          <h4 className="min-w-0 break-words text-[18px] font-semibold leading-snug text-[#111827]">
                             {plan.name}
                           </h4>
                         </div>
                         <Badge
                           variant="secondary"
-                          className="mt-2 rounded-full bg-[#F5F7F9] px-2.5 py-1 text-[10px] font-medium text-[#64748B]"
+                          className="mt-2 rounded-full bg-[#F5F7F9] px-2.5 py-1 text-xs font-semibold text-[#64748B]"
                         >
                           ID: {plan.id.slice(0, 8)}
                         </Badge>
@@ -892,12 +892,12 @@ export default function NutritionAdmin() {
                         key={label}
                         className={`min-w-0 rounded-[10px] border border-[#E2E8F0] p-3.5 ${tone}`}
                       >
-                        <p className="truncate text-[10px] font-semibold uppercase tracking-[0.06em] opacity-70">
+                        <p className="truncate text-xs font-medium text-[#64748B] uppercase tracking-[0.06em]">
                           {label}
                         </p>
                         <div className="mt-1 flex min-w-0 items-baseline gap-1">
-                          <p className="truncate text-xl font-bold leading-tight">{value}</p>
-                          <span className="shrink-0 text-[10px] font-medium opacity-70">{unit}</span>
+                          <p className="truncate text-sm font-semibold leading-tight">{value}</p>
+                          <span className="shrink-0 text-xs font-medium opacity-70">{unit}</span>
                         </div>
                       </div>
                     ))}
@@ -913,7 +913,7 @@ export default function NutritionAdmin() {
           visual container as the rest of the page instead of floating loose */}
       <section className="mt-8 pb-6">
         <div className="mb-5">
-          <h3 className="flex items-center gap-2 text-lg font-bold text-[#111827] sm:text-xl">
+          <h3 className="flex items-center gap-2 text-[18px] font-semibold text-[#111827]">
             <CalculatorIcon className="h-5 w-5 text-[#06966D]" />
             Nutrition Calculators
           </h3>

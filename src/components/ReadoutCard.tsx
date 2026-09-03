@@ -31,20 +31,20 @@ const ReadoutCard = ({ label, value, unit, description, handleDBSave, children, 
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className={`text-3xl font-mono font-bold tracking-tighter ${colorClass}`}
+            className={`text-[30px] font-bold tracking-tight ${colorClass}`}
             style={{ fontVariantNumeric: "tabular-nums" }}
           >
             {value}
           </motion.h2>
         </AnimatePresence>
         {unit && (
-          <span className="text-lg font-medium text-muted-foreground">
+          <span className="text-base font-medium text-[#64748B]">
             {unit}
           </span>
         )}
       </div>
       {description && (
-        <p className="mt-4 text-sm text-muted-foreground leading-relaxed max-w-[60ch]">
+        <p className="mt-4 text-sm font-normal text-[#526581] leading-relaxed max-w-[60ch]">
           {description}
         </p>
       )}

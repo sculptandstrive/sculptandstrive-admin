@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Users as UsersIcon, Shield, ShieldAlert, ShieldCheck, UserCog, Search, RefreshCw, Loader2, UserPlus } from "lucide-react";
+import { Users as UsersIcon, Shield, ShieldAlert, ShieldCheck, UserCog, Search, RefreshCw, Loader2, UserPlus, Play } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -99,6 +99,8 @@ export default function Users() {
       completedCount: number;
       totalCalories: number;
     };
+    videos: any[];
+    videosLoading: boolean;
   } | null>(null);
 
   const fetchClientProfile = async (userId: string) => {
@@ -140,10 +142,57 @@ export default function Users() {
           totalCount: workouts.length,
           completedCount: completed.length,
           totalCalories: calories,
-        }
+        },
+        videos: [],
+        videosLoading: true,
       });
+
+      let videosData: any[] = [];
+      try {
+        const videosRes = await supabase
+          .from("tutorials")
+          .select("id, title, description, thumbnail_url, video_url_small, video_url_large, duration, category, level, audience, status, is_published, content_type")
+          .or("content_type.eq.tutorial,content_type.is.null")
+          .eq("status", "published")
+          .order("created_at", { ascending: false });
+        if (!videosRes.error) {
+          videosData = videosData.concat(videosRes.data || []);
+        }
+      } catch (err) {
+        console.error("Error fetching tutorial videos:", err);
+      }
+
+      try {
+        const playlistLinksRes = await supabase
+          .from("tutorial_playlist_videos")
+          .select("video_id, tutorial_playlists!inner(audience, is_published)");
+        if (!playlistLinksRes.error && playlistLinksRes.data) {
+          const allowedIds = new Set(
+            (playlistLinksRes.data as any[])
+              .filter((row) => {
+                const pl = row.tutorial_playlists;
+                return pl?.is_published !== false;
+              })
+              .map((row) => row.video_id)
+          );
+          videosData = videosData.filter((v) => allowedIds.has(v.id));
+        }
+      } catch (err) {
+        // Fall back to the unfiltered list if the join isn't accessible
+      }
+
+      setProfileData((prev) =>
+        prev
+          ? {
+              ...prev,
+              videos: videosData,
+              videosLoading: false,
+            }
+          : prev
+      );
     } catch (err: any) {
       console.error("Error loading client profile data:", err);
+      setProfileData((prev) => (prev ? { ...prev, videosLoading: false } : prev));
     } finally {
       setProfileLoading(false);
     }
@@ -156,11 +205,20 @@ export default function Users() {
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
-      const [profilesRes, rolesRes, coachClientsRes] = await Promise.all([
+      const [profilesRes, rolesRes] = await Promise.all([
         supabase.from("profiles").select("*").order("created_at", { ascending: false }),
-        supabase.from("user_roles").select("user_id, role"),
-        supabase.from("coach_clients").select("client_id, coach_id").order("created_at", { ascending: false })
+        supabase.from("user_roles").select("user_id, role")
       ]);
+
+      let coachClientsData: any[] = [];
+      try {
+        const coachClientsRes = await supabase.from("coach_clients").select("client_id, coach_id").order("created_at", { ascending: false });
+        if (!coachClientsRes.error) {
+          coachClientsData = coachClientsRes.data || [];
+        }
+      } catch (err) {
+        // Table coach_clients may not exist in schema
+      }
 
       if (profilesRes.error) throw profilesRes.error;
       if (rolesRes.error) throw rolesRes.error;
@@ -169,7 +227,7 @@ export default function Users() {
       const rolesMap = new Map((rolesRes.data || []).map(r => [r.user_id, r.role]));
       const coachMap = new Map<string, { id: string; name: string | null }>();
 
-      for (const cc of (coachClientsRes?.data || []) as any[]) {
+      for (const cc of coachClientsData) {
         if (!coachMap.has(cc.client_id)) {
           const coachName = profileMap.get(cc.coach_id) || null;
           coachMap.set(cc.client_id, { id: cc.coach_id, name: coachName });
@@ -193,7 +251,7 @@ export default function Users() {
 
       setUsers(formattedUsers);
     } catch (error: any) {
-      toast({ title: "Sync Error", description: error.message, variant: "destructive" });
+      toast({ title: "Sync Error", description: error.message || "Failed to fetch users", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -229,7 +287,7 @@ export default function Users() {
       }));
       setCoachesList(formatted);
     } catch (error: any) {
-      console.error("Error fetching coaches list:", error);
+      console.error("Error fetching coaches list:", error?.message || error);
     } finally {
       setLoadingCoaches(false);
     }
@@ -416,7 +474,7 @@ export default function Users() {
 
       <Card className="border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] overflow-hidden bg-white">
         <CardHeader className="p-5 border-b border-[#E2E8F0] flex flex-row items-center justify-between space-y-0 bg-[#F5F7F9]">
-          <CardTitle className="flex items-center gap-2 text-[#111827] font-bold">
+          <CardTitle className="flex items-center gap-2 text-[20px] font-semibold text-[#111827]">
             <UsersIcon className="w-4 h-4 text-[#71D0F7]" />
             Registry ({filteredUsers.length})
           </CardTitle>
@@ -435,10 +493,10 @@ export default function Users() {
             <Table className="min-w-full table-fixed border-collapse">
               <TableHeader className="bg-[#F5F7F9]">
                 <TableRow>
-                  <TableHead className="w-[200px] pl-6 text-xs font-bold text-[#475569] uppercase tracking-wider">Member Name</TableHead>
-                  <TableHead className="w-[250px] text-xs font-bold text-[#475569] uppercase tracking-wider">Email Address</TableHead>
-                  <TableHead className="w-[120px] text-center text-xs font-bold text-[#475569] uppercase tracking-wider">Current Role</TableHead>
-                  <TableHead className="w-[240px] text-right pr-6 text-xs font-bold text-[#475569] uppercase tracking-wider">Management</TableHead>
+                  <TableHead className="w-[200px] pl-6 text-xs font-semibold text-[#64748B] uppercase tracking-wider">Member Name</TableHead>
+                  <TableHead className="w-[250px] text-xs font-semibold text-[#64748B] uppercase tracking-wider">Email Address</TableHead>
+                  <TableHead className="w-[120px] text-center text-xs font-semibold text-[#64748B] uppercase tracking-wider">Current Role</TableHead>
+                  <TableHead className="w-[240px] text-right pr-6 text-xs font-semibold text-[#64748B] uppercase tracking-wider">Management</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -446,7 +504,7 @@ export default function Users() {
                   <TableRow key={user.id} className="hover:bg-[#F5F7F9] border-b border-[#E2E8F0] last:border-0 transition-colors duration-150">
                     <TableCell className="py-2.5 pl-6">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-[8px] bg-[#E8F8F8] flex items-center justify-center text-xs font-bold text-[#4DB8F5] shrink-0">
+                        <div className="w-8 h-8 rounded-[8px] bg-[#E8F8F8] flex items-center justify-center text-xs font-semibold text-[#4DB8F5] shrink-0">
                           {(user.full_name?.[0] || user.email?.[0] || "U").toUpperCase()}
                         </div>
                         <span className="text-sm font-semibold text-[#111827] truncate block max-w-[140px]" title={user.full_name || ""}>
@@ -460,7 +518,7 @@ export default function Users() {
                       </span>
                     </TableCell>
                     <TableCell className="py-2.5 text-center">
-                      <Badge variant="outline" className={`${(roleConfig[user.role] || roleConfig.user).color} text-[10px] px-2 py-0.5 border-none uppercase font-bold`}>
+                      <Badge variant="outline" className={`${(roleConfig[user.role] || roleConfig.user).color} text-xs px-2 py-0.5 border-none uppercase font-semibold`}>
                         {user.role === 'trial_user' ? 'Trial User' : user.role}
                       </Badge>
                       {user.role === 'user' && (
@@ -506,7 +564,7 @@ export default function Users() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="admin" className="text-xs font-bold text-[#EF4444]" disabled>ADMIN</SelectItem>
+                            <SelectItem value="admin" className="text-xs font-semibold text-[#EF4444]" disabled>ADMIN</SelectItem>
                             <SelectItem value="user" className="text-xs font-medium">USER</SelectItem>
                             <SelectItem value="trial_user" className="text-xs font-medium">TRIAL USER</SelectItem>
                             <SelectItem value="coach" className="text-xs font-medium text-[#7C5CFC]">COACH</SelectItem>
@@ -527,10 +585,10 @@ export default function Users() {
       <Dialog open={isAssignGroupOpen} onOpenChange={setIsAssignGroupOpen}>
         <DialogContent className="rounded-[14px]">
           <DialogHeader>
-            <DialogTitle className="text-[#111827] font-bold">
+            <DialogTitle className="text-[18px] font-semibold text-[#111827]">
               Assign User to Group
             </DialogTitle>
-            <DialogDescription className="text-[#64748B]">
+            <DialogDescription className="text-sm font-normal text-[#526581]">
               Select a group to assign this user to.
             </DialogDescription>
           </DialogHeader>
@@ -588,7 +646,7 @@ export default function Users() {
       <AlertDialog open={roleChangeDialog.open} onOpenChange={(o) => !updating && setRoleChangeDialog(prev => ({ ...prev, open: o }))}>
         <AlertDialogContent className="max-w-xs rounded-[14px]">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-sm text-[#111827] font-bold">Modify Permissions?</AlertDialogTitle>
+            <AlertDialogTitle className="text-[18px] font-semibold text-[#111827]">Modify Permissions?</AlertDialogTitle>
             <AlertDialogDescription className="text-xs text-[#64748B]">
               Assign <b className="text-[#111827]">{roleChangeDialog.newRole?.toUpperCase()}</b> access to this account?
             </AlertDialogDescription>
@@ -604,8 +662,8 @@ export default function Users() {
       <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto bg-white border border-[#E2E8F0] text-[#111827] rounded-[14px] p-5 custom-scrollbar">
           <DialogHeader className="border-b border-[#E2E8F0] pb-4 mb-4">
-            <DialogTitle className="text-base font-semibold flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-[#E8F8F8] flex items-center justify-center text-xs font-black text-[#4DB8F5]">
+            <DialogTitle className="text-[18px] font-semibold flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-[#E8F8F8] flex items-center justify-center text-xs font-semibold text-[#4DB8F5]">
                 {(selectedProfileUser?.full_name?.[0] || selectedProfileUser?.email?.[0] || "U").toUpperCase()}
               </div>
               <div>
@@ -652,44 +710,44 @@ export default function Users() {
               {/* Stats Summary Panel */}
               <div className="grid grid-cols-3 gap-4 p-4 rounded-[14px] bg-[#F5F7F9] border border-[#E2E8F0]">
                 <div className="text-center">
-                  <span className="text-[10px] text-[#64748B] font-black uppercase tracking-wider block mb-1">Workouts Assigned</span>
-                  <span className="text-xl font-bold text-[#111827]">{profileData.workoutsSummary.totalCount}</span>
+                  <span className="text-sm font-medium text-[#64748B] block mb-1">Workouts Assigned</span>
+                  <span className="text-[30px] sm:text-[32px] font-bold text-[#111827] leading-none">{profileData.workoutsSummary.totalCount}</span>
                 </div>
                 <div className="text-center border-x border-[#E2E8F0]">
-                  <span className="text-[10px] text-[#64748B] font-black uppercase tracking-wider block mb-1">Sessions Done</span>
-                  <span className="text-xl font-bold text-[#10B981]">{profileData.workoutsSummary.completedCount}</span>
+                  <span className="text-sm font-medium text-[#64748B] block mb-1">Sessions Done</span>
+                  <span className="text-[30px] sm:text-[32px] font-bold text-[#059669] leading-none">{profileData.workoutsSummary.completedCount}</span>
                 </div>
                 <div className="text-center">
-                  <span className="text-[10px] text-[#64748B] font-black uppercase tracking-wider block mb-1">Est. Kcal Burned</span>
-                  <span className="text-xl font-bold text-[#F59E0B]">{profileData.workoutsSummary.totalCalories.toLocaleString()}</span>
+                  <span className="text-sm font-medium text-[#64748B] block mb-1">Est. Kcal Burned</span>
+                  <span className="text-[30px] sm:text-[32px] font-bold text-[#F59E0B] leading-none">{profileData.workoutsSummary.totalCalories.toLocaleString()}</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {/* Column 1: Health History */}
                 <div className="space-y-4">
-                  <h4 className="font-bold text-sm text-[#111827] uppercase tracking-widest border-b border-[#E2E8F0] pb-1.5">Health Questionnaire</h4>
+                  <h4 className="text-xs font-medium text-[#64748B] uppercase tracking-widest border-b border-[#E2E8F0] pb-1.5">Health Questionnaire</h4>
                   <div className="space-y-4 bg-[#F5F7F9] border border-[#E2E8F0] p-4 rounded-[14px] text-xs">
                     <div>
-                      <span className="text-[#64748B] font-bold block mb-1">Medical Conditions</span>
+                      <span className="text-xs font-medium text-[#64748B] block mb-1">Medical Conditions</span>
                       <p className="text-[#111827] bg-white p-2.5 rounded-[8px] border border-[#E2E8F0] min-h-[40px]">
                         {profileData.healthHistory?.medical_conditions || "None declared."}
                       </p>
                     </div>
                     <div>
-                      <span className="text-[#64748B] font-bold block mb-1">Injuries</span>
+                      <span className="text-xs font-medium text-[#64748B] block mb-1">Injuries</span>
                       <p className="text-[#111827] bg-white p-2.5 rounded-[8px] border border-[#E2E8F0] min-h-[40px]">
                         {profileData.healthHistory?.injuries || "None declared."}
                       </p>
                     </div>
                     <div>
-                      <span className="text-[#64748B] font-bold block mb-1">Allergies</span>
+                      <span className="text-xs font-medium text-[#64748B] block mb-1">Allergies</span>
                       <p className="text-[#111827] bg-white p-2.5 rounded-[8px] border border-[#E2E8F0] min-h-[40px]">
                         {profileData.healthHistory?.allergies || "None declared."}
                       </p>
                     </div>
                     <div>
-                      <span className="text-[#64748B] font-bold block mb-1">Medications</span>
+                      <span className="text-xs font-medium text-[#64748B] block mb-1">Medications</span>
                       <p className="text-[#111827] bg-white p-2.5 rounded-[8px] border border-[#E2E8F0] min-h-[40px]">
                         {profileData.healthHistory?.medications || "None declared."}
                       </p>
@@ -699,7 +757,7 @@ export default function Users() {
 
                 {/* Column 2: Weekly Check-ins */}
                 <div className="space-y-4">
-                  <h4 className="font-bold text-sm text-[#111827] uppercase tracking-widest border-b border-[#E2E8F0] pb-1.5">Weekly Check-in Log</h4>
+                  <h4 className="text-xs font-medium text-[#64748B] uppercase tracking-widest border-b border-[#E2E8F0] pb-1.5">Weekly Check-in Log</h4>
                   {profileData.checkins.length === 0 ? (
                     <p className="text-xs text-[#64748B] italic py-8 text-center bg-[#F5F7F9] rounded-[14px] border border-[#E2E8F0]">No check-ins submitted yet.</p>
                   ) : (
@@ -707,26 +765,26 @@ export default function Users() {
                       {profileData.checkins.map((c) => (
                         <div key={c.id} className="p-3 rounded-[14px] bg-white border border-[#E2E8F0] space-y-2 text-xs">
                           <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-1.5">
-                            <span className="text-[#111827] font-bold">{new Date(c.checkin_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
-                            <span className="text-[#111827] font-bold bg-[#F5F7F9] px-2 py-0.5 rounded-[8px] border border-[#E2E8F0]">{c.weight_kg} kg</span>
+                            <span className="text-xs font-medium text-[#111827]">{new Date(c.checkin_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                            <span className="text-xs font-medium text-[#111827] bg-[#F5F7F9] px-2 py-0.5 rounded-[8px] border border-[#E2E8F0]">{c.weight_kg} kg</span>
                           </div>
                           <div className="grid grid-cols-3 gap-2 text-[11px]">
                             <div>
-                              <span className="text-[#64748B] block">Energy</span>
+                              <span className="text-xs font-medium text-[#64748B] block mb-1">Energy</span>
                               <span className="text-[#111827] font-semibold">{c.energy_level}/5</span>
                             </div>
                             <div>
-                              <span className="text-[#64748B] block">Mood</span>
+                              <span className="text-xs font-medium text-[#64748B] block mb-1">Mood</span>
                               <span className="text-[#111827] font-semibold capitalize">{c.mood}</span>
                             </div>
                             <div>
-                              <span className="text-[#64748B] block">Sleep</span>
+                              <span className="text-xs font-medium text-[#64748B] block mb-1">Sleep</span>
                               <span className="text-[#111827] font-semibold">{c.sleep_hours ? `${c.sleep_hours} hrs` : "—"}</span>
                             </div>
                           </div>
                           {c.notes && (
                             <div className="bg-[#F5F7F9] p-2 rounded-[8px] border border-[#E2E8F0] text-[11px] text-[#64748B]">
-                              <span className="text-[10px] text-[#64748B] block font-bold mb-0.5">Notes:</span>
+                              <span className="text-xs font-medium text-[#64748B] block mb-0.5">Notes:</span>
                               {c.notes}
                             </div>
                           )}
@@ -739,7 +797,7 @@ export default function Users() {
 
               {/* Progress Photos Row */}
               <div className="space-y-4 pt-4 border-t border-[#E2E8F0]">
-                <h4 className="font-bold text-sm text-[#111827] uppercase tracking-widest border-b border-[#E2E8F0] pb-1.5">Progress Photos</h4>
+                <h4 className="text-xs font-medium text-[#64748B] uppercase tracking-widest border-b border-[#E2E8F0] pb-1.5">Progress Photos</h4>
                 {profileData.photos.length === 0 ? (
                   <p className="text-xs text-[#64748B] italic py-8 text-center bg-[#F5F7F9] rounded-[14px] border border-[#E2E8F0]">No progress photos uploaded yet.</p>
                 ) : (
@@ -753,8 +811,70 @@ export default function Users() {
                             className="w-full h-full object-cover transition-transform group-hover:scale-105"
                           />
                         </div>
-                        <div className="p-2 bg-[#F5F7F9] text-center text-[10px] font-bold text-[#64748B] border-t border-[#E2E8F0]">
+                        <div className="p-2 bg-[#F5F7F9] text-center text-xs font-medium text-[#64748B] border-t border-[#E2E8F0]">
                           {new Date(p.taken_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Tutorial Videos Row */}
+              <div className="space-y-4 pt-4 border-t border-[#E2E8F0]">
+                <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-1.5">
+                  <h4 className="text-xs font-medium text-[#64748B] uppercase tracking-widest">Tutorial Videos</h4>
+                  <span className="text-[11px] font-medium text-[#64748B]">{profileData.videos?.length || 0} available</span>
+                </div>
+                {profileData.videosLoading ? (
+                  <div className="flex items-center justify-center py-8 gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-[#71D0F7]" />
+                    <span className="text-xs text-[#64748B]">Loading videos...</span>
+                  </div>
+                ) : !profileData.videos || profileData.videos.length === 0 ? (
+                  <p className="text-xs text-[#64748B] italic py-8 text-center bg-[#F5F7F9] rounded-[14px] border border-[#E2E8F0]">No tutorial videos available.</p>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {profileData.videos.map((v: any) => (
+                      <div key={v.id} className="rounded-[14px] overflow-hidden border border-[#E2E8F0] bg-white flex flex-col group">
+                        <a
+                          href={v.video_url_large || v.video_url_small || "#"}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block aspect-video w-full overflow-hidden bg-[#F5F7F9] relative"
+                        >
+                          {v.thumbnail_url ? (
+                            <img
+                              src={v.thumbnail_url}
+                              alt={v.title || "Tutorial video"}
+                              className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-[#94A3B8] text-xs">No thumbnail</div>
+                          )}
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Play className="w-8 h-8 text-white" />
+                          </div>
+                          {v.duration && (
+                            <span className="absolute bottom-1.5 right-1.5 bg-black/70 text-white text-[10px] font-medium px-1.5 py-0.5 rounded">
+                              {v.duration}
+                            </span>
+                          )}
+                        </a>
+                        <div className="p-2.5 space-y-1">
+                          <p className="text-xs font-semibold text-[#111827] line-clamp-2">{v.title || "Untitled video"}</p>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {v.category && (
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-[#E2E8F0] text-[#64748B] font-medium">
+                                {v.category}
+                              </Badge>
+                            )}
+                            {v.level && (
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-[#E2E8F0] text-[#64748B] font-medium">
+                                {v.level}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}

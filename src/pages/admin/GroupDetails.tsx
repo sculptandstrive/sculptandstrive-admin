@@ -230,26 +230,26 @@ return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       <Card className="bg-white border border-slate-200/80 shadow-sm rounded-2xl">
         <CardContent className="pt-6">
-          <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Total Members</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{stats.totalMembers}</p>
+          <p className="text-sm font-medium text-[#64748B]">Total Members</p>
+          <p className="text-[30px] sm:text-[32px] font-bold text-[#111827] mt-1">{stats.totalMembers}</p>
         </CardContent>
       </Card>
       <Card className="bg-white border border-slate-200/80 shadow-sm rounded-2xl">
         <CardContent className="pt-6">
-          <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Avg Completion</p>
-          <p className="text-2xl font-bold text-emerald-600 mt-1">{stats.avgCompletion}%</p>
+          <p className="text-sm font-medium text-[#64748B]">Avg Completion</p>
+          <p className="text-[30px] sm:text-[32px] font-bold text-[#059669] mt-1">{stats.avgCompletion}%</p>
         </CardContent>
       </Card>
       <Card className="bg-white border border-slate-200/80 shadow-sm rounded-2xl">
         <CardContent className="pt-6">
-          <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Avg Weight Loss</p>
-          <p className="text-2xl font-bold text-emerald-600 mt-1">{stats.avgWeightLoss} kg</p>
+          <p className="text-sm font-medium text-[#64748B]">Avg Weight Loss</p>
+          <p className="text-[30px] sm:text-[32px] font-bold text-[#059669] mt-1">{stats.avgWeightLoss} kg</p>
         </CardContent>
       </Card>
       <Card className="bg-white border border-slate-200/80 shadow-sm rounded-2xl">
         <CardContent className="pt-6">
-          <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Check-ins</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">
+          <p className="text-sm font-medium text-[#64748B]">Check-ins</p>
+          <p className="text-[30px] sm:text-[32px] font-bold text-[#111827] mt-1">
             {stats.completedCheckins}/{stats.totalCheckins}
           </p>
         </CardContent>
@@ -259,7 +259,7 @@ return (
     {/* Members Section */}
     <Card className="bg-white border border-slate-200/80 shadow-sm rounded-2xl">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-gray-900 text-base font-semibold flex items-center gap-2">
+        <CardTitle className="text-[20px] font-semibold text-[#111827] flex items-center gap-2">
           <Users className="w-4 h-4 text-emerald-600" />
           Members ({group.members.length})
         </CardTitle>
@@ -308,7 +308,7 @@ return (
     <Dialog open={isAssignOpen} onOpenChange={setIsAssignOpen}>
       <DialogContent className="bg-white border border-slate-200 shadow-xl rounded-2xl max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-gray-900 text-lg font-bold">Add Member to Group</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold text-[#111827]">Add Member to Group</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-2">

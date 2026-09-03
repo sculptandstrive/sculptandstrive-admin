@@ -147,27 +147,27 @@ return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       <Card className="bg-white border border-slate-200/80 shadow-sm rounded-2xl">
         <CardContent className="pt-6">
-          <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Avg Completion</p>
-          <p className="text-2xl font-bold text-emerald-600 mt-1">{groupStats.avgCompletion}%</p>
+          <p className="text-sm font-medium text-[#64748B]">Avg Completion</p>
+          <p className="text-[30px] sm:text-[32px] font-bold text-[#059669] mt-1">{groupStats.avgCompletion}%</p>
           <Progress value={groupStats.avgCompletion} className="h-1.5 bg-slate-100 mt-2" />
         </CardContent>
       </Card>
       <Card className="bg-white border border-slate-200/80 shadow-sm rounded-2xl">
         <CardContent className="pt-6">
-          <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Total Weight Loss</p>
-          <p className="text-2xl font-bold text-emerald-600 mt-1">{groupStats.totalWeightLoss} kg</p>
+          <p className="text-sm font-medium text-[#64748B]">Total Weight Loss</p>
+          <p className="text-[30px] sm:text-[32px] font-bold text-[#059669] mt-1">{groupStats.totalWeightLoss} kg</p>
         </CardContent>
       </Card>
       <Card className="bg-white border border-slate-200/80 shadow-sm rounded-2xl">
         <CardContent className="pt-6">
-          <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Avg Attendance</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{groupStats.avgAttendance}%</p>
+          <p className="text-sm font-medium text-[#64748B]">Avg Attendance</p>
+          <p className="text-[30px] sm:text-[32px] font-bold text-[#111827] mt-1">{groupStats.avgAttendance}%</p>
         </CardContent>
       </Card>
       <Card className="bg-white border border-slate-200/80 shadow-sm rounded-2xl">
         <CardContent className="pt-6">
-          <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Top Performer</p>
-          <p className="text-xl font-bold text-emerald-600 mt-1 truncate">{groupStats.topPerformer}</p>
+          <p className="text-sm font-medium text-[#64748B]">Top Performer</p>
+          <p className="text-[20px] font-bold text-[#059669] mt-1 truncate">{groupStats.topPerformer}</p>
         </CardContent>
       </Card>
     </div>
@@ -175,7 +175,7 @@ return (
     {/* Members Progress Table */}
     <Card className="bg-white border border-slate-200/80 shadow-sm rounded-2xl">
       <CardHeader>
-        <CardTitle className="text-gray-900 text-base font-semibold flex items-center gap-2">
+        <CardTitle className="text-[20px] font-semibold text-[#111827] flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-emerald-600" />
           Member Progress Comparison
         </CardTitle>
@@ -185,12 +185,12 @@ return (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-200/80 bg-slate-50/60">
-                <th className="text-left py-3 px-3 text-xs text-gray-500 font-bold uppercase tracking-wider">Member</th>
-                <th className="text-center py-3 px-3 text-xs text-gray-500 font-bold uppercase tracking-wider">Workout</th>
-                <th className="text-center py-3 px-3 text-xs text-gray-500 font-bold uppercase tracking-wider">Weight</th>
-                <th className="text-center py-3 px-3 text-xs text-gray-500 font-bold uppercase tracking-wider">Nutrition</th>
-                <th className="text-center py-3 px-3 text-xs text-gray-500 font-bold uppercase tracking-wider">Attendance</th>
-                <th className="text-center py-3 px-3 text-xs text-gray-500 font-bold uppercase tracking-wider">Recovery</th>
+                <th className="text-left py-3 px-3 text-xs text-[#64748B] font-semibold uppercase tracking-wider">Member</th>
+                <th className="text-center py-3 px-3 text-xs text-[#64748B] font-semibold uppercase tracking-wider">Workout</th>
+                <th className="text-center py-3 px-3 text-xs text-[#64748B] font-semibold uppercase tracking-wider">Weight</th>
+                <th className="text-center py-3 px-3 text-xs text-[#64748B] font-semibold uppercase tracking-wider">Nutrition</th>
+                <th className="text-center py-3 px-3 text-xs text-[#64748B] font-semibold uppercase tracking-wider">Attendance</th>
+                <th className="text-center py-3 px-3 text-xs text-[#64748B] font-semibold uppercase tracking-wider">Recovery</th>
               </tr>
             </thead>
             <tbody>

@@ -15,14 +15,14 @@ export function StatCard({ title, value, change, changeType = "neutral", icon: I
     <div className="bg-card rounded-xl p-5 shadow-sm hover:shadow-card-hover transition-all duration-300 animate-slide-up border border-border/50">
       <div className="flex items-start justify-between">
         <div className="space-y-2">
-          <p className="text-base font-semibold text-slate-500">{title}</p>
-          <p className="text-4xl font-bold text-foreground">{value}</p>
+          <p className="text-sm font-medium text-[#64748B]">{title}</p>
+          <p className="text-[30px] sm:text-[32px] font-bold text-[#111827] leading-none mt-1">{value}</p>
           {change && (
             <p className={cn(
-              "text-sm",
-              changeType === "positive" && "text-emerald-600",
+              "text-xs font-medium mt-1.5",
+              changeType === "positive" && "text-[#059669]",
               changeType === "negative" && "text-destructive",
-              changeType === "neutral" && "text-muted-foreground"
+              changeType === "neutral" && "text-[#64748B]"
             )}>
               {change}
             </p>
