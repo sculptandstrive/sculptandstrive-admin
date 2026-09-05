@@ -31,6 +31,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatCard } from "@/components/StatCard";
 
 interface MemberCount {
   user: number,
@@ -48,84 +49,6 @@ interface UpcomingSession {
   type: string;
   time: string;
   category: string;
-}
-
-const STAT_THEMES = {
-  emerald: {
-    iconBg: "bg-emerald-100 dark:bg-emerald-950/40",
-    iconColor: "text-emerald-600 dark:text-emerald-400",
-    trendColor: "text-emerald-600 dark:text-emerald-400",
-    sparkStroke: "#10b981",
-    sparkFill: "rgba(16,185,129,0.12)",
-  },
-  violet: {
-    iconBg: "bg-violet-100 dark:bg-purple-950/40",
-    iconColor: "text-violet-600 dark:text-purple-400",
-    trendColor: "text-violet-600 dark:text-purple-400",
-    sparkStroke: "#7c3aed",
-    sparkFill: "rgba(124,58,237,0.12)",
-  },
-  blue: {
-    iconBg: "bg-blue-100 dark:bg-blue-950/40",
-    iconColor: "text-blue-600 dark:text-blue-400",
-    trendColor: "text-blue-600 dark:text-blue-400",
-    sparkStroke: "#2563eb",
-    sparkFill: "rgba(37,99,235,0.12)",
-  },
-} as const;
-
-function MiniSparkline({ stroke, fill }: { stroke: string; fill: string }) {
-  return (
-    <svg viewBox="0 0 100 32" className="w-20 h-8" preserveAspectRatio="none">
-      <polyline
-        fill="none"
-        stroke={stroke}
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        points="0,24 15,20 30,26 45,10 60,16 75,6 100,10"
-      />
-      <polyline
-        fill={fill}
-        stroke="none"
-        points="0,24 15,20 30,26 45,10 60,16 75,6 100,10 100,32 0,32"
-      />
-    </svg>
-  );
-}
-
-function StatCardVisual({
-  title,
-  value,
-  caption,
-  icon: Icon,
-  theme,
-}: {
-  title: string;
-  value: string;
-  caption: string;
-  icon: React.ElementType;
-  theme: keyof typeof STAT_THEMES;
-}) {
-  const t = STAT_THEMES[theme];
-  return (
-    <Card className="border border-border rounded-2xl shadow-sm bg-card">
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${t.iconBg}`}>
-            <Icon className={`w-5 h-5 ${t.iconColor}`} />
-          </div>
-          <MiniSparkline stroke={t.sparkStroke} fill={t.sparkFill} />
-        </div>
-        <p className="text-sm font-medium text-muted-foreground">{title}</p>
-        <p className="text-3xl font-semibold text-foreground tracking-tight leading-none mt-1.5">{value}</p>
-        <div className={`flex items-center gap-1 mt-2.5 text-xs font-semibold ${t.trendColor}`}>
-          <TrendingUp className="w-3.5 h-3.5" />
-          <span>{caption}</span>
-        </div>
-      </CardContent>
-    </Card>
-  );
 }
 
 const ACTIVITY_FALLBACK_COLORS = ["bg-emerald-500", "bg-violet-500", "bg-orange-500", "bg-blue-500"];
@@ -301,27 +224,33 @@ export default function Dashboard() {
       </PageHeader>
 
       {/* Stat cards row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-6">
-        <StatCardVisual
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+        <StatCard
           title="Subscribed Members"
           value={loading ? "..." : memberCount.user.toLocaleString()}
-          caption="Active platform users"
+          percentage="12%"
+          trendLabel="vs last week"
           icon={Users}
           theme="emerald"
+          compact
         />
-        <StatCardVisual
+        <StatCard
           title="Trial Members"
           value={loading ? "..." : memberCount.trial_user.toLocaleString()}
-          caption="Trial platform users"
+          percentage="8%"
+          trendLabel="vs last week"
           icon={Users}
           theme="violet"
+          compact
         />
-        <StatCardVisual
+        <StatCard
           title="Total Sessions"
           value={loading ? "..." : sessionCount.toLocaleString()}
-          caption="Total scheduled sessions"
+          percentage="18%"
+          trendLabel="vs last week"
           icon={Activity}
           theme="blue"
+          compact
         />
       </div>
 

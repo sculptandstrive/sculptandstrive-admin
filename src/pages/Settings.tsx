@@ -4,7 +4,6 @@ import {
   Sun,
   Moon,
   Monitor,
-  Type,
   Trash2,
   Loader2,
 } from "lucide-react";
@@ -42,7 +41,7 @@ export default function Settings() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { toast } = useToast();
-  const { setTheme, setFontSize, setPrimaryColor, setAccentColor, theme, fontSize, primaryColor, accentColor } = useTheme();
+  const { setTheme, setPrimaryColor, setAccentColor, theme, primaryColor, accentColor } = useTheme();
 
   useEffect(() => {
     const fetchLogo = async () => {
@@ -484,24 +483,6 @@ export default function Settings() {
                     ))}
                   </div>
                 </div>
-
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                    <Type className="w-4 h-4" />
-                    Font Size
-                  </Label>
-                  <Select value={fontSize} onValueChange={setFontSize}>
-                    <SelectTrigger className="rounded-xl">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="small">Small</SelectItem>
-                      <SelectItem value="medium">Medium (Default)</SelectItem>
-                      <SelectItem value="large">Large</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
 
               </CardContent>
             </Card>

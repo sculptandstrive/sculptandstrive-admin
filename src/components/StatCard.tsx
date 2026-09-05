@@ -139,6 +139,7 @@ export interface StatCardProps {
   iconBg?: string;
   iconColor?: string;
   showSparkline?: boolean;
+  compact?: boolean;
   className?: string;
 }
 
@@ -155,6 +156,7 @@ export function StatCard({
   iconBg,
   iconColor,
   showSparkline = true,
+  compact = false,
   className,
 }: StatCardProps) {
   const t = STAT_CARD_THEMES[theme] || STAT_CARD_THEMES.emerald;
@@ -165,23 +167,31 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "bg-card border border-border/80 rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between h-full",
+        "bg-card border border-border/80 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between h-full",
+        compact ? "p-4 sm:p-4.5" : "p-4.5 sm:p-5",
         className
       )}
     >
       <div>
         {/* Top-left Icon Box */}
-        <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${resolvedIconBg}`}>
-          <Icon className={`w-5 h-5 ${resolvedIconColor}`} />
+        <div className={cn(
+          "rounded-xl flex items-center justify-center shrink-0",
+          compact ? "w-10 h-10" : "w-11 h-11",
+          resolvedIconBg
+        )}>
+          <Icon className={cn(compact ? "w-4.5 h-4.5" : "w-5 h-5", resolvedIconColor)} />
         </div>
 
         {/* Title */}
-        <p className="text-sm font-medium text-muted-foreground mt-3.5">
+        <p className={cn(
+          "text-sm font-medium text-muted-foreground",
+          compact ? "mt-2.5" : "mt-3.5"
+        )}>
           {title}
         </p>
 
         {/* Main Number & Unit */}
-        <div className="flex items-baseline mt-1.5">
+        <div className={cn("flex items-baseline", compact ? "mt-1" : "mt-1.5")}>
           <span className="text-3xl font-semibold text-foreground tracking-tight leading-none">
             {value}
           </span>
@@ -194,7 +204,10 @@ export function StatCard({
       </div>
 
       {/* Bottom: Trend and Sparkline */}
-      <div className="flex items-end justify-between mt-3 pt-1">
+      <div className={cn(
+        "flex items-end justify-between pt-1",
+        compact ? "mt-2.5" : "mt-3"
+      )}>
         {trendText ? (
           <div className="flex items-center text-xs font-semibold leading-none pb-0.5">
             <span className={`${t.trendColor} font-bold mr-1`}>↑ {trendText}</span>
