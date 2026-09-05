@@ -146,28 +146,28 @@ return (
     {/* Stats Summary */}
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       <Card className="bg-card border border-border shadow-sm rounded-2xl">
-        <CardContent className="pt-6">
+        <CardContent className="p-5">
           <p className="text-sm font-medium text-muted-foreground">Avg Completion</p>
-          <p className="text-[30px] sm:text-[32px] font-bold text-emerald-500 mt-1">{groupStats.avgCompletion}%</p>
-          <Progress value={groupStats.avgCompletion} className="h-1.5 bg-muted mt-2" />
+          <p className="text-3xl font-semibold text-emerald-600 dark:text-emerald-400 tracking-tight leading-none mt-1.5">{groupStats.avgCompletion}%</p>
+          <Progress value={groupStats.avgCompletion} className="h-1.5 bg-muted mt-2.5" />
         </CardContent>
       </Card>
       <Card className="bg-card border border-border shadow-sm rounded-2xl">
-        <CardContent className="pt-6">
+        <CardContent className="p-5">
           <p className="text-sm font-medium text-muted-foreground">Total Weight Loss</p>
-          <p className="text-[30px] sm:text-[32px] font-bold text-emerald-500 mt-1">{groupStats.totalWeightLoss} kg</p>
+          <p className="text-3xl font-semibold text-emerald-600 dark:text-emerald-400 tracking-tight leading-none mt-1.5">{groupStats.totalWeightLoss} kg</p>
         </CardContent>
       </Card>
       <Card className="bg-card border border-border shadow-sm rounded-2xl">
-        <CardContent className="pt-6">
+        <CardContent className="p-5">
           <p className="text-sm font-medium text-muted-foreground">Avg Attendance</p>
-          <p className="text-[30px] sm:text-[32px] font-bold text-foreground mt-1">{groupStats.avgAttendance}%</p>
+          <p className="text-3xl font-semibold text-foreground tracking-tight leading-none mt-1.5">{groupStats.avgAttendance}%</p>
         </CardContent>
       </Card>
       <Card className="bg-card border border-border shadow-sm rounded-2xl">
-        <CardContent className="pt-6">
+        <CardContent className="p-5">
           <p className="text-sm font-medium text-muted-foreground">Top Performer</p>
-          <p className="text-[20px] font-bold text-emerald-500 mt-1 truncate">{groupStats.topPerformer}</p>
+          <p className="text-[20px] font-bold text-emerald-600 dark:text-emerald-400 mt-1.5 truncate">{groupStats.topPerformer}</p>
         </CardContent>
       </Card>
     </div>

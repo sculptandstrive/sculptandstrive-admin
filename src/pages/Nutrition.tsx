@@ -706,12 +706,12 @@ export default function NutritionAdmin() {
             key={label}
             className="rounded-2xl border border-border bg-card shadow-sm"
           >
-            <CardContent className="flex min-h-[126px] items-center justify-between p-5 sm:p-6">
-              <div className="min-w-0">
+            <CardContent className="flex items-center justify-between p-5">
+              <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-muted-foreground">
                   {label}
                 </p>
-                <p className="mt-2 text-[30px] font-bold leading-none text-foreground sm:text-[32px]">
+                <p className="text-3xl font-semibold text-foreground tracking-tight leading-none mt-1.5">
                   {value}
                 </p>
               </div>

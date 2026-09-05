@@ -2788,14 +2788,12 @@ export default function Sessions() {
 function StatCard({ title, value, icon, bgColor }: any) {
   return (
     <Card className="border border-border shadow-sm rounded-2xl bg-card">
-      <CardContent className="p-5 sm:p-6">
-        <div className="flex items-start justify-between mb-3">
-          <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${bgColor}`}>
-            {icon}
-          </div>
+      <CardContent className="p-5 flex items-center justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium text-muted-foreground">{title}</p>
+          <p className="text-3xl font-semibold text-foreground tracking-tight leading-none mt-1.5">{value}</p>
         </div>
-        <p className="text-sm font-medium text-muted-foreground">{title}</p>
-        <p className="text-[30px] sm:text-[32px] font-bold text-foreground mt-1 leading-tight">{value}</p>
+        <div className={`h-11 w-11 rounded-xl flex items-center justify-center shrink-0 ${bgColor}`}>{icon}</div>
       </CardContent>
     </Card>
   );

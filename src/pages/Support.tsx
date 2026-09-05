@@ -87,30 +87,30 @@ export default function Support() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
         <Card className="border border-border rounded-2xl shadow-sm border-l-4 border-l-destructive bg-card">
-          <CardContent className="pt-5 flex justify-between items-center">
-            <div>
+          <CardContent className="p-5 flex justify-between items-center">
+            <div className="min-w-0 flex-1">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">NEW TICKETS</p>
-              <p className="text-[30px] sm:text-[32px] font-bold leading-none text-foreground">{tickets.filter(t => t.status === 'open').length}</p>
+              <p className="text-3xl font-semibold text-foreground tracking-tight leading-none mt-1.5">{tickets.filter(t => t.status === 'open').length}</p>
             </div>
-            <div className="p-2.5 rounded-xl bg-destructive/10 text-destructive"><AlertCircle className="w-4 h-4" /></div>
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 bg-destructive/10 text-destructive"><AlertCircle className="w-5 h-5" /></div>
           </CardContent>
         </Card>
         <Card className="border border-border rounded-2xl shadow-sm border-l-4 border-l-amber-500 bg-card">
-          <CardContent className="pt-5 flex justify-between items-center">
-            <div>
+          <CardContent className="p-5 flex justify-between items-center">
+            <div className="min-w-0 flex-1">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">BEING VIEWED</p>
-              <p className="text-[30px] sm:text-[32px] font-bold leading-none text-foreground">{tickets.filter(t => t.status === 'in_progress').length}</p>
+              <p className="text-3xl font-semibold text-foreground tracking-tight leading-none mt-1.5">{tickets.filter(t => t.status === 'in_progress').length}</p>
             </div>
-            <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400"><Eye className="w-4 h-4" /></div>
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 bg-amber-500/10 text-amber-500 dark:text-amber-400"><Eye className="w-5 h-5" /></div>
           </CardContent>
         </Card>
         <Card className="border border-border rounded-2xl shadow-sm border-l-4 border-l-emerald-500 bg-card">
-          <CardContent className="pt-5 flex justify-between items-center">
-            <div>
+          <CardContent className="p-5 flex justify-between items-center">
+            <div className="min-w-0 flex-1">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">CLOSED / SOLVED</p>
-              <p className="text-[30px] sm:text-[32px] font-bold leading-none text-foreground">{tickets.filter(t => t.status === 'resolved').length}</p>
+              <p className="text-3xl font-semibold text-foreground tracking-tight leading-none mt-1.5">{tickets.filter(t => t.status === 'resolved').length}</p>
             </div>
-            <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400"><CheckCircle className="w-4 h-4" /></div>
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"><CheckCircle className="w-5 h-5" /></div>
           </CardContent>
         </Card>
       </div>

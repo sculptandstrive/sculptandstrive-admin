@@ -263,19 +263,21 @@ export default function ProgressPage() {
             key={stat.title}
             className="border border-border rounded-2xl shadow-sm bg-card"
           >
-            <CardContent className="pt-5">
+            <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
-                  <p className="text-[30px] sm:text-[32px] font-bold leading-none text-foreground">
+                  <p className="text-3xl font-semibold text-foreground tracking-tight leading-none mt-1.5">
                     {stat.value.toLocaleString()}
                   </p>
-                  <p className="text-xs font-medium text-emerald-500">
-                    {stat.change}
-                  </p>
+                  {stat.change && (
+                    <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mt-2">
+                      {stat.change}
+                    </p>
+                  )}
                 </div>
-                <div className="bg-primary/10 rounded-xl p-3">
-                  <stat.icon className="h-6 w-6 text-primary" />
+                <div className="bg-primary/10 rounded-xl p-2.5 shrink-0">
+                  <stat.icon className="h-5 w-5 text-primary" />
                 </div>
               </div>
             </CardContent>
