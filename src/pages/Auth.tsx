@@ -160,7 +160,7 @@ export default function Auth() {
 
                   <Button 
                     type="submit" 
-                    className="w-full bg-[#07AC7D] hover:bg-[#06966D] text-white font-semibold shadow-sm text-sm h-10 transition-all"
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-sm text-sm h-10 transition-all rounded-xl"
                     disabled={isLoading}
                   >
                     {isLoading ? (

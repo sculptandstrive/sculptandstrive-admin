@@ -187,7 +187,7 @@ export default function Groups() {
   if (loading)
     return (
       <div className="flex h-[70vh] items-center justify-center">
-        <Loader2 className="animate-spin text-[#2dd4bf]" />
+        <Loader2 className="animate-spin text-primary" />
       </div>
     );
     return (
@@ -201,44 +201,44 @@ export default function Groups() {
         onOpenChange={setIsCreateDialogOpen}
       >
         <DialogTrigger asChild>
-          <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-sm">
+          <Button className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-sm">
             <Plus className="w-4 h-4" /> Create Group
           </Button>
         </DialogTrigger>
-        <DialogContent className="bg-white border border-slate-200 shadow-xl rounded-2xl max-w-md">
+        <DialogContent className="bg-card border border-border shadow-xl rounded-2xl max-w-md text-foreground">
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold text-[#111827]">
+            <DialogTitle className="text-[18px] font-semibold text-foreground">
               Create New Group
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <p className="text-sm font-medium text-gray-700">
-                Group Name <span className="text-red-400">*</span>
+              <p className="text-sm font-medium text-foreground">
+                Group Name <span className="text-destructive">*</span>
               </p>
               <Input
                 placeholder="e.g. Morning Fat Loss"
                 value={newGroupName}
                 onChange={(e) => setNewGroupName(e.target.value)}
-                className="bg-slate-50 border border-slate-200 text-gray-900 placeholder:text-gray-400 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl"
+                className="bg-card border border-input text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 rounded-xl"
               />
             </div>
             <div className="space-y-2">
-              <p className="text-sm font-medium text-gray-700">Description</p>
+              <p className="text-sm font-medium text-foreground">Description</p>
               <Input
                 placeholder="Group description..."
                 value={newGroupDescription}
                 onChange={(e) => setNewGroupDescription(e.target.value)}
-                className="bg-slate-50 border border-slate-200 text-gray-900 placeholder:text-gray-400 focus:border-emerald-500 focus:ring-emerald-500/20 rounded-xl"
+                className="bg-card border border-input text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 rounded-xl"
               />
             </div>
             <div className="space-y-2">
-              <p className="text-sm font-medium text-gray-700">Coach</p>
+              <p className="text-sm font-medium text-foreground">Coach</p>
               <Select value={selectedCoach} onValueChange={setSelectedCoach}>
-                <SelectTrigger className="bg-slate-50 border border-slate-200 text-gray-900 rounded-xl">
+                <SelectTrigger className="bg-card border border-input text-foreground rounded-xl">
                   <SelectValue placeholder="Select coach (default: you)" />
                 </SelectTrigger>
-                <SelectContent className="bg-white border border-slate-200 shadow-md rounded-xl">
+                <SelectContent className="bg-popover border border-border shadow-md rounded-xl">
                   {coaches.map((c) => (
                     <SelectItem key={c.user_id} value={c.user_id}>
                       {c.full_name}
@@ -252,14 +252,14 @@ export default function Groups() {
             <Button
               variant="outline"
               onClick={() => setIsCreateDialogOpen(false)}
-              className="rounded-xl border-slate-200"
+              className="rounded-xl border-border text-foreground hover:bg-muted"
             >
               Cancel
             </Button>
             <Button
               onClick={handleCreateGroup}
               disabled={!newGroupName.trim()}
-              className="bg-emerald-600 text-white rounded-xl"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl"
             >
               <Plus className="w-4 h-4 mr-2" />
               Create Group
@@ -271,23 +271,23 @@ export default function Groups() {
 
     {/* Search Bar */}
     <div className="relative">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
       <Input
         placeholder="Search groups by name or coach..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        className="pl-10 bg-white border border-slate-200/80 text-gray-900 placeholder:text-gray-400 focus:border-emerald-500 focus:ring-emerald-500/20 shadow-sm rounded-xl"
+        className="pl-10 bg-card border border-input text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 shadow-sm rounded-xl"
       />
     </div>
 
     {/* Groups Grid */}
     {filteredGroups.length === 0 ? (
-      <div className="text-center py-20 bg-white rounded-2xl border border-slate-200/80 shadow-sm">
-        <Users className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-        <p className="text-gray-500 text-sm">
+      <div className="text-center py-20 bg-card rounded-2xl border border-border shadow-sm">
+        <Users className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
+        <p className="text-muted-foreground text-sm">
           {searchTerm ? "No groups found matching your search" : "No groups created yet"}
         </p>
-        <p className="text-gray-400 text-xs mt-1">
+        <p className="text-muted-foreground/70 text-xs mt-1">
           {!searchTerm && 'Click "Create Group" to get started'}
         </p>
       </div>
@@ -298,34 +298,34 @@ export default function Groups() {
             key={group.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:border-emerald-500/40 hover:shadow-md transition-all duration-200 overflow-hidden"
+            className="bg-card rounded-2xl border border-border shadow-sm hover:border-primary/40 hover:shadow-md transition-all duration-200 overflow-hidden"
           >
             <div className="p-5">
               {/* Header */}
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-100/80 border border-emerald-200/60 flex items-center justify-center flex-shrink-0">
-                    <Users className="w-4 h-4 text-emerald-600" />
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
+                    <Users className="w-4 h-4 text-primary" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-[18px] font-semibold text-[#111827] truncate">
+                    <h3 className="text-[18px] font-semibold text-foreground truncate">
                       {group.name}
                     </h3>
                   </div>
                 </div>
-                <Badge className="bg-slate-100 text-slate-600 border border-slate-200 text-xs font-semibold px-2.5 py-1 rounded-lg">
+                <Badge className="bg-muted text-muted-foreground border border-border text-xs font-semibold px-2.5 py-1 rounded-lg">
                   {group.member_count} {group.member_count === 1 ? 'member' : 'members'}
                 </Badge>
               </div>
 
               {/* Coach */}
-              <p className="text-sm text-slate-500 mb-4">
-                Coach: <span className="font-medium text-slate-700">{group.coach_name}</span>
+              <p className="text-sm text-muted-foreground mb-4">
+                Coach: <span className="font-medium text-foreground">{group.coach_name}</span>
               </p>
 
               {/* Actions */}
-              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                <span className="text-xs text-slate-400">
+              <div className="flex items-center justify-between pt-3 border-t border-border">
+                <span className="text-xs text-muted-foreground">
                   {new Date(group.created_at).toLocaleDateString()}
                 </span>
                 <div className="flex items-center gap-1">
@@ -333,7 +333,7 @@ export default function Groups() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-7 px-3 text-xs font-medium rounded-lg border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                      className="h-7 px-3 text-xs font-medium rounded-lg border-border text-foreground hover:bg-muted"
                     >
                       View
                       <ChevronRight className="w-3.5 h-3.5 ml-1" />
@@ -342,7 +342,7 @@ export default function Groups() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-gray-400 hover:text-red-500 hover:bg-red-50 h-7 w-7 rounded-lg transition-colors"
+                    className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-7 w-7 rounded-lg transition-colors"
                     onClick={() => handleDeleteGroup(group.id)}
                   >
                     <Trash2 className="w-3.5 h-3.5" />

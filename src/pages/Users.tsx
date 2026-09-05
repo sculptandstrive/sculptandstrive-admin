@@ -61,10 +61,10 @@ interface UserWithRole {
 
 
 const roleConfig: Record<AppRole, { label: string; color: string; icon: typeof Shield }> = {
-  admin: { label: "Admin", color: "bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/20", icon: ShieldAlert },
-  user: { label: "User", color: "bg-[#F5F7F9] text-[#64748B] border-[#E2E8F0]", icon: UserCog },
-  trial_user: { label: 'Trial User', color: "bg-[#F5F7F9] text-[#64748B] border-[#E2E8F0]", icon: UserCog },
-  coach: { label: 'Coach', color: "bg-[#7C5CFC]/10 text-[#7C5CFC] border-[#7C5CFC]/20", icon: ShieldCheck }
+  admin: { label: "Admin", color: "bg-destructive/10 text-destructive border-destructive/20", icon: ShieldAlert },
+  user: { label: "User", color: "bg-muted text-muted-foreground border-border", icon: UserCog },
+  trial_user: { label: 'Trial User', color: "bg-muted text-muted-foreground border-border", icon: UserCog },
+  coach: { label: 'Coach', color: "bg-purple-500/10 text-purple-400 border-purple-500/20", icon: ShieldCheck }
 };
 
 export default function Users() {
@@ -456,63 +456,63 @@ export default function Users() {
   };
 
   if (adminLoading) return <div className="p-4"><Skeleton className="h-64 w-full" /></div>;
-  if (!isAdmin) return <div className="p-20 text-center"><ShieldAlert className="mx-auto h-12 w-12 text-[#EF4444]/50" /></div>;
+  if (!isAdmin) return <div className="p-20 text-center"><ShieldAlert className="mx-auto h-12 w-12 text-destructive/50" /></div>;
 
   return (
     <>
       <PageHeader title="User Management" description="Real-time access control.">
         <div className="relative max-w-xs w-full">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-[#64748B]" />
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search users..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8 bg-white text-xs border-[#CBD5E1] rounded-[8px] focus-visible:border-[#71D0F7] focus-visible:ring-[3px] focus-visible:ring-[#71D0F7]/[.12]"
+            className="pl-8 bg-card text-xs border-input rounded-xl focus-visible:border-primary focus-visible:ring-primary/20"
           />
         </div>
       </PageHeader>
 
-      <Card className="border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] overflow-hidden bg-white">
-        <CardHeader className="p-5 border-b border-[#E2E8F0] flex flex-row items-center justify-between space-y-0 bg-[#F5F7F9]">
-          <CardTitle className="flex items-center gap-2 text-[20px] font-semibold text-[#111827]">
-            <UsersIcon className="w-4 h-4 text-[#71D0F7]" />
+      <Card className="border border-border rounded-2xl shadow-sm overflow-hidden bg-card">
+        <CardHeader className="p-5 border-b border-border flex flex-row items-center justify-between space-y-0 bg-muted/40">
+          <CardTitle className="flex items-center gap-2 text-[20px] font-semibold text-foreground">
+            <UsersIcon className="w-4 h-4 text-primary" />
             Registry ({filteredUsers.length})
           </CardTitle>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Filter by name/email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-9 w-64 text-sm rounded-[10px] bg-white border-[#CBD5E1] focus-visible:border-[#71D0F7] focus-visible:ring-[3px] focus-visible:ring-[#71D0F7]/[.12]"
+              className="pl-9 h-9 w-64 text-sm rounded-xl bg-card border-input focus-visible:border-primary focus-visible:ring-primary/20"
             />
           </div>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table className="min-w-full table-fixed border-collapse">
-              <TableHeader className="bg-[#F5F7F9]">
+              <TableHeader className="bg-muted/40">
                 <TableRow>
-                  <TableHead className="w-[200px] pl-6 text-xs font-semibold text-[#64748B] uppercase tracking-wider">Member Name</TableHead>
-                  <TableHead className="w-[250px] text-xs font-semibold text-[#64748B] uppercase tracking-wider">Email Address</TableHead>
-                  <TableHead className="w-[120px] text-center text-xs font-semibold text-[#64748B] uppercase tracking-wider">Current Role</TableHead>
-                  <TableHead className="w-[240px] text-right pr-6 text-xs font-semibold text-[#64748B] uppercase tracking-wider">Management</TableHead>
+                  <TableHead className="w-[200px] pl-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Member Name</TableHead>
+                  <TableHead className="w-[250px] text-xs font-semibold text-muted-foreground uppercase tracking-wider">Email Address</TableHead>
+                  <TableHead className="w-[120px] text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">Current Role</TableHead>
+                  <TableHead className="w-[240px] text-right pr-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Management</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredUsers.map((user) => (
-                  <TableRow key={user.id} className="hover:bg-[#F5F7F9] border-b border-[#E2E8F0] last:border-0 transition-colors duration-150">
+                  <TableRow key={user.id} className="hover:bg-muted/50 border-b border-border last:border-0 transition-colors duration-150">
                     <TableCell className="py-2.5 pl-6">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-[8px] bg-[#E8F8F8] flex items-center justify-center text-xs font-semibold text-[#4DB8F5] shrink-0">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary shrink-0">
                           {(user.full_name?.[0] || user.email?.[0] || "U").toUpperCase()}
                         </div>
-                        <span className="text-sm font-semibold text-[#111827] truncate block max-w-[140px]" title={user.full_name || ""}>
+                        <span className="text-sm font-semibold text-foreground truncate block max-w-[140px]" title={user.full_name || ""}>
                           {user.full_name || "Unnamed User"}
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="py-2.5 text-sm text-[#64748B]">
+                    <TableCell className="py-2.5 text-sm text-muted-foreground">
                       <span className="truncate block max-w-[220px]" title={user.email || ""}>
                         {user.email || "not set"}
                       </span>
@@ -522,7 +522,7 @@ export default function Users() {
                         {user.role === 'trial_user' ? 'Trial User' : user.role}
                       </Badge>
                       {user.role === 'user' && (
-                        <span className="block text-[11px] text-[#64748B] mt-1 font-medium">
+                        <span className="block text-[11px] text-muted-foreground mt-1 font-medium">
                           Coach: {user.coach_name || "Unassigned"}
                         </span>
                       )}
@@ -532,7 +532,7 @@ export default function Users() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-8 w-28 text-xs font-semibold bg-white border-[#E2E8F0] text-[#334155] hover:bg-[#F5F7F9] rounded-[8px]"
+                          className="h-8 w-28 text-xs font-semibold bg-card border-border text-foreground hover:bg-muted rounded-xl"
                           onClick={() => {
                             setSelectedUserId(user.user_id);
                             setIsAssignGroupOpen(true);
@@ -546,7 +546,7 @@ export default function Users() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-8 w-28 text-xs font-semibold bg-white border-[#E2E8F0] text-[#334155] hover:bg-[#F5F7F9] rounded-[8px]"
+                          className="h-8 w-28 text-xs font-semibold bg-card border-border text-foreground hover:bg-muted rounded-xl"
                           onClick={() => {
                             setSelectedProfileUser(user);
                             setProfileDialogOpen(true);
@@ -560,14 +560,14 @@ export default function Users() {
                           onValueChange={(val: AppRole) => handleRoleChange(user, val)} 
                           disabled={user.role === 'admin' || user.user_id === currentUser?.id || updating}
                         >
-                          <SelectTrigger className="h-8 w-28 text-xs font-semibold bg-white border-[#CBD5E1] rounded-[8px] disabled:opacity-75 disabled:cursor-not-allowed focus:border-[#71D0F7] focus:ring-[3px] focus:ring-[#71D0F7]/[.12]">
+                          <SelectTrigger className="h-8 w-28 text-xs font-semibold bg-card border-input text-foreground rounded-xl disabled:opacity-75 disabled:cursor-not-allowed focus:border-primary focus:ring-primary/20">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="admin" className="text-xs font-semibold text-[#EF4444]" disabled>ADMIN</SelectItem>
+                            <SelectItem value="admin" className="text-xs font-semibold text-destructive" disabled>ADMIN</SelectItem>
                             <SelectItem value="user" className="text-xs font-medium">USER</SelectItem>
                             <SelectItem value="trial_user" className="text-xs font-medium">TRIAL USER</SelectItem>
-                            <SelectItem value="coach" className="text-xs font-medium text-[#7C5CFC]">COACH</SelectItem>
+                            <SelectItem value="coach" className="text-xs font-medium text-purple-400">COACH</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -583,30 +583,30 @@ export default function Users() {
 
       {/* ── Assign Group Dialog ── */}
       <Dialog open={isAssignGroupOpen} onOpenChange={setIsAssignGroupOpen}>
-        <DialogContent className="rounded-[14px]">
+        <DialogContent className="rounded-2xl bg-card border-border text-foreground">
           <DialogHeader>
-            <DialogTitle className="text-[18px] font-semibold text-[#111827]">
+            <DialogTitle className="text-[18px] font-semibold text-foreground">
               Assign User to Group
             </DialogTitle>
-            <DialogDescription className="text-sm font-normal text-[#526581]">
+            <DialogDescription className="text-sm font-normal text-muted-foreground">
               Select a group to assign this user to.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-[#475569]">Select Group</p>
+              <p className="text-sm font-semibold text-muted-foreground">Select Group</p>
               <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
-                <SelectTrigger className="border-[#CBD5E1] rounded-[8px] focus:border-[#71D0F7] focus:ring-[3px] focus:ring-[#71D0F7]/[.12]">
+                <SelectTrigger className="border-input bg-card text-foreground rounded-xl focus:border-primary focus:ring-primary/20">
                   <SelectValue placeholder="Choose a group..." />
                 </SelectTrigger>
                 <SelectContent>
                   {groups.length === 0 ? (
-                    <SelectItem value="none" disabled className="text-[#94A3B8]">
+                    <SelectItem value="none" disabled className="text-muted-foreground">
                       No groups available
                     </SelectItem>
                   ) : (
                     groups.map((g) => (
-                      <SelectItem key={g.id} value={g.id} className="hover:bg-[#E8F8F8]">
+                      <SelectItem key={g.id} value={g.id} className="hover:bg-primary/10">
                         {g.name}
                       </SelectItem>
                     ))
@@ -618,7 +618,7 @@ export default function Users() {
           <DialogFooter className="gap-2">
             <Button
               variant="outline"
-              className="border-[#E2E8F0] rounded-[10px]"
+              className="border-border rounded-xl"
               onClick={() => setIsAssignGroupOpen(false)}
             >
               Cancel
@@ -626,7 +626,7 @@ export default function Users() {
             <Button
               onClick={handleAssignGroup}
               disabled={!selectedGroupId || assigning}
-              className="bg-[#71D0F7] hover:bg-[#4DB8F5] text-white rounded-[10px] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {assigning ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -644,44 +644,44 @@ export default function Users() {
 
 
       <AlertDialog open={roleChangeDialog.open} onOpenChange={(o) => !updating && setRoleChangeDialog(prev => ({ ...prev, open: o }))}>
-        <AlertDialogContent className="max-w-xs rounded-[14px]">
+        <AlertDialogContent className="max-w-xs rounded-2xl bg-card border-border text-foreground">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-[18px] font-semibold text-[#111827]">Modify Permissions?</AlertDialogTitle>
-            <AlertDialogDescription className="text-xs text-[#64748B]">
-              Assign <b className="text-[#111827]">{roleChangeDialog.newRole?.toUpperCase()}</b> access to this account?
+            <AlertDialogTitle className="text-[18px] font-semibold text-foreground">Modify Permissions?</AlertDialogTitle>
+            <AlertDialogDescription className="text-xs text-muted-foreground">
+              Assign <b className="text-foreground">{roleChangeDialog.newRole?.toUpperCase()}</b> access to this account?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row gap-2">
-            <AlertDialogCancel className="text-xs h-8 flex-1 border-[#E2E8F0] rounded-[8px]">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmRoleChange} className="text-xs h-8 flex-1 bg-[#71D0F7] hover:bg-[#4DB8F5] rounded-[8px]">Confirm</AlertDialogAction>
+            <AlertDialogCancel className="text-xs h-8 flex-1 border-border rounded-xl">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRoleChange} className="text-xs h-8 flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl">Confirm</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       {/* ── Client Profile Dialog ── */}
       <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto bg-white border border-[#E2E8F0] text-[#111827] rounded-[14px] p-5 custom-scrollbar">
-          <DialogHeader className="border-b border-[#E2E8F0] pb-4 mb-4">
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto bg-card border border-border text-foreground rounded-2xl p-5 custom-scrollbar">
+          <DialogHeader className="border-b border-border pb-4 mb-4">
             <DialogTitle className="text-[18px] font-semibold flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-[#E8F8F8] flex items-center justify-center text-xs font-semibold text-[#4DB8F5]">
+              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
                 {(selectedProfileUser?.full_name?.[0] || selectedProfileUser?.email?.[0] || "U").toUpperCase()}
               </div>
               <div>
-                <span className="text-[#111827] block">{selectedProfileUser?.full_name || "Client Profile"}</span>
-                <span className="text-xs text-[#64748B] font-normal">{selectedProfileUser?.email}</span>
+                <span className="text-foreground block">{selectedProfileUser?.full_name || "Client Profile"}</span>
+                <span className="text-xs text-muted-foreground font-normal">{selectedProfileUser?.email}</span>
               </div>
             </DialogTitle>
-            <DialogDescription className="text-xs text-[#64748B] flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+            <DialogDescription className="text-xs text-muted-foreground flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
               <span>Joined on {selectedProfileUser?.created_at ? new Date(selectedProfileUser.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}</span>
               {selectedProfileUser?.role === 'user' && (
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-[#334155]">Assign Coach:</span>
+                  <span className="font-semibold text-foreground">Assign Coach:</span>
                   <Select
                     value={selectedProfileUser?.coach_id || "none"}
                     onValueChange={(coachId) => handleDirectAssignCoach(selectedProfileUser.user_id, coachId)}
                     disabled={assigning}
                   >
-                    <SelectTrigger className="h-8 text-xs w-48 bg-white border-[#CBD5E1] text-[#111827] font-semibold px-2.5 rounded-[8px] focus:border-[#71D0F7] focus:ring-[3px] focus:ring-[#71D0F7]/[.12]">
+                    <SelectTrigger className="h-8 text-xs w-48 bg-card border-input text-foreground font-semibold px-2.5 rounded-xl focus:border-primary focus:ring-primary/20">
                       <SelectValue placeholder="No Coach assigned" />
                     </SelectTrigger>
                     <SelectContent>
@@ -700,55 +700,55 @@ export default function Users() {
 
           {profileLoading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
-              <Loader2 className="w-8 h-8 animate-spin text-[#71D0F7]" />
-              <p className="text-sm text-[#64748B] font-medium">Retrieving client record...</p>
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground font-medium">Retrieving client record...</p>
             </div>
           ) : !profileData ? (
-            <p className="text-center py-20 text-[#64748B] text-sm">Failed to load profile details.</p>
+            <p className="text-center py-20 text-muted-foreground text-sm">Failed to load profile details.</p>
           ) : (
             <div className="space-y-6">
               {/* Stats Summary Panel */}
-              <div className="grid grid-cols-3 gap-4 p-4 rounded-[14px] bg-[#F5F7F9] border border-[#E2E8F0]">
+              <div className="grid grid-cols-3 gap-4 p-4 rounded-2xl bg-muted/40 border border-border">
                 <div className="text-center">
-                  <span className="text-sm font-medium text-[#64748B] block mb-1">Workouts Assigned</span>
-                  <span className="text-[30px] sm:text-[32px] font-bold text-[#111827] leading-none">{profileData.workoutsSummary.totalCount}</span>
+                  <span className="text-sm font-medium text-muted-foreground block mb-1">Workouts Assigned</span>
+                  <span className="text-[30px] sm:text-[32px] font-bold text-foreground leading-none">{profileData.workoutsSummary.totalCount}</span>
                 </div>
-                <div className="text-center border-x border-[#E2E8F0]">
-                  <span className="text-sm font-medium text-[#64748B] block mb-1">Sessions Done</span>
-                  <span className="text-[30px] sm:text-[32px] font-bold text-[#059669] leading-none">{profileData.workoutsSummary.completedCount}</span>
+                <div className="text-center border-x border-border">
+                  <span className="text-sm font-medium text-muted-foreground block mb-1">Sessions Done</span>
+                  <span className="text-[30px] sm:text-[32px] font-bold text-emerald-500 leading-none">{profileData.workoutsSummary.completedCount}</span>
                 </div>
                 <div className="text-center">
-                  <span className="text-sm font-medium text-[#64748B] block mb-1">Est. Kcal Burned</span>
-                  <span className="text-[30px] sm:text-[32px] font-bold text-[#F59E0B] leading-none">{profileData.workoutsSummary.totalCalories.toLocaleString()}</span>
+                  <span className="text-sm font-medium text-muted-foreground block mb-1">Est. Kcal Burned</span>
+                  <span className="text-[30px] sm:text-[32px] font-bold text-amber-500 leading-none">{profileData.workoutsSummary.totalCalories.toLocaleString()}</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {/* Column 1: Health History */}
                 <div className="space-y-4">
-                  <h4 className="text-xs font-medium text-[#64748B] uppercase tracking-widest border-b border-[#E2E8F0] pb-1.5">Health Questionnaire</h4>
-                  <div className="space-y-4 bg-[#F5F7F9] border border-[#E2E8F0] p-4 rounded-[14px] text-xs">
+                  <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-widest border-b border-border pb-1.5">Health Questionnaire</h4>
+                  <div className="space-y-4 bg-muted/40 border border-border p-4 rounded-2xl text-xs">
                     <div>
-                      <span className="text-xs font-medium text-[#64748B] block mb-1">Medical Conditions</span>
-                      <p className="text-[#111827] bg-white p-2.5 rounded-[8px] border border-[#E2E8F0] min-h-[40px]">
+                      <span className="text-xs font-medium text-muted-foreground block mb-1">Medical Conditions</span>
+                      <p className="text-foreground bg-card p-2.5 rounded-xl border border-border min-h-[40px]">
                         {profileData.healthHistory?.medical_conditions || "None declared."}
                       </p>
                     </div>
                     <div>
-                      <span className="text-xs font-medium text-[#64748B] block mb-1">Injuries</span>
-                      <p className="text-[#111827] bg-white p-2.5 rounded-[8px] border border-[#E2E8F0] min-h-[40px]">
+                      <span className="text-xs font-medium text-muted-foreground block mb-1">Injuries</span>
+                      <p className="text-foreground bg-card p-2.5 rounded-xl border border-border min-h-[40px]">
                         {profileData.healthHistory?.injuries || "None declared."}
                       </p>
                     </div>
                     <div>
-                      <span className="text-xs font-medium text-[#64748B] block mb-1">Allergies</span>
-                      <p className="text-[#111827] bg-white p-2.5 rounded-[8px] border border-[#E2E8F0] min-h-[40px]">
+                      <span className="text-xs font-medium text-muted-foreground block mb-1">Allergies</span>
+                      <p className="text-foreground bg-card p-2.5 rounded-xl border border-border min-h-[40px]">
                         {profileData.healthHistory?.allergies || "None declared."}
                       </p>
                     </div>
                     <div>
-                      <span className="text-xs font-medium text-[#64748B] block mb-1">Medications</span>
-                      <p className="text-[#111827] bg-white p-2.5 rounded-[8px] border border-[#E2E8F0] min-h-[40px]">
+                      <span className="text-xs font-medium text-muted-foreground block mb-1">Medications</span>
+                      <p className="text-foreground bg-card p-2.5 rounded-xl border border-border min-h-[40px]">
                         {profileData.healthHistory?.medications || "None declared."}
                       </p>
                     </div>
@@ -757,34 +757,34 @@ export default function Users() {
 
                 {/* Column 2: Weekly Check-ins */}
                 <div className="space-y-4">
-                  <h4 className="text-xs font-medium text-[#64748B] uppercase tracking-widest border-b border-[#E2E8F0] pb-1.5">Weekly Check-in Log</h4>
+                  <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-widest border-b border-border pb-1.5">Weekly Check-in Log</h4>
                   {profileData.checkins.length === 0 ? (
-                    <p className="text-xs text-[#64748B] italic py-8 text-center bg-[#F5F7F9] rounded-[14px] border border-[#E2E8F0]">No check-ins submitted yet.</p>
+                    <p className="text-xs text-muted-foreground italic py-8 text-center bg-muted/40 rounded-2xl border border-border">No check-ins submitted yet.</p>
                   ) : (
                     <div className="space-y-3 max-h-[360px] overflow-y-auto pr-2 custom-scrollbar">
                       {profileData.checkins.map((c) => (
-                        <div key={c.id} className="p-3 rounded-[14px] bg-white border border-[#E2E8F0] space-y-2 text-xs">
-                          <div className="flex justify-between items-center border-b border-[#E2E8F0] pb-1.5">
-                            <span className="text-xs font-medium text-[#111827]">{new Date(c.checkin_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
-                            <span className="text-xs font-medium text-[#111827] bg-[#F5F7F9] px-2 py-0.5 rounded-[8px] border border-[#E2E8F0]">{c.weight_kg} kg</span>
+                        <div key={c.id} className="p-3 rounded-2xl bg-card border border-border space-y-2 text-xs">
+                          <div className="flex justify-between items-center border-b border-border pb-1.5">
+                            <span className="text-xs font-medium text-foreground">{new Date(c.checkin_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                            <span className="text-xs font-medium text-foreground bg-muted px-2 py-0.5 rounded-lg border border-border">{c.weight_kg} kg</span>
                           </div>
                           <div className="grid grid-cols-3 gap-2 text-[11px]">
                             <div>
-                              <span className="text-xs font-medium text-[#64748B] block mb-1">Energy</span>
-                              <span className="text-[#111827] font-semibold">{c.energy_level}/5</span>
+                              <span className="text-xs font-medium text-muted-foreground block mb-1">Energy</span>
+                              <span className="text-foreground font-semibold">{c.energy_level}/5</span>
                             </div>
                             <div>
-                              <span className="text-xs font-medium text-[#64748B] block mb-1">Mood</span>
-                              <span className="text-[#111827] font-semibold capitalize">{c.mood}</span>
+                              <span className="text-xs font-medium text-muted-foreground block mb-1">Mood</span>
+                              <span className="text-foreground font-semibold capitalize">{c.mood}</span>
                             </div>
                             <div>
-                              <span className="text-xs font-medium text-[#64748B] block mb-1">Sleep</span>
-                              <span className="text-[#111827] font-semibold">{c.sleep_hours ? `${c.sleep_hours} hrs` : "—"}</span>
+                              <span className="text-xs font-medium text-muted-foreground block mb-1">Sleep</span>
+                              <span className="text-foreground font-semibold">{c.sleep_hours ? `${c.sleep_hours} hrs` : "—"}</span>
                             </div>
                           </div>
                           {c.notes && (
-                            <div className="bg-[#F5F7F9] p-2 rounded-[8px] border border-[#E2E8F0] text-[11px] text-[#64748B]">
-                              <span className="text-xs font-medium text-[#64748B] block mb-0.5">Notes:</span>
+                            <div className="bg-muted/60 p-2 rounded-xl border border-border text-[11px] text-muted-foreground">
+                              <span className="text-xs font-medium text-muted-foreground block mb-0.5">Notes:</span>
                               {c.notes}
                             </div>
                           )}
@@ -796,22 +796,22 @@ export default function Users() {
               </div>
 
               {/* Progress Photos Row */}
-              <div className="space-y-4 pt-4 border-t border-[#E2E8F0]">
-                <h4 className="text-xs font-medium text-[#64748B] uppercase tracking-widest border-b border-[#E2E8F0] pb-1.5">Progress Photos</h4>
+              <div className="space-y-4 pt-4 border-t border-border">
+                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-widest border-b border-border pb-1.5">Progress Photos</h4>
                 {profileData.photos.length === 0 ? (
-                  <p className="text-xs text-[#64748B] italic py-8 text-center bg-[#F5F7F9] rounded-[14px] border border-[#E2E8F0]">No progress photos uploaded yet.</p>
+                  <p className="text-xs text-muted-foreground italic py-8 text-center bg-muted/40 rounded-2xl border border-border">No progress photos uploaded yet.</p>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {profileData.photos.map((p) => (
-                      <div key={p.id} className="relative rounded-[14px] overflow-hidden border border-[#E2E8F0] bg-white flex flex-col group">
-                        <div className="aspect-[3/4] w-full overflow-hidden bg-[#F5F7F9] flex items-center justify-center">
+                      <div key={p.id} className="relative rounded-2xl overflow-hidden border border-border bg-card flex flex-col group">
+                        <div className="aspect-[3/4] w-full overflow-hidden bg-muted flex items-center justify-center">
                           <img
                             src={p.image_path}
                             alt={`Progress photo ${p.taken_at}`}
                             className="w-full h-full object-cover transition-transform group-hover:scale-105"
                           />
                         </div>
-                        <div className="p-2 bg-[#F5F7F9] text-center text-xs font-medium text-[#64748B] border-t border-[#E2E8F0]">
+                        <div className="p-2 bg-muted/60 text-center text-xs font-medium text-muted-foreground border-t border-border">
                           {new Date(p.taken_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                         </div>
                       </div>
@@ -821,27 +821,27 @@ export default function Users() {
               </div>
 
               {/* Tutorial Videos Row */}
-              <div className="space-y-4 pt-4 border-t border-[#E2E8F0]">
-                <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-1.5">
-                  <h4 className="text-xs font-medium text-[#64748B] uppercase tracking-widest">Tutorial Videos</h4>
-                  <span className="text-[11px] font-medium text-[#64748B]">{profileData.videos?.length || 0} available</span>
+              <div className="space-y-4 pt-4 border-t border-border">
+                <div className="flex items-center justify-between border-b border-border pb-1.5">
+                  <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-widest">Tutorial Videos</h4>
+                  <span className="text-[11px] font-medium text-muted-foreground">{profileData.videos?.length || 0} available</span>
                 </div>
                 {profileData.videosLoading ? (
                   <div className="flex items-center justify-center py-8 gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-[#71D0F7]" />
-                    <span className="text-xs text-[#64748B]">Loading videos...</span>
+                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                    <span className="text-xs text-muted-foreground">Loading videos...</span>
                   </div>
                 ) : !profileData.videos || profileData.videos.length === 0 ? (
-                  <p className="text-xs text-[#64748B] italic py-8 text-center bg-[#F5F7F9] rounded-[14px] border border-[#E2E8F0]">No tutorial videos available.</p>
+                  <p className="text-xs text-muted-foreground italic py-8 text-center bg-muted/40 rounded-2xl border border-border">No tutorial videos available.</p>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {profileData.videos.map((v: any) => (
-                      <div key={v.id} className="rounded-[14px] overflow-hidden border border-[#E2E8F0] bg-white flex flex-col group">
+                      <div key={v.id} className="rounded-2xl overflow-hidden border border-border bg-card flex flex-col group">
                         <a
                           href={v.video_url_large || v.video_url_small || "#"}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="block aspect-video w-full overflow-hidden bg-[#F5F7F9] relative"
+                          className="block aspect-video w-full overflow-hidden bg-muted relative"
                         >
                           {v.thumbnail_url ? (
                             <img
@@ -850,7 +850,7 @@ export default function Users() {
                               className="w-full h-full object-cover transition-transform group-hover:scale-105"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-[#94A3B8] text-xs">No thumbnail</div>
+                            <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No thumbnail</div>
                           )}
                           <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
                             <Play className="w-8 h-8 text-white" />
@@ -862,15 +862,15 @@ export default function Users() {
                           )}
                         </a>
                         <div className="p-2.5 space-y-1">
-                          <p className="text-xs font-semibold text-[#111827] line-clamp-2">{v.title || "Untitled video"}</p>
+                          <p className="text-xs font-semibold text-foreground line-clamp-2">{v.title || "Untitled video"}</p>
                           <div className="flex items-center gap-1.5 flex-wrap">
                             {v.category && (
-                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-[#E2E8F0] text-[#64748B] font-medium">
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-border text-muted-foreground font-medium">
                                 {v.category}
                               </Badge>
                             )}
                             {v.level && (
-                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-[#E2E8F0] text-[#64748B] font-medium">
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-border text-muted-foreground font-medium">
                                 {v.level}
                               </Badge>
                             )}

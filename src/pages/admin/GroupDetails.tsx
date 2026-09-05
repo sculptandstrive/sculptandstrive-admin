@@ -200,14 +200,14 @@ export default function GroupDetails() {
   if (loading)
     return (
       <div className="flex h-[70vh] items-center justify-center">
-        <Loader2 className="animate-spin text-[#2dd4bf]" />
+        <Loader2 className="animate-spin text-primary" />
       </div>
     );
 
   if (!group)
     return (
       <div className="text-center py-20">
-        <p className="text-slate-400">Group not found</p>
+        <p className="text-muted-foreground">Group not found</p>
       </div>
     );
 return (
@@ -219,7 +219,7 @@ return (
       <Button
         variant="outline"
         onClick={() => window.history.back()}
-        className="border-slate-200 text-gray-700 hover:bg-slate-50 shadow-sm rounded-xl"
+        className="border-border text-foreground hover:bg-muted shadow-sm rounded-xl"
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
         Back
@@ -228,28 +228,28 @@ return (
 
     {/* Stats Grid */}
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <Card className="bg-white border border-slate-200/80 shadow-sm rounded-2xl">
+      <Card className="bg-card border border-border shadow-sm rounded-2xl">
         <CardContent className="pt-6">
-          <p className="text-sm font-medium text-[#64748B]">Total Members</p>
-          <p className="text-[30px] sm:text-[32px] font-bold text-[#111827] mt-1">{stats.totalMembers}</p>
+          <p className="text-sm font-medium text-muted-foreground">Total Members</p>
+          <p className="text-[30px] sm:text-[32px] font-bold text-foreground mt-1">{stats.totalMembers}</p>
         </CardContent>
       </Card>
-      <Card className="bg-white border border-slate-200/80 shadow-sm rounded-2xl">
+      <Card className="bg-card border border-border shadow-sm rounded-2xl">
         <CardContent className="pt-6">
-          <p className="text-sm font-medium text-[#64748B]">Avg Completion</p>
-          <p className="text-[30px] sm:text-[32px] font-bold text-[#059669] mt-1">{stats.avgCompletion}%</p>
+          <p className="text-sm font-medium text-muted-foreground">Avg Completion</p>
+          <p className="text-[30px] sm:text-[32px] font-bold text-emerald-500 mt-1">{stats.avgCompletion}%</p>
         </CardContent>
       </Card>
-      <Card className="bg-white border border-slate-200/80 shadow-sm rounded-2xl">
+      <Card className="bg-card border border-border shadow-sm rounded-2xl">
         <CardContent className="pt-6">
-          <p className="text-sm font-medium text-[#64748B]">Avg Weight Loss</p>
-          <p className="text-[30px] sm:text-[32px] font-bold text-[#059669] mt-1">{stats.avgWeightLoss} kg</p>
+          <p className="text-sm font-medium text-muted-foreground">Avg Weight Loss</p>
+          <p className="text-[30px] sm:text-[32px] font-bold text-emerald-500 mt-1">{stats.avgWeightLoss} kg</p>
         </CardContent>
       </Card>
-      <Card className="bg-white border border-slate-200/80 shadow-sm rounded-2xl">
+      <Card className="bg-card border border-border shadow-sm rounded-2xl">
         <CardContent className="pt-6">
-          <p className="text-sm font-medium text-[#64748B]">Check-ins</p>
-          <p className="text-[30px] sm:text-[32px] font-bold text-[#111827] mt-1">
+          <p className="text-sm font-medium text-muted-foreground">Check-ins</p>
+          <p className="text-[30px] sm:text-[32px] font-bold text-foreground mt-1">
             {stats.completedCheckins}/{stats.totalCheckins}
           </p>
         </CardContent>
@@ -257,15 +257,15 @@ return (
     </div>
 
     {/* Members Section */}
-    <Card className="bg-white border border-slate-200/80 shadow-sm rounded-2xl">
+    <Card className="bg-card border border-border shadow-sm rounded-2xl">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-[20px] font-semibold text-[#111827] flex items-center gap-2">
-          <Users className="w-4 h-4 text-emerald-600" />
+        <CardTitle className="text-[20px] font-semibold text-foreground flex items-center gap-2">
+          <Users className="w-4 h-4 text-primary" />
           Members ({group.members.length})
         </CardTitle>
         <Button
           onClick={() => setIsAssignOpen(true)}
-          className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-sm"
+          className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-sm"
         >
           <UserPlus className="w-4 h-4" />
           Add Member
@@ -273,7 +273,7 @@ return (
       </CardHeader>
       <CardContent>
         {group.members.length === 0 ? (
-          <p className="text-center py-8 text-gray-500 text-sm">
+          <p className="text-center py-8 text-muted-foreground text-sm">
             No members in this group yet.
           </p>
         ) : (
@@ -281,17 +281,17 @@ return (
             {group.members.map((member) => (
               <div
                 key={member.id}
-                className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50/70 border border-slate-200/80 hover:bg-slate-100/60 transition-colors"
+                className="flex items-center justify-between p-3.5 rounded-xl bg-muted/40 border border-border hover:bg-muted/60 transition-colors"
               >
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">{member.full_name}</p>
-                  <p className="text-xs text-slate-500">{member.email}</p>
+                  <p className="text-sm font-semibold text-foreground">{member.full_name}</p>
+                  <p className="text-xs text-muted-foreground">{member.email}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-gray-400 hover:text-red-500 hover:bg-red-50 h-8 w-8 rounded-lg transition-colors"
+                    className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-8 w-8 rounded-lg transition-colors"
                     onClick={() => handleRemoveMember(member.id, member.full_name)}
                   >
                     <Trash2 className="w-4 h-4" />
@@ -306,20 +306,20 @@ return (
  
     {/* Assign User Dialog */}
     <Dialog open={isAssignOpen} onOpenChange={setIsAssignOpen}>
-      <DialogContent className="bg-white border border-slate-200 shadow-xl rounded-2xl max-w-md">
+      <DialogContent className="bg-card border border-border shadow-xl rounded-2xl max-w-md text-foreground">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold text-[#111827]">Add Member to Group</DialogTitle>
+          <DialogTitle className="text-[18px] font-semibold text-foreground">Add Member to Group</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
-            <p className="text-sm font-medium text-gray-700">Select User</p>
+            <p className="text-sm font-medium text-foreground">Select User</p>
             <Select value={selectedUser} onValueChange={setSelectedUser}>
-              <SelectTrigger className="bg-slate-50 border border-slate-200 text-gray-900 rounded-xl">
+              <SelectTrigger className="bg-card border border-input text-foreground rounded-xl">
                 <SelectValue placeholder="Choose a user..." />
               </SelectTrigger>
-              <SelectContent className="bg-white border border-slate-200 shadow-md rounded-xl">
+              <SelectContent className="bg-popover border border-border shadow-md rounded-xl">
                 {availableUsers.length === 0 ? (
-                  <SelectItem value="none" disabled className="text-gray-400">
+                  <SelectItem value="none" disabled className="text-muted-foreground">
                     No available users
                   </SelectItem>
                 ) : (
@@ -337,14 +337,14 @@ return (
           <Button
             variant="outline"
             onClick={() => setIsAssignOpen(false)}
-            className="rounded-xl border-slate-200"
+            className="rounded-xl border-border text-foreground hover:bg-muted"
           >
             Cancel
           </Button>
           <Button
             onClick={handleAssignUser}
             disabled={!selectedUser}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl disabled:opacity-50"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl disabled:opacity-50"
           >
             <UserPlus className="w-4 h-4 mr-2" />
             Add to Group

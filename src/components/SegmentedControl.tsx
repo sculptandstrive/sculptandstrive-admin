@@ -34,8 +34,8 @@ const SegmentedControl = ({
   };
 
   const variantClasses = {
-    default: "bg-slate-100/90 border border-slate-200/80 shadow-inner",
-    outline: "bg-transparent border-2 border-slate-200",
+    default: "bg-muted border border-border shadow-inner",
+    outline: "bg-transparent border-2 border-border",
     ghost: "bg-transparent border-none",
   };
 
@@ -46,9 +46,9 @@ const SegmentedControl = ({
   };
 
   const activeVariants = {
-    default: "bg-[#07AC7D] shadow-md shadow-[#07AC7D]/20",
-    outline: "bg-[#07AC7D] border-2 border-[#07AC7D]",
-    ghost: "bg-[#07AC7D]/10",
+    default: "bg-primary shadow-md shadow-primary/20",
+    outline: "bg-primary border-2 border-primary",
+    ghost: "bg-primary/10",
   };
 
   return (
@@ -69,7 +69,7 @@ const SegmentedControl = ({
             onClick={() => onChange(option.value)}
             className={cn(
               "relative flex-1 inline-flex items-center justify-center rounded-full font-medium transition-all duration-200 z-10 select-none whitespace-nowrap",
-              "hover:scale-[1.01] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#07AC7D]/50",
+              "hover:scale-[1.01] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
               buttonSizeClasses[size]
             )}
           >
@@ -88,9 +88,9 @@ const SegmentedControl = ({
                 "relative z-10 flex items-center justify-center gap-2 whitespace-nowrap transition-colors duration-200",
                 isActive
                   ? variant === "ghost"
-                    ? "text-[#07AC7D] font-semibold"
-                    : "text-white font-semibold"
-                  : "text-[#526581] hover:text-slate-900"
+                    ? "text-primary font-semibold"
+                    : "text-primary-foreground font-semibold"
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               {option.icon && (

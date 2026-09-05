@@ -38,13 +38,13 @@ const ReadoutCard = ({ label, value, unit, description, handleDBSave, children, 
           </motion.h2>
         </AnimatePresence>
         {unit && (
-          <span className="text-base font-medium text-[#64748B]">
+          <span className="text-base font-medium text-muted-foreground">
             {unit}
           </span>
         )}
       </div>
       {description && (
-        <p className="mt-4 text-sm font-normal text-[#526581] leading-relaxed max-w-[60ch]">
+        <p className="mt-4 text-sm font-normal text-muted-foreground leading-relaxed max-w-[60ch]">
           {description}
         </p>
       )}

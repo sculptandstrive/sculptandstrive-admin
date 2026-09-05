@@ -12,10 +12,10 @@ interface KpiCardProps {
 
 // ✅ FIXED: Using CSS variables instead of hardcoded HEX
 const accentMap = {
-  teal: "bg-[#E8F8F8] text-[#71D0F7]",
-  purple: "bg-purple-50 text-purple-600",
-  blue: "bg-blue-50 text-blue-600",
-  orange: "bg-orange-50 text-orange-600",
+  teal: "bg-primary/10 text-primary",
+  purple: "bg-purple-500/10 text-purple-400",
+  blue: "bg-blue-500/10 text-blue-400",
+  orange: "bg-orange-500/10 text-orange-400",
 };
 
 function Sparkline({ data, color }: { data: number[]; color: string }) {
@@ -59,25 +59,23 @@ export function KpiCard({
   const positive = trend !== undefined && trend >= 0;
 
   return (
-    // ✅ FIXED: Using CSS variables from index.css
-    <div className="bg-[#FFFFFF] rounded-[14px] p-5 shadow-[0_4px_18px_rgba(15,23,42,0.05)] hover:shadow-lg transition-all duration-300 border border-[#E2E8F0]">
+    <div className="bg-card rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-300 border border-border">
       <div className="flex items-start justify-between">
         <div className="space-y-1">
-          {/* ✅ FIXED: Proper typography tokens */}
-          <p className="text-[14px] font-medium text-[#64748B]">{title}</p>
-          <p className="text-[32px] font-bold text-[#111827] leading-[1.1]">{value}</p>
+          <p className="text-[14px] font-medium text-muted-foreground">{title}</p>
+          <p className="text-[32px] font-bold text-foreground leading-[1.1]">{value}</p>
           <div className="flex items-center gap-2">
             {trend !== undefined && (
               <span
                 className={cn(
                   "text-[13px] font-medium",
-                  positive ? "text-[#10B981]" : "text-[#EF4444]"
+                  positive ? "text-emerald-500" : "text-destructive"
                 )}
               >
                 {positive ? "↑" : "↓"} {Math.abs(trend)}%
               </span>
             )}
-            {subtitle && <span className="text-[12px] text-[#64748B]">{subtitle}</span>}
+            {subtitle && <span className="text-[12px] text-muted-foreground">{subtitle}</span>}
           </div>
         </div>
         <div className={cn("p-2.5 rounded-xl flex-shrink-0", accentMap[accent])}>
@@ -88,7 +86,7 @@ export function KpiCard({
         <div className="mt-3 flex justify-end">
           <Sparkline
             data={sparklineData}
-            color={positive === false ? "#EF4444" : "#71D0F7"}
+            color={positive === false ? "#EF4444" : "#10B981"}
           />
         </div>
       )}

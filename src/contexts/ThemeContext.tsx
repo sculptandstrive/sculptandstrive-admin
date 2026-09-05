@@ -8,7 +8,6 @@ const ThemeContext = createContext(null);
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState("light");
   const [fontSize, setFontSize] = useState("medium");
-  const [contrast, setContrast] = useState("normal");
   const [primaryColor, setPrimaryColor] = useState("#07AC7D");
   const [accentColor, setAccentColor] = useState("#F59E0B");
 
@@ -18,9 +17,9 @@ export const ThemeProvider = ({ children }) => {
   useEffect(() => {
     setTheme(localStorage.getItem("app-theme") || "light");
     setFontSize(localStorage.getItem("app-fontSize") || "medium");
-    setContrast(localStorage.getItem("app-contrast") || "normal");
     setPrimaryColor(localStorage.getItem("app-primary") || "#07AC7D");
     setAccentColor(localStorage.getItem("app-accent") || "#F59E0B");
+    localStorage.removeItem("app-contrast");
   }, []);
 
   // Apply theme + save whenever changed
@@ -39,17 +38,15 @@ export const ThemeProvider = ({ children }) => {
     root.classList.add(`text-${fontSize}`);
 
     root.classList.remove("contrast-normal", "contrast-high");
-    root.classList.add(`contrast-${contrast}`);
 
     root.style.setProperty("--primary", hexToHsl(primaryColor));
     root.style.setProperty("--accent", hexToHsl(accentColor));
 
     localStorage.setItem("app-theme", theme);
     localStorage.setItem("app-fontSize", fontSize);
-    localStorage.setItem("app-contrast", contrast);
     localStorage.setItem("app-primary", primaryColor);
     localStorage.setItem("app-accent", accentColor);
-  }, [theme, fontSize, contrast, primaryColor, accentColor]);
+  }, [theme, fontSize, primaryColor, accentColor]);
 
   return (
     <ThemeContext.Provider
@@ -58,8 +55,6 @@ export const ThemeProvider = ({ children }) => {
         setTheme,
         fontSize,
         setFontSize,
-        contrast,
-        setContrast,
         primaryColor,
         setPrimaryColor,
         accentColor,
@@ -72,3 +67,4 @@ export const ThemeProvider = ({ children }) => {
 };
 
 export const useTheme = () => useContext(ThemeContext);
+

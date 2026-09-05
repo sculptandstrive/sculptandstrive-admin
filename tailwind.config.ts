@@ -65,6 +65,12 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        'bg-page': 'hsl(var(--background))',
+        'bg-card-secondary': 'hsl(var(--secondary))',
+        'text-primary': 'hsl(var(--foreground))',
+        'text-secondary': 'hsl(var(--muted-foreground))',
+        'text-muted': 'hsl(var(--muted-foreground))',
+        'text-disabled': 'hsl(var(--muted-foreground))',
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -74,6 +80,7 @@ export default {
           "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
+          "text-muted": "hsl(var(--sidebar-text-muted))",
         },
       },
       borderRadius: {

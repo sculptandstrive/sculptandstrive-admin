@@ -12,7 +12,6 @@ import {
   Plus,
   UserMinus,
   Trash2,
-  Pencil,
   RefreshCw,
   ChevronDown,
   Calculator as CalculatorIcon,
@@ -93,7 +92,7 @@ function pctToGrams(
 
 export default function NutritionAdmin() {
   const [mealPlans, setMealPlans] = useState<MealPlan[]>([]);
-  const [assignType, setAssignType] = useState<"individual" | "group" | "all">("individual");
+  const [assignType, setAssignType] = useState<"individual" | "group">("individual");
   const [selectedGroupForPlan, setSelectedGroupForPlan] = useState("");
   const [groups, setGroups] = useState<any[]>([]);
   const [selectedUserForPlan, setSelectedUserForPlan] = useState("");
@@ -108,7 +107,6 @@ export default function NutritionAdmin() {
   const [macroMode, setMacroMode] = useState<MacroMode>("values");
   const [macroModeOpen, setMacroModeOpen] = useState(false);
   const [newPlan, setNewPlan] = useState(DEFAULT_PLAN);
-  const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -128,11 +126,6 @@ export default function NutritionAdmin() {
     if (!isDialogOpen) {
       setNewPlan(DEFAULT_PLAN);
       setMacroMode("values");
-      setMacroModeOpen(false);
-      setAssignType("individual");
-      setSelectedUserForPlan("");
-      setSelectedGroupForPlan("");
-      setEditingPlanId(null);
     }
   }, [isDialogOpen]);
 
@@ -234,11 +227,11 @@ export default function NutritionAdmin() {
     }
   };
 
-  const handleSavePlan = async () => {
+  const handleCreatePlan = async () => {
     const calVal = Number(newPlan.calories);
     const waterVal = Number(newPlan.water);
 
-    // Resolve macro values.
+    // ── Resolve macro values ───────────────────────────────────────────────
     let proVal: number;
     let fatsVal: number;
     let carbsVal: number;
@@ -247,17 +240,17 @@ export default function NutritionAdmin() {
       const proteinPct = Number(newPlan.protein);
       const fatsPct = Number(newPlan.fats);
       const carbsPct = Number(newPlan.carbs);
-      const percentageTotal = proteinPct + fatsPct + carbsPct;
 
-      if (percentageTotal !== 100) {
+      // Percentage validations
+      if (proteinPct + fatsPct + carbsPct !== 100) {
         toast({
           title: "Validation Error",
-          description: "Protein, Fats and Carbs percentages must add up to 100%.",
+          description:
+            "Protein, Fats and Carbs percentages must add up to 100%.",
           variant: "destructive",
         });
         return;
       }
-
       if (proteinPct < 0 || fatsPct < 0 || carbsPct < 0) {
         toast({
           title: "Validation Error",
@@ -276,7 +269,7 @@ export default function NutritionAdmin() {
       carbsVal = Number(newPlan.carbs);
     }
 
-    // Common validations.
+    // ── Common validations ─────────────────────────────────────────────────
     if (!newPlan.name.trim()) {
       toast({
         title: "Validation Error",
@@ -285,7 +278,6 @@ export default function NutritionAdmin() {
       });
       return;
     }
-
     if (calVal > 6000 || calVal < 1200) {
       toast({
         title: "Validation Error",
@@ -294,7 +286,6 @@ export default function NutritionAdmin() {
       });
       return;
     }
-
     if (macroMode === "values") {
       if (proVal > 400 || proVal < 0) {
         toast({
@@ -304,7 +295,6 @@ export default function NutritionAdmin() {
         });
         return;
       }
-
       if (fatsVal > 400 || fatsVal < 0) {
         toast({
           title: "Validation Error",
@@ -313,7 +303,6 @@ export default function NutritionAdmin() {
         });
         return;
       }
-
       if (carbsVal > 600 || carbsVal < 100) {
         toast({
           title: "Validation Error",
@@ -323,7 +312,6 @@ export default function NutritionAdmin() {
         return;
       }
     }
-
     if (waterVal > 12000 || waterVal < 1000) {
       toast({
         title: "Validation Error",
@@ -333,169 +321,30 @@ export default function NutritionAdmin() {
       return;
     }
 
-    if (assignType === "individual" && !selectedUserForPlan && !editingPlanId) {
-      toast({
-        title: "Assignment Required",
-        description: "Select a user, choose Group, or choose All Users before saving the plan.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (assignType === "group" && !selectedGroupForPlan) {
-      toast({
-        title: "Group Required",
-        description: "Select a group to assign this plan to all group members.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
-      const planPayload = {
-        name: newPlan.name.trim(),
-        meals: newPlan.meals,
-        calories: calVal,
-        protein: proVal,
-        fats: fatsVal,
-        carbs: carbsVal,
-        water: waterVal,
-      };
+      const { error } = await (supabase as any).from("meal_plans").insert([
+        {
+          name: newPlan.name.trim(),
+          meals: newPlan.meals,
+          calories: calVal,
+          protein: proVal,
+          fats: fatsVal,
+          carbs: carbsVal,
+          water: waterVal,
+        },
+      ]);
+      if (error) throw error;
 
-      let planId = editingPlanId;
-
-      if (editingPlanId) {
-        const { error } = await (supabase as any)
-          .from("meal_plans")
-          .update(planPayload)
-          .eq("id", editingPlanId);
-
-        if (error) throw error;
-      } else {
-        const { data, error } = await (supabase as any)
-          .from("meal_plans")
-          .insert([planPayload])
-          .select("id")
-          .single();
-
-        if (error) throw error;
-        planId = data.id;
-      }
-
-      // Assignment is intentionally handled after the plan exists.
-      // For Group, every member returned from workout_group_members gets the plan.
-      if (planId && assignType === "individual" && selectedUserForPlan) {
-        const { error } = await (supabase as any)
-          .from("user_meal_plans")
-          .upsert(
-            { user_id: selectedUserForPlan, plan_id: planId },
-            { onConflict: "user_id" },
-          );
-
-        if (error) throw error;
-      }
-
-      if (planId && assignType === "group") {
-        const { data: groupMembers, error: membersError } = await (supabase as any)
-          .from("workout_group_members")
-          .select("user_id")
-          .eq("group_id", selectedGroupForPlan);
-
-        if (membersError) throw membersError;
-
-        const memberIds = (groupMembers || [])
-          .map((member: any) => member.user_id)
-          .filter(Boolean);
-
-        if (memberIds.length === 0) {
-          throw new Error("The selected group has no members to assign.");
-        }
-
-        const assignments = memberIds.map((userId: string) => ({
-          user_id: userId,
-          plan_id: planId,
-        }));
-
-        const { error: assignmentError } = await (supabase as any)
-          .from("user_meal_plans")
-          .upsert(assignments, { onConflict: "user_id" });
-
-        if (assignmentError) throw assignmentError;
-
-        toast({
-          title: editingPlanId ? "Plan Updated & Group Assigned" : "Plan Created & Group Assigned",
-          description: `${memberIds.length} group member${memberIds.length === 1 ? "" : "s"} now have this meal plan.`,
-        });
-      } else if (planId && assignType === "all") {
-        const { data: allProfiles, error: profilesError } = await (supabase as any)
-          .from("profiles")
-          .select("user_id")
-          .not("user_id", "is", null);
-
-        if (profilesError) throw profilesError;
-
-        const allUserIds = (allProfiles || [])
-          .map((profile: any) => profile.user_id)
-          .filter(Boolean);
-
-        if (allUserIds.length === 0) {
-          throw new Error("No users are available to assign this meal plan.");
-        }
-
-        const assignments = allUserIds.map((userId: string) => ({
-          user_id: userId,
-          plan_id: planId,
-        }));
-
-        const { error: assignmentError } = await (supabase as any)
-          .from("user_meal_plans")
-          .upsert(assignments, { onConflict: "user_id" });
-
-        if (assignmentError) throw assignmentError;
-
-        toast({
-          title: editingPlanId
-            ? "Plan Updated & Assigned to All Users"
-            : "Plan Created & Assigned to All Users",
-          description: `${allUserIds.length} user${allUserIds.length === 1 ? "" : "s"} now have this meal plan.`,
-        });
-      } else {
-        toast({
-          title: editingPlanId ? "Plan Updated" : "Plan Created",
-          description: editingPlanId
-            ? "Meal plan details have been updated successfully."
-            : "New plan is now live.",
-        });
-      }
-
+      toast({ title: "Plan Created", description: "New plan is now live." });
       setIsDialogOpen(false);
-      await fetchAdminDashboardData();
+      fetchAdminDashboardData();
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error?.message || "Unable to save the meal plan.",
+        description: error.message,
         variant: "destructive",
       });
     }
-  };
-
-  const handleEditPlan = (plan: MealPlan) => {
-    setEditingPlanId(plan.id);
-    setNewPlan({
-      name: plan.name,
-      calories: String(plan.calories),
-      protein: String(plan.protein),
-      meals: Number(plan.meals) || 4,
-      fats: String(plan.fats),
-      carbs: String(plan.carbs),
-      water: String(plan.water),
-    });
-    setMacroMode("values");
-    setAssignType("individual");
-    setSelectedUserForPlan("");
-    setSelectedGroupForPlan("");
-    setMacroModeOpen(false);
-    setIsDialogOpen(true);
   };
 
   const handleDeletePlan = async (planId: string) => {
@@ -583,7 +432,7 @@ export default function NutritionAdmin() {
       : 100;
 
   return (
-    <div className="min-w-0 w-full bg-white min-h-screen">
+    <div className="min-w-0 w-full">
 
       <PageHeader
         title="Nutrition Admin"
@@ -591,11 +440,11 @@ export default function NutritionAdmin() {
       >
         <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end lg:w-auto">
           <div className="relative order-2 w-full sm:order-1 sm:w-[220px] lg:w-[240px]">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#64748B]" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search plans..."
               aria-label="Search meal plans"
-              className="h-10 w-full rounded-[10px] border-[#E2E8F0] bg-white pl-9 text-sm shadow-none focus-visible:border-[#07AC7D] focus-visible:ring-[#07AC7D]/15"
+              className="h-10 w-full rounded-[10px] border-border bg-card pl-9 text-sm text-foreground placeholder:text-muted-foreground shadow-none focus-visible:border-[#07AC7D] focus-visible:ring-[#07AC7D]/15"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -604,7 +453,7 @@ export default function NutritionAdmin() {
           <Button
             variant="outline"
             onClick={fetchAdminDashboardData}
-            className="order-3 h-10 w-full gap-2 rounded-[10px] border-[#E2E8F0] bg-white px-4 text-[#334155] shadow-none hover:border-[#07AC7D] hover:bg-[#F1FAF6] hover:text-[#06966D] sm:order-2 sm:w-auto"
+            className="order-3 h-10 w-full gap-2 rounded-[10px] border-border bg-card px-4 text-foreground shadow-none hover:border-[#07AC7D] hover:bg-muted sm:order-2 sm:w-auto"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             <span>Sync Data</span>
@@ -618,34 +467,34 @@ export default function NutritionAdmin() {
               </Button>
             </DialogTrigger>
 
-            <DialogContent className="max-h-[90vh] w-[calc(100%-1rem)] max-w-lg overflow-y-auto rounded-[14px] border-[#E2E8F0] bg-white p-4 sm:p-6">
+            <DialogContent className="max-h-[90vh] w-[calc(100%-1rem)] max-w-lg overflow-y-auto rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-xl">
               <DialogHeader>
-                <DialogTitle className="text-[18px] font-semibold text-[#111827]">
+                <DialogTitle className="text-[18px] font-semibold text-foreground">
                   Add New Meal Plan
                 </DialogTitle>
               </DialogHeader>
 
               <div className="grid gap-4 py-2">
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-[#475569]">
-                    Plan Title <span className="font-normal text-[#64748B]">(Max 20 chars)</span>
+                  <p className="text-xs font-semibold text-muted-foreground">
+                    Plan Title <span className="font-normal text-muted-foreground/80">(Max 20 chars)</span>
                   </p>
                   <Input
                     maxLength={20}
                     placeholder="e.g., Vegan Shred"
                     value={newPlan.name}
                     onChange={(e) => setNewPlan({ ...newPlan, name: e.target.value })}
-                    className="h-11 rounded-[10px] border-[#CBD5E1] focus-visible:border-[#07AC7D] focus-visible:ring-[#07AC7D]/15"
+                    className="h-11 rounded-[10px] border-border bg-background text-foreground focus-visible:border-[#07AC7D] focus-visible:ring-[#07AC7D]/15"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-[#475569]">Macro Input Mode</p>
+                  <p className="text-xs font-semibold text-muted-foreground">Macro Input Mode</p>
                   <div className="relative w-full">
                     <button
                       type="button"
                       onClick={() => setMacroModeOpen((v) => !v)}
-                      className="flex h-11 w-full items-center justify-between rounded-[10px] border border-[#CBD5E1] bg-white px-3 text-sm font-medium text-[#334155] shadow-none transition-colors hover:border-[#07AC7D] focus:outline-none focus:ring-2 focus:ring-[#07AC7D]/15"
+                      className="flex h-11 w-full items-center justify-between rounded-[10px] border border-border bg-background px-3 text-sm font-medium text-foreground shadow-none transition-colors hover:border-[#07AC7D] focus:outline-none focus:ring-2 focus:ring-[#07AC7D]/15"
                     >
                       <span>
                         {macroMode === "values"
@@ -653,13 +502,13 @@ export default function NutritionAdmin() {
                           : "Enter by Percentage (%)"}
                       </span>
                       <ChevronDown
-                        className={`h-4 w-4 text-[#64748B] transition-transform ${macroModeOpen ? "rotate-180" : ""
+                        className={`h-4 w-4 text-muted-foreground transition-transform ${macroModeOpen ? "rotate-180" : ""
                           }`}
                       />
                     </button>
 
                     {macroModeOpen && (
-                      <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-[10px] border border-[#E2E8F0] bg-white shadow-lg">
+                      <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-[10px] border border-border bg-popover text-popover-foreground shadow-lg">
                         {(["values", "percentage"] as MacroMode[]).map((mode) => (
                           <button
                             key={mode}
@@ -674,7 +523,7 @@ export default function NutritionAdmin() {
                                 carbs: mode === "percentage" ? "45" : "140",
                               }));
                             }}
-                            className={`flex w-full items-center justify-between px-3 py-3 text-left text-sm transition-colors hover:bg-[#F1FAF6] ${macroMode === mode ? "bg-[#F1FAF6] font-semibold text-[#2E9D7A]" : "text-[#334155]"
+                            className={`flex w-full items-center justify-between px-3 py-3 text-left text-sm transition-colors hover:bg-muted ${macroMode === mode ? "bg-muted font-semibold text-emerald-500" : "text-foreground"
                               }`}
                           >
                             <span>
@@ -682,13 +531,13 @@ export default function NutritionAdmin() {
                                 ? "Enter by Value (grams)"
                                 : "Enter by Percentage (%)"}
                             </span>
-                            {macroMode === mode && <Check className="h-4 w-4 text-[#06966D]" />}
+                            {macroMode === mode && <Check className="h-4 w-4 text-emerald-500" />}
                           </button>
                         ))}
                       </div>
                     )}
                   </div>
-                  <p className="text-xs leading-5 text-[#64748B]">
+                  <p className="text-xs leading-5 text-muted-foreground">
                     {macroMode === "percentage"
                       ? "Enter macro split as % of total calories. Must sum to 100%."
                       : "Enter macro amounts directly in grams."}
@@ -697,36 +546,26 @@ export default function NutritionAdmin() {
 
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold text-[#475569]">Assign To</p>
+                    <p className="text-xs font-semibold text-muted-foreground">Assign To</p>
                     <Select
                       value={assignType}
-                      onValueChange={(v) => {
-                        setAssignType(v as "individual" | "group" | "all");
-                        if (v !== "individual") setSelectedUserForPlan("");
-                        if (v !== "group") setSelectedGroupForPlan("");
-                      }}
+                      onValueChange={(v) => setAssignType(v as "individual" | "group")}
                     >
-                      <SelectTrigger className="h-11 w-full rounded-[10px] border-[#CBD5E1]">
+                      <SelectTrigger className="h-11 w-full rounded-[10px] border-border bg-background text-foreground">
                         <SelectValue placeholder="Select assignment type" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="individual">Individual</SelectItem>
                         <SelectItem value="group">Group</SelectItem>
-                        <SelectItem value="all">All Users</SelectItem>
                       </SelectContent>
                     </Select>
-                    {assignType === "all" && (
-                      <p className="mt-2 text-[11px] font-medium text-[#06966D]">
-                        This plan will be automatically assigned to every user.
-                      </p>
-                    )}
                   </div>
 
                   {assignType === "individual" ? (
                     <div className="space-y-2">
-                      <p className="text-xs font-semibold text-[#475569]">Select User</p>
+                      <p className="text-xs font-semibold text-muted-foreground">Select User</p>
                       <Select value={selectedUserForPlan} onValueChange={setSelectedUserForPlan}>
-                        <SelectTrigger className="h-11 w-full rounded-[10px] border-[#CBD5E1]">
+                        <SelectTrigger className="h-11 w-full rounded-[10px] border-border bg-background text-foreground">
                           <SelectValue placeholder="Choose a user..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -738,12 +577,11 @@ export default function NutritionAdmin() {
                         </SelectContent>
                       </Select>
                     </div>
-                  ) : assignType === "group" ? (
+                  ) : (
                     <div className="space-y-2">
-                      <p className="text-xs font-semibold text-[#475569]">Select Group</p>
-                      <p className="text-[11px] text-[#64748B]">All members of this group will receive the plan.</p>
+                      <p className="text-xs font-semibold text-muted-foreground">Select Group</p>
                       <Select value={selectedGroupForPlan} onValueChange={setSelectedGroupForPlan}>
-                        <SelectTrigger className="h-11 w-full rounded-[10px] border-[#CBD5E1]">
+                        <SelectTrigger className="h-11 w-full rounded-[10px] border-border bg-background text-foreground">
                           <SelectValue placeholder="Choose a group..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -761,31 +599,26 @@ export default function NutritionAdmin() {
                         </SelectContent>
                       </Select>
                     </div>
-                  ) : (
-                    <div className="flex h-11 items-center rounded-[10px] border border-[#B8E4D4] bg-[#F1FAF6] px-3">
-                      <Users className="mr-2 h-4 w-4 text-[#06966D]" />
-                      <span className="text-sm font-semibold text-[#06966D]">All Users</span>
-                    </div>
                   )}
                 </div>
 
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold text-[#475569]">Daily Calories</p>
+                    <p className="text-xs font-semibold text-muted-foreground">Daily Calories</p>
                     <Input
                       type="number"
                       value={newPlan.calories}
                       onChange={(e) => setNewPlan({ ...newPlan, calories: e.target.value })}
-                      className="h-11 rounded-[10px] border-[#CBD5E1]"
+                      className="h-11 rounded-[10px] border-border bg-background text-foreground"
                     />
                   </div>
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold text-[#475569]">Water (ml)</p>
+                    <p className="text-xs font-semibold text-muted-foreground">Water (ml)</p>
                     <Input
                       type="number"
                       value={newPlan.water}
                       onChange={(e) => setNewPlan({ ...newPlan, water: e.target.value })}
-                      className="h-11 rounded-[10px] border-[#CBD5E1]"
+                      className="h-11 rounded-[10px] border-border bg-background text-foreground"
                     />
                   </div>
                 </div>
@@ -797,23 +630,23 @@ export default function NutritionAdmin() {
                     { key: "carbs", label: "Carbs" },
                   ].map(({ key, label }) => (
                     <div key={key} className="space-y-2">
-                      <p className="text-xs font-semibold text-[#475569]">
+                      <p className="text-xs font-semibold text-muted-foreground">
                         {label} {macroMode === "percentage" ? "(%)" : "(g)"}
                       </p>
                       <Input
                         type="number"
                         value={newPlan[key as keyof typeof newPlan] as string | number}
                         onChange={(e) => setNewPlan({ ...newPlan, [key]: e.target.value })}
-                        className="h-11 rounded-[10px] border-[#CBD5E1]"
+                        className="h-11 rounded-[10px] border-border bg-background text-foreground"
                       />
                       {macroMode === "percentage" && key === "protein" && previewProteinG !== null && (
-                        <p className="text-xs text-[#64748B]">≈ {previewProteinG}g</p>
+                        <p className="text-xs text-muted-foreground">≈ {previewProteinG}g</p>
                       )}
                       {macroMode === "percentage" && key === "fats" && previewFatsG !== null && (
-                        <p className="text-xs text-[#64748B]">≈ {previewFatsG}g</p>
+                        <p className="text-xs text-muted-foreground">≈ {previewFatsG}g</p>
                       )}
                       {macroMode === "percentage" && key === "carbs" && previewCarbsG !== null && (
-                        <p className="text-xs text-[#64748B]">≈ {previewCarbsG}g</p>
+                        <p className="text-xs text-muted-foreground">≈ {previewCarbsG}g</p>
                       )}
                     </div>
                   ))}
@@ -822,10 +655,10 @@ export default function NutritionAdmin() {
                 {macroMode === "percentage" && (
                   <div
                     className={`flex items-center justify-between rounded-[10px] border px-3 py-2.5 text-sm font-medium ${pctTotal === 100
-                      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-500"
                       : pctTotal > 100
-                        ? "border-red-200 bg-red-50 text-red-600"
-                        : "border-amber-200 bg-amber-50 text-amber-600"
+                        ? "border-red-500/40 bg-red-500/10 text-red-500"
+                        : "border-amber-500/40 bg-amber-500/10 text-amber-500"
                       }`}
                   >
                     <span>Total</span>
@@ -845,15 +678,15 @@ export default function NutritionAdmin() {
                 <Button
                   variant="outline"
                   onClick={() => setIsDialogOpen(false)}
-                  className="h-10 w-full rounded-[10px] border-[#E2E8F0] sm:w-auto"
+                  className="h-10 w-full rounded-[10px] border-border sm:w-auto"
                 >
                   Cancel
                 </Button>
                 <Button
-                  onClick={handleSavePlan}
+                  onClick={handleCreatePlan}
                   className="h-10 w-full rounded-[10px] bg-[#07AC7D] text-white hover:bg-[#06966D] sm:w-auto"
                 >
-                  {editingPlanId ? "Update Plan" : "Save Plan"}
+                  Save Plan
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -864,25 +697,25 @@ export default function NutritionAdmin() {
       {/* KPI cards */}
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: "Live Meal Plans", value: mealPlans.length, icon: Utensils, iconClass: "bg-[#F1FAF6] text-[#06966D]" },
-          { label: "Total Recipes", value: recipeCount, icon: Apple, iconClass: "bg-[#ECFDF5] text-[#10B981]" },
-          { label: "Global Avg Cals", value: globalAvgCals, icon: Flame, iconClass: "bg-[#FFF7ED] text-[#F59E0B]" },
-          { label: "Water Intake Avg", value: `${globalWaterAvg}%`, icon: Droplets, iconClass: "bg-[#EFF6FF] text-[#4F7CFF]" },
+          { label: "Live Meal Plans", value: mealPlans.length, icon: Utensils, iconClass: "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400" },
+          { label: "Total Recipes", value: recipeCount, icon: Apple, iconClass: "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400" },
+          { label: "Global Avg Cals", value: globalAvgCals, icon: Flame, iconClass: "bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400" },
+          { label: "Water Intake Avg", value: `${globalWaterAvg}%`, icon: Droplets, iconClass: "bg-blue-100 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400" },
         ].map(({ label, value, icon: Icon, iconClass }) => (
           <Card
             key={label}
-            className="rounded-[14px] border border-[#E2E8F0] bg-white shadow-[0_4px_18px_rgba(15,23,42,.05)]"
+            className="rounded-2xl border border-border bg-card shadow-sm"
           >
             <CardContent className="flex min-h-[126px] items-center justify-between p-5 sm:p-6">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-[#64748B]">
+                <p className="text-sm font-medium text-muted-foreground">
                   {label}
                 </p>
-                <p className="mt-2 text-[30px] font-bold leading-none text-[#111827] sm:text-[32px]">
+                <p className="mt-2 text-[30px] font-bold leading-none text-foreground sm:text-[32px]">
                   {value}
                 </p>
               </div>
-              <div className={`ml-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] ${iconClass}`}>
+              <div className={`ml-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${iconClass}`}>
                 <Icon className="h-5 w-5" strokeWidth={2} />
               </div>
             </CardContent>
@@ -891,18 +724,18 @@ export default function NutritionAdmin() {
       </div>
 
       {/* Meal plans */}
-      <section className="mt-8 bg-white">
+      <section className="mt-8">
         <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="flex items-center gap-2 text-[20px] font-semibold text-[#111827]">
-              <Utensils className="h-5 w-5 text-[#06966D]" />
+            <h2 className="flex items-center gap-2 text-[20px] font-semibold text-foreground">
+              <Utensils className="h-5 w-5 text-emerald-500" />
               Active Meal Plans
             </h2>
-            <p className="mt-1 text-sm text-[#64748B]">
+            <p className="mt-1 text-sm text-muted-foreground">
               Review nutrition targets and manage member access.
             </p>
           </div>
-          <Badge className="w-fit rounded-full border border-[#C6EFE2] bg-[#F1FAF6] px-3 py-1 text-[#2E9D7A] hover:bg-[#F1FAF6]">
+          <Badge className="w-fit rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-emerald-500 hover:bg-emerald-500/15">
             {filteredPlans.length} {filteredPlans.length === 1 ? "plan" : "plans"}
           </Badge>
         </div>
@@ -912,13 +745,13 @@ export default function NutritionAdmin() {
             {[1, 2].map((item) => (
               <Card
                 key={item}
-                className="rounded-[14px] border border-[#E2E8F0] bg-white shadow-[0_4px_18px_rgba(15,23,42,.05)]"
+                className="rounded-2xl border border-border bg-card shadow-sm"
               >
                 <CardContent className="space-y-5 p-5 sm:p-6">
-                  <div className="h-6 w-1/2 animate-pulse rounded bg-slate-100" />
+                  <div className="h-6 w-1/2 animate-pulse rounded bg-muted" />
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                     {Array.from({ length: 6 }).map((_, index) => (
-                      <div key={index} className="h-20 animate-pulse rounded-[10px] bg-slate-100" />
+                      <div key={index} className="h-20 animate-pulse rounded-xl bg-muted" />
                     ))}
                   </div>
                 </CardContent>
@@ -926,13 +759,13 @@ export default function NutritionAdmin() {
             ))}
           </div>
         ) : filteredPlans.length === 0 ? (
-          <Card className="rounded-[14px] border border-dashed border-[#CBD5E1] bg-white shadow-[0_4px_18px_rgba(15,23,42,.05)]">
+          <Card className="rounded-2xl border border-dashed border-border bg-card shadow-sm">
             <CardContent className="flex flex-col items-center justify-center px-6 py-12 text-center">
-              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#F1FAF6] text-[#06966D]">
+              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
                 <Utensils className="h-5 w-5" />
               </div>
-              <h4 className="text-[18px] font-semibold text-[#111827]">No meal plans found</h4>
-              <p className="mt-1 max-w-sm text-sm text-[#64748B]">
+              <h4 className="text-[18px] font-semibold text-foreground">No meal plans found</h4>
+              <p className="mt-1 max-w-sm text-sm text-muted-foreground">
                 Try a different search or create a new nutrition plan.
               </p>
             </CardContent>
@@ -942,51 +775,38 @@ export default function NutritionAdmin() {
             {filteredPlans.map((plan) => (
               <Card
                 key={plan.id}
-                className="group overflow-hidden rounded-[14px] border border-[#E2E8F0] bg-white shadow-[0_4px_18px_rgba(15,23,42,.05)] transition-shadow duration-150 hover:shadow-[0_8px_24px_rgba(15,23,42,.08)]"
+                className="group overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow duration-150 hover:shadow-md"
               >
                 <CardContent className="p-4 sm:p-6">
-                  <div className="flex flex-col gap-4 border-b border-[#E2E8F0] pb-5">
+                  <div className="flex flex-col gap-4 border-b border-border pb-5">
                     <div className="flex min-w-0 items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="flex min-w-0 items-center gap-2">
-                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#F1FAF6] text-[#06966D]">
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
                             <Utensils className="h-4 w-4" />
                           </span>
-                          <h4 className="min-w-0 break-words text-[18px] font-semibold leading-snug text-[#111827]">
+                          <h4 className="min-w-0 break-words text-[18px] font-semibold leading-snug text-foreground">
                             {plan.name}
                           </h4>
                         </div>
                         <Badge
                           variant="secondary"
-                          className="mt-2 rounded-full bg-[#F5F7F9] px-2.5 py-1 text-xs font-semibold text-[#64748B]"
+                          className="mt-2 rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground"
                         >
                           ID: {plan.id.slice(0, 8)}
                         </Badge>
                       </div>
 
-                      <div className="flex shrink-0 items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          aria-label={`Edit ${plan.name}`}
-                          title="Edit meal plan"
-                          className="h-9 w-9 rounded-[10px] text-[#06966D] hover:bg-[#F1FAF6] hover:text-[#057A5A]"
-                          onClick={() => handleEditPlan(plan)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          aria-label={`Delete ${plan.name}`}
-                          title="Delete meal plan"
-                          className="h-9 w-9 rounded-[10px] text-[#EF4444] hover:bg-red-50 hover:text-[#DC2626]"
-                          onClick={() => handleDeletePlan(plan.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Delete ${plan.name}`}
+                        title="Delete meal plan"
+                        className="h-8 w-8 shrink-0 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        onClick={() => handleDeletePlan(plan.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
 
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -994,19 +814,19 @@ export default function NutritionAdmin() {
                         <DropdownMenuTrigger asChild>
                           <Button
                             variant="outline"
-                            className="h-10 w-full justify-center gap-2 rounded-[10px] border-[#B8E4D4] bg-[#F1FAF6] px-3 text-[#06966D] hover:border-[#06966D] hover:bg-[#F1FAF6] hover:text-[#06966D]"
+                            className="h-9 w-full justify-center gap-2 rounded-[8px] border-emerald-500/30 bg-emerald-500/10 px-3 text-emerald-500 hover:bg-emerald-500/20"
                           >
                             <UserMinus className="h-4 w-4" strokeWidth={2} />
                             <span>Revoke</span>
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-[min(280px,calc(100vw-32px))] rounded-[10px] border-[#E2E8F0] bg-white p-1 shadow-lg">
-                          <DropdownMenuLabel className="px-3 py-2 text-xs font-semibold text-[#64748B]">
+                        <DropdownMenuContent align="end" className="w-[min(280px,calc(100vw-32px))] rounded-xl border border-border bg-popover p-1 shadow-lg">
+                          <DropdownMenuLabel className="px-3 py-2 text-xs font-semibold text-muted-foreground">
                             Revoke User Access
                           </DropdownMenuLabel>
                           <div className="max-h-[300px] overflow-y-auto">
                             {users.filter((u) => u.active_plan_name === plan.name).length === 0 ? (
-                              <div className="px-3 py-3 text-sm text-[#64748B]">
+                              <div className="px-3 py-3 text-sm text-muted-foreground">
                                 No users are assigned to this plan.
                               </div>
                             ) : (
@@ -1016,7 +836,7 @@ export default function NutritionAdmin() {
                                   <DropdownMenuItem
                                     key={u.id}
                                     onClick={() => handleRemovePlan(u.id, plan.id)}
-                                    className="rounded-[8px] px-3 py-2.5 focus:bg-[#F1FAF6] focus:text-[#2E9D7A]"
+                                    className="rounded-[8px] px-3 py-2.5 focus:bg-muted focus:text-foreground"
                                   >
                                     <span className="truncate">{u.full_name}</span>
                                   </DropdownMenuItem>
@@ -1030,14 +850,14 @@ export default function NutritionAdmin() {
                         <DropdownMenuTrigger asChild>
                           <Button
                             variant="outline"
-                            className="h-10 w-full justify-center gap-2 rounded-[10px] border-[#E2E8F0] bg-white px-3 text-[#334155] hover:border-[#07AC7D] hover:bg-[#F1FAF6] hover:text-[#06966D]"
+                            className="h-9 w-full justify-center gap-2 rounded-[8px] border-border bg-card px-3 text-foreground hover:border-[#07AC7D] hover:bg-muted"
                           >
                             <UserPlus className="h-4 w-4" />
                             <span>Assign</span>
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-[min(280px,calc(100vw-32px))] rounded-[10px] border-[#E2E8F0] bg-white p-1 shadow-lg">
-                          <DropdownMenuLabel className="px-3 py-2 text-xs font-semibold text-[#64748B]">
+                        <DropdownMenuContent align="end" className="w-[min(280px,calc(100vw-32px))] rounded-xl border border-border bg-popover p-1 shadow-lg">
+                          <DropdownMenuLabel className="px-3 py-2 text-xs font-semibold text-muted-foreground">
                             Assign User
                           </DropdownMenuLabel>
                           <div className="max-h-[300px] overflow-y-auto">
@@ -1045,7 +865,7 @@ export default function NutritionAdmin() {
                               <DropdownMenuItem
                                 key={u.id}
                                 onClick={() => handleAssignPlan(u.id, plan.id)}
-                                className="rounded-[8px] px-3 py-2.5 focus:bg-[#F1FAF6] focus:text-[#2E9D7A]"
+                                className="rounded-[8px] px-3 py-2.5 focus:bg-muted focus:text-foreground"
                               >
                                 <span className="min-w-0 flex-1 truncate">{u.full_name}</span>
                                 {u.active_plan_name === plan.name && (
@@ -1059,20 +879,20 @@ export default function NutritionAdmin() {
                     </div>
                   </div>
 
-                  <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
                     {[
-                      { label: "Calories", value: `${plan.calories}`, unit: "kcal", tone: "bg-[#F8FAFC] text-[#334155]" },
-                      { label: "Protein", value: `${plan.protein}`, unit: "g", tone: "bg-[#F8FAFC] text-[#334155]" },
-                      { label: "Fats", value: `${plan.fats}`, unit: "g", tone: "bg-[#F8FAFC] text-[#334155]" },
-                      { label: "Carbs", value: `${plan.carbs}`, unit: "g", tone: "bg-[#F8FAFC] text-[#334155]" },
-                      { label: "Water", value: `${plan.water}`, unit: "ml", tone: "bg-[#F8FAFC] text-[#334155]" },
-                      { label: "Active Users", value: `${plan.members}`, unit: "members", tone: "bg-[#F1FAF6] text-[#2E9D7A]" },
+                      { label: "Calories", value: `${plan.calories}`, unit: "kcal", tone: "bg-muted/70 text-foreground" },
+                      { label: "Protein", value: `${plan.protein}`, unit: "g", tone: "bg-muted/70 text-foreground" },
+                      { label: "Fats", value: `${plan.fats}`, unit: "g", tone: "bg-muted/70 text-foreground" },
+                      { label: "Carbs", value: `${plan.carbs}`, unit: "g", tone: "bg-muted/70 text-foreground" },
+                      { label: "Water", value: `${plan.water}`, unit: "ml", tone: "bg-muted/70 text-foreground" },
+                      { label: "Active Users", value: `${plan.members}`, unit: "members", tone: "bg-emerald-500/10 text-emerald-500" },
                     ].map(({ label, value, unit, tone }) => (
                       <div
                         key={label}
-                        className={`min-w-0 rounded-[10px] border border-[#E2E8F0] p-3.5 ${tone}`}
+                        className={`min-w-0 rounded-xl border border-border p-3 ${tone}`}
                       >
-                        <p className="truncate text-xs font-medium text-[#64748B] uppercase tracking-[0.06em]">
+                        <p className="truncate text-xs font-medium text-muted-foreground uppercase tracking-wider">
                           {label}
                         </p>
                         <div className="mt-1 flex min-w-0 items-baseline gap-1">
@@ -1089,15 +909,14 @@ export default function NutritionAdmin() {
         )}
       </section>
 
-      {/* Calculators — wrapped in a card so BMR/Macro/TDEE sit inside the same
-          visual container as the rest of the page instead of floating loose */}
+      {/* Calculators — sitting seamlessly on the dark surface */}
       <section className="mt-8 pb-6">
         <div className="mb-5">
-          <h3 className="flex items-center gap-2 text-[18px] font-semibold text-[#111827]">
-            <CalculatorIcon className="h-5 w-5 text-[#06966D]" />
+          <h3 className="flex items-center gap-2 text-[20px] font-semibold text-foreground leading-snug">
+            <CalculatorIcon className="h-5 w-5 text-emerald-500" />
             Nutrition Calculators
           </h3>
-          <p className="mt-1 text-sm text-[#64748B]">
+          <p className="mt-1 text-sm text-muted-foreground">
             BMR, macro, and calorie tools for quick member reference.
           </p>
         </div>
@@ -1106,5 +925,4 @@ export default function NutritionAdmin() {
       </section>
     </div>
   );
-
 }

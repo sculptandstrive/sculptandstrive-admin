@@ -27,7 +27,7 @@ export function AppHeader({ onToggleSidebar, onToggleMobile, mobileMenuOpen }: A
   const avatarUrl = user?.user_metadata?.avatar_url || "";
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-[#E2E8F0] bg-white px-4 lg:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border bg-card text-card-foreground px-4 lg:px-6">
       {/* Left */}
       <div className="flex items-center gap-2">
         <Button

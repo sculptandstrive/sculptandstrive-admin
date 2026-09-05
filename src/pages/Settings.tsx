@@ -5,7 +5,6 @@ import {
   Moon,
   Monitor,
   Type,
-  Contrast,
   Trash2,
   Loader2,
 } from "lucide-react";
@@ -41,9 +40,9 @@ export default function Settings() {
   const [currentLogoUrl, setCurrentLogoUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const { toast } = useToast();
-  const {setTheme, setFontSize, setContrast, setPrimaryColor, setAccentColor, theme, fontSize, contrast, primaryColor, accentColor} = useTheme();
+  const { setTheme, setFontSize, setPrimaryColor, setAccentColor, theme, fontSize, primaryColor, accentColor } = useTheme();
 
   useEffect(() => {
     const fetchLogo = async () => {
@@ -214,9 +213,9 @@ export default function Settings() {
         })
         .eq("user_id", user.id);
 
-        const { error: authUpdateError } = await supabase.auth.updateUser({
-          data: { avatar_url: "" },
-        });
+      const { error: authUpdateError } = await supabase.auth.updateUser({
+        data: { avatar_url: "" },
+      });
 
       setCurrentLogoUrl(null);
 
@@ -279,18 +278,18 @@ export default function Settings() {
 
         {/* Branding Tab */}
         <TabsContent value="branding" className="space-y-6 animate-fade-in">
-          <Card className="border border-border rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)]">
+          <Card className="border border-border rounded-2xl shadow-sm bg-card">
             <CardHeader>
-              <CardTitle className="text-[20px] font-semibold text-[#111827]">App Branding</CardTitle>
-              <CardDescription className="text-sm font-normal text-[#526581]">
+              <CardTitle className="text-[20px] font-semibold text-foreground">App Branding</CardTitle>
+              <CardDescription className="text-sm font-normal text-muted-foreground">
                 Customize your platform's look and feel
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-start gap-6">
                 <div className="space-y-2">
-                  <Label className="text-xs font-medium text-[#64748B]">Current Logo</Label>
-                  <div className="relative w-24 h-24 rounded-[14px] bg-muted flex items-center justify-center border-2 border-dashed border-border overflow-hidden">
+                  <Label className="text-xs font-medium text-muted-foreground">Current Logo</Label>
+                  <div className="relative w-24 h-24 rounded-2xl bg-muted flex items-center justify-center border-2 border-dashed border-border overflow-hidden">
                     {uploading && (
                       <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10">
                         <Loader2 className="w-6 h-6 animate-spin text-accent" />
@@ -307,7 +306,7 @@ export default function Settings() {
                       variant="outline"
                       size="sm"
                       onClick={handleDeleteLogo}
-                      className="w-full rounded-[8px] text-sm font-semibold"
+                      className="w-full rounded-xl text-sm font-semibold"
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
                       Remove
@@ -316,7 +315,7 @@ export default function Settings() {
                 </div>
                 <div className="flex-1 space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="logo-upload" className="text-xs font-medium text-[#64748B]">Upload New Logo</Label>
+                    <Label htmlFor="logo-upload" className="text-xs font-medium text-muted-foreground">Upload New Logo</Label>
                     <Input
                       ref={fileInputRef}
                       id="logo-upload"
@@ -324,18 +323,18 @@ export default function Settings() {
                       accept="image/*"
                       onChange={handleFileChange}
                       disabled={uploading}
-                      className="cursor-pointer rounded-[8px]"
+                      className="cursor-pointer rounded-xl"
                     />
                   </div>
                   <div className="space-y-1">
-                    <p className="text-xs font-normal text-[#64748B]">
+                    <p className="text-xs font-normal text-muted-foreground">
                       Recommended: SVG or PNG, minimum 512x512px
                     </p>
-                    <p className="text-xs font-normal text-[#64748B]">
+                    <p className="text-xs font-normal text-muted-foreground">
                       Maximum file size: 5MB
                     </p>
                     {isCustomLogo && (
-                      <p className="text-xs font-medium text-[#059669]">
+                      <p className="text-xs font-medium text-emerald-500">
                         ✓ Custom logo uploaded
                       </p>
                     )}
@@ -346,14 +345,14 @@ export default function Settings() {
               <div className="space-y-4 pt-4 border-t border-border">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-sm font-medium text-[#111827]">Theme Colors</Label>
-                    <p className="text-xs font-normal text-[#64748B]">Select custom primary and accent brand colors</p>
+                    <Label className="text-sm font-medium text-foreground">Theme Colors</Label>
+                    <p className="text-xs font-normal text-muted-foreground">Select custom primary and accent brand colors</p>
                   </div>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => { setPrimaryColor("#07AC7D"); setAccentColor("#F59E0B"); }}
-                    className="text-xs font-medium text-[#64748B] hover:text-[#111827]"
+                    className="text-xs font-medium text-muted-foreground hover:text-foreground"
                   >
                     Reset Colors
                   </Button>
@@ -361,7 +360,7 @@ export default function Settings() {
 
                 {/* Preset Palettes */}
                 <div className="space-y-2">
-                  <Label className="text-xs font-medium text-[#64748B]">Preset Theme Palettes</Label>
+                  <Label className="text-xs font-medium text-muted-foreground">Preset Theme Palettes</Label>
                   <div className="flex flex-wrap gap-2">
                     {[
                       { name: "Teal (#0D9488)", primary: "#0D9488", accent: "#06B6D4" },
@@ -377,11 +376,10 @@ export default function Settings() {
                           setPrimaryColor(palette.primary);
                           setAccentColor(palette.accent);
                         }}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${
-                          primaryColor.toLowerCase() === palette.primary.toLowerCase()
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-border hover:border-primary/50"
-                        }`}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${primaryColor.toLowerCase() === palette.primary.toLowerCase()
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border hover:border-primary/50"
+                          }`}
                       >
                         <span className="w-3 h-3 rounded-full" style={{ backgroundColor: palette.primary }} />
                         {palette.name}
@@ -392,37 +390,37 @@ export default function Settings() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                   <div className="space-y-2">
-                    <Label htmlFor="primary-color" className="text-xs font-medium text-[#64748B]">Primary Color</Label>
+                    <Label htmlFor="primary-color" className="text-xs font-medium text-muted-foreground">Primary Color</Label>
                     <div className="flex items-center gap-3">
                       <input
                         id="primary-color"
                         type="color"
                         value={primaryColor}
                         onChange={(e) => setPrimaryColor(e.target.value)}
-                        className="w-12 h-10 rounded-[8px] border border-border cursor-pointer bg-transparent"
+                        className="w-12 h-10 rounded-xl border border-border cursor-pointer bg-transparent"
                       />
                       <Input
                         value={primaryColor}
                         onChange={(e) => setPrimaryColor(e.target.value)}
-                        className="font-mono rounded-[8px]"
+                        className="font-mono rounded-xl"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="accent-color" className="text-xs font-medium text-[#64748B]">Accent Color</Label>
+                    <Label htmlFor="accent-color" className="text-xs font-medium text-muted-foreground">Accent Color</Label>
                     <div className="flex items-center gap-3">
                       <input
                         id="accent-color"
                         type="color"
                         value={accentColor}
                         onChange={(e) => setAccentColor(e.target.value)}
-                        className="w-12 h-10 rounded-[8px] border border-border cursor-pointer bg-transparent"
+                        className="w-12 h-10 rounded-xl border border-border cursor-pointer bg-transparent"
                       />
                       <Input
                         value={accentColor}
                         onChange={(e) => setAccentColor(e.target.value)}
-                        className="font-mono rounded-[8px]"
+                        className="font-mono rounded-xl"
                       />
                     </div>
                   </div>
@@ -435,9 +433,9 @@ export default function Settings() {
         {/* Display Tab */}
         <TabsContent value="display" className="space-y-6 animate-fade-in">
           <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
-            <Card className="border border-border rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)]">
+            <Card className="border border-border rounded-2xl shadow-sm bg-card">
               <CardHeader>
-                <CardTitle className="text-[20px] font-semibold text-[#111827] flex items-center gap-2">
+                <CardTitle className="text-[20px] font-semibold text-foreground flex items-center gap-2">
                   {theme === "light" ? (
                     <Sun className="w-7 h-7 text-accent" />
                   ) : (
@@ -448,7 +446,7 @@ export default function Settings() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-xs font-medium text-[#64748B]">Theme</Label>
+                  <Label className="text-xs font-medium text-muted-foreground">Theme</Label>
                   <div className="flex gap-2">
                     {[
                       { value: "light", icon: Sun, label: "Light" },
@@ -458,7 +456,7 @@ export default function Settings() {
                         key={option.value}
                         onClick={() => setTheme(option.value as typeof theme)}
                         className={cn(
-                          "flex-1 flex flex-col items-center gap-3 p-4 rounded-[10px] border transition-all duration-150",
+                          "flex-1 flex flex-col items-center gap-3 p-4 rounded-xl border transition-all duration-150",
                           theme === option.value
                             ? "border-accent bg-accent/10"
                             : "border-border hover:border-accent/50",
@@ -488,12 +486,12 @@ export default function Settings() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-2 text-xs font-medium text-[#64748B]">
+                  <Label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
                     <Type className="w-4 h-4" />
                     Font Size
                   </Label>
                   <Select value={fontSize} onValueChange={setFontSize}>
-                    <SelectTrigger className="rounded-[8px]">
+                    <SelectTrigger className="rounded-xl">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -504,21 +502,7 @@ export default function Settings() {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2 text-xs font-medium text-[#64748B]">
-                    <Contrast className="w-4 h-4" />
-                    Contrast
-                  </Label>
-                  <Select value={contrast} onValueChange={setContrast}>
-                    <SelectTrigger className="rounded-[8px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="normal">Normal</SelectItem>
-                      <SelectItem value="high">High Contrast</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+
               </CardContent>
             </Card>
           </div>

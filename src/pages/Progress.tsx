@@ -261,21 +261,21 @@ export default function ProgressPage() {
         {stats.map((stat) => (
           <Card
             key={stat.title}
-            className="border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] bg-white"
+            className="border border-border rounded-2xl shadow-sm bg-card"
           >
             <CardContent className="pt-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-[#64748B]">{stat.title}</p>
-                  <p className="text-[30px] sm:text-[32px] font-bold leading-none text-[#111827]">
+                  <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+                  <p className="text-[30px] sm:text-[32px] font-bold leading-none text-foreground">
                     {stat.value.toLocaleString()}
                   </p>
-                  <p className="text-xs font-medium text-[#10B981]">
+                  <p className="text-xs font-medium text-emerald-500">
                     {stat.change}
                   </p>
                 </div>
-                <div className="bg-[#E8F8F8] rounded-[10px] p-3">
-                  <stat.icon className="h-6 w-6 text-[#71D0F7]" />
+                <div className="bg-primary/10 rounded-xl p-3">
+                  <stat.icon className="h-6 w-6 text-primary" />
                 </div>
               </div>
             </CardContent>
@@ -285,25 +285,25 @@ export default function ProgressPage() {
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         {/* Member Growth Chart */}
-        <Card className="border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] bg-white">
+        <Card className="border border-border rounded-2xl shadow-sm bg-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-[18px] font-semibold text-[#111827]">
-              <Users className="h-4 w-4 text-[#71D0F7]" />
+            <CardTitle className="flex items-center gap-2 text-[18px] font-semibold text-foreground">
+              <Users className="h-4 w-4 text-primary" />
               Member Growth
             </CardTitle>
-            <p className="text-sm text-[#64748B]">
+            <p className="text-sm text-muted-foreground">
               Total members with 'user' role over time
             </p>
           </CardHeader>
           <CardContent>
             {memberGrowthData.length === 0 ? (
-              <div className="flex h-64 items-center justify-center rounded-[10px] border border-dashed border-[#E2E8F0] bg-[#F5F7F9]">
+              <div className="flex h-64 items-center justify-center rounded-xl border border-dashed border-border bg-muted/40">
                 <div className="text-center">
-                  <Users className="h-12 w-12 mx-auto text-[#CBD5E1] mb-3" />
-                  <p className="text-[#64748B] italic">
+                  <Users className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                  <p className="text-muted-foreground italic">
                     No member data found in user_roles table.
                   </p>
-                  <p className="text-xs text-[#94A3B8] mt-2">
+                  <p className="text-xs text-muted-foreground/70 mt-2">
                     Members will appear as they sign up.
                   </p>
                 </div>
@@ -323,44 +323,45 @@ export default function ProgressPage() {
                         >
                           <stop
                             offset="5%"
-                            stopColor="#71D0F7"
+                            stopColor="#10B981"
                             stopOpacity={0.25}
                           />
                           <stop
                             offset="95%"
-                            stopColor="#71D0F7"
+                            stopColor="#10B981"
                             stopOpacity={0}
                           />
                         </linearGradient>
                       </defs>
                       <CartesianGrid
                         strokeDasharray="3 3"
-                        stroke="#E2E8F0"
+                        stroke="hsl(var(--border))"
                         vertical={false}
                       />
                       <XAxis
                         dataKey="date"
-                        stroke="#64748B"
+                        stroke="hsl(var(--muted-foreground))"
                         tick={{
-                          fill: "#64748B",
+                          fill: "hsl(var(--muted-foreground))",
                           fontSize: 12,
                         }}
                       />
                       <YAxis
-                        stroke="#64748B"
+                        stroke="hsl(var(--muted-foreground))"
                         tick={{
-                          fill: "#64748B",
+                          fill: "hsl(var(--muted-foreground))",
                           fontSize: 12,
                         }}
                       />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "#FFFFFF",
-                          border: "1px solid #E2E8F0",
-                          borderRadius: "8px",
-                          boxShadow: "0 4px 18px rgba(15,23,42,0.08)",
+                          backgroundColor: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "12px",
+                          color: "hsl(var(--foreground))",
+                          boxShadow: "0 4px 18px rgba(0,0,0,0.2)",
                         }}
-                        labelStyle={{ color: "#111827" }}
+                        labelStyle={{ color: "hsl(var(--foreground))" }}
                         formatter={(value: any, name: string) => {
                           if (name === "count") return [value, "Total Members"];
                           if (name === "newMembers")
@@ -371,7 +372,7 @@ export default function ProgressPage() {
                       <Area
                         type="monotone"
                         dataKey="count"
-                        stroke="#71D0F7"
+                        stroke="#10B981"
                         strokeWidth={3}
                         fill="url(#memberGradient)"
                       />
@@ -383,24 +384,24 @@ export default function ProgressPage() {
           </CardContent>
         </Card>
 
-        <Card className="border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] bg-white">
+        <Card className="border border-border rounded-2xl shadow-sm bg-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-[18px] font-semibold text-[#111827]">
-              <LineChart className="h-5 w-5 text-[#71D0F7]" />
+            <CardTitle className="flex items-center gap-2 text-[18px] font-semibold text-foreground">
+              <LineChart className="h-5 w-5 text-primary" />
               Growth Rate Trends
             </CardTitle>
-            <p className="text-sm text-[#64748B]">
+            <p className="text-sm text-muted-foreground">
               New member signups per period
             </p>
           </CardHeader>
           <CardContent>
             {memberGrowthData.length === 0 ? (
-              <div className="flex h-64 items-center justify-center rounded-[10px] border border-dashed border-[#E2E8F0] bg-[#F5F7F9]">
+              <div className="flex h-64 items-center justify-center rounded-xl border border-dashed border-border bg-muted/40">
                 <div className="text-center">
-                  <p className="text-[#64748B] italic">
+                  <p className="text-muted-foreground italic">
                     No growth data available yet.
                   </p>
-                  <p className="text-xs text-[#94A3B8] mt-2">
+                  <p className="text-xs text-muted-foreground/70 mt-2">
                     Charts will render as members join.
                   </p>
                 </div>
@@ -411,39 +412,40 @@ export default function ProgressPage() {
                   <RechartsLineChart data={memberGrowthData}>
                     <CartesianGrid
                       strokeDasharray="3 3"
-                      stroke="#E2E8F0"
+                      stroke="hsl(var(--border))"
                       vertical={false}
                     />
                     <XAxis
                       dataKey="date"
-                      stroke="#64748B"
+                      stroke="hsl(var(--muted-foreground))"
                       tick={{
-                        fill: "#64748B",
+                        fill: "hsl(var(--muted-foreground))",
                         fontSize: 12,
                       }}
                     />
                     <YAxis
-                      stroke="#64748B"
+                      stroke="hsl(var(--muted-foreground))"
                       tick={{
-                        fill: "#64748B",
+                        fill: "hsl(var(--muted-foreground))",
                         fontSize: 12,
                       }}
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "#FFFFFF",
-                        border: "1px solid #E2E8F0",
-                        borderRadius: "8px",
-                        boxShadow: "0 4px 18px rgba(15,23,42,0.08)",
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "12px",
+                        color: "hsl(var(--foreground))",
+                        boxShadow: "0 4px 18px rgba(0,0,0,0.2)",
                       }}
                       formatter={(value: any) => [value, "New Members"]}
                     />
                     <Line
                       type="monotone"
                       dataKey="newMembers"
-                      stroke="#71D0F7"
+                      stroke="#10B981"
                       strokeWidth={3}
-                      dot={{ fill: "#71D0F7", strokeWidth: 2 }}
+                      dot={{ fill: "#10B981", strokeWidth: 2 }}
                     />
                   </RechartsLineChart>
                 </ResponsiveContainer>
@@ -455,14 +457,14 @@ export default function ProgressPage() {
 
       {/* Additional Stats Row */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mt-6">
-        <Card className="border border-[#E2E8F0] rounded-[14px] shadow-[0_4px_18px_rgba(15,23,42,0.05)] bg-white">
+        <Card className="border border-border rounded-2xl shadow-sm bg-card">
           <CardHeader>
-            <CardTitle className="text-[18px] font-semibold text-[#111827]">Member Goal Progress</CardTitle>
+            <CardTitle className="text-[18px] font-semibold text-foreground">Member Goal Progress</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
               {allMembers.length === 0 ? (
-                <p className="text-center py-10 text-[#64748B] italic">
+                <p className="text-center py-10 text-muted-foreground italic">
                   No records found in progress_records table.
                 </p>
               ) : (
@@ -471,15 +473,15 @@ export default function ProgressPage() {
                   return (
                     <div key={member.id} className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <p className="font-medium text-[#111827]">
+                        <p className="font-medium text-foreground">
                           {member.profiles?.full_name || member.user_name || "Member"}
                         </p>
-                        <span className="text-sm font-medium text-[#71D0F7]">
+                        <span className="text-sm font-medium text-primary">
                           {progressValue}%
                         </span>
                       </div>
-                      <Progress value={progressValue} className="h-2 bg-[#E2E8F0] [&>div]:bg-[#71D0F7]" />
-                      <p className="text-xs text-[#64748B] italic">
+                      <Progress value={progressValue} className="h-2 bg-muted [&>div]:bg-primary" />
+                      <p className="text-xs text-muted-foreground italic">
                         {member.target_weight
                           ? `${member.start_weight}kg → ${member.current_weight}kg (Target: ${member.target_weight}kg)`
                           : member.milestone_note || "Milestone goal"}

@@ -1578,31 +1578,31 @@ export default function Sessions() {
             <StatCard
               title="Live Now"
               value={sessions.filter((s) => getLiveStatus(s.scheduled_at, s.type)).length}
-              icon={<Video className="w-4 h-4 text-[#07AC7D]" />}
-              bgColor="bg-[#F1FAF6]"
+              icon={<Video className="w-5 h-5 text-emerald-600" />}
+              bgColor="bg-emerald-100"
             />
             <StatCard
               title="Total Workouts"
               value={sessions.filter(s => s.type === "live").length}
-              icon={<CalendarIcon className="w-4 h-4 text-[#07AC7D]" />}
-              bgColor="bg-[#F1FAF6]"
+              icon={<CalendarIcon className="w-5 h-5 text-emerald-600" />}
+              bgColor="bg-emerald-100"
             />
             <StatCard
               title="Active Clients"
               value={clients.length}
-              icon={<UsersIcon className="w-4 h-4 text-slate-400" />}
-              bgColor="bg-slate-50"
+              icon={<UsersIcon className="w-5 h-5 text-slate-600" />}
+              bgColor="bg-slate-100"
             />
           </div>
 
-          <Card className="border border-slate-200/80 shadow-sm rounded-2xl overflow-hidden">
-            <CardHeader className="px-5 py-4 border-b border-slate-100 bg-slate-50/50">
-              <CardTitle className="text-[18px] font-semibold text-[#111827]">
+          <Card className="border border-border shadow-sm rounded-2xl overflow-hidden bg-card">
+            <CardHeader className="px-5 py-4 border-b border-border bg-card">
+              <CardTitle className="text-[20px] font-semibold text-[#111827] leading-snug">
                 Live Workout Sessions
               </CardTitle>
             </CardHeader>
             <CardContent className="px-5 py-4">
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {loading ? (
                   <p className="text-center py-6 text-slate-400 text-sm">Syncing database...</p>
                 ) : sessions.filter(s => s.type === "live").length === 0 ? (
@@ -1623,46 +1623,46 @@ export default function Sessions() {
                     return (
                       <div
                         key={session.id}
-                        className={`flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-xl border transition-all ${isPast
-                          ? "opacity-60 bg-slate-50/50 border-slate-200"
-                          : "hover:border-[#07AC7D]/40 hover:bg-[#F1FAF6]/40 border-slate-200"
+                        className={`flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-3.5 rounded-xl border transition-all ${isPast
+                          ? "opacity-60 bg-slate-50/50 border-slate-200/60"
+                          : "hover:border-[#07AC7D]/40 hover:bg-slate-50/70 border-slate-200/60"
                           }`}
                       >
                         <div className="flex-1 min-w-0">
-                          <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <div className="flex flex-wrap items-center gap-2 mb-0.5">
                             <h4 className="font-semibold text-sm text-[#111827] truncate">
                               {session.title}
                             </h4>
                             <div className="flex gap-1.5">
                               {isLive && (
-                                <Badge className="bg-[#07AC7D] text-white text-xs font-semibold px-2 py-0.5">
+                                <Badge className="bg-[#07AC7D] text-white text-[11px] font-semibold px-2 py-0">
                                   LIVE NOW
                                 </Badge>
                               )}
                               {isPast && (
-                                <Badge variant="secondary" className="text-xs bg-slate-200 text-slate-600 px-2 py-0.5 font-semibold">
+                                <Badge variant="secondary" className="text-[11px] bg-slate-200 text-slate-600 px-2 py-0 font-semibold">
                                   PAST
                                 </Badge>
                               )}
                               {session.admin_is_mass && (
-                                <Badge variant="outline" className="text-xs border-emerald-200 text-[#07AC7D] px-2 py-0.5 font-semibold">
+                                <Badge variant="outline" className="text-[11px] border-emerald-200 text-[#07AC7D] px-2 py-0 font-semibold">
                                   PUBLIC
                                 </Badge>
                               )}
                             </div>
                           </div>
-                          <p className="text-sm text-[#526581] font-normal">
+                          <p className="text-xs text-[#526581] font-normal">
                             Coach {session.instructor}
                           </p>
                         </div>
 
                         <div className="flex items-center flex-wrap gap-2">
-                          <div className="flex items-center gap-1.5 text-slate-600 bg-white px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold">
-                            <Clock className="w-3.5 h-3.5 text-[#07AC7D]" />
+                          <div className="flex items-center gap-1.5 text-muted-foreground bg-card px-2.5 py-1 rounded-lg border border-border text-xs font-semibold">
+                            <Clock className="w-3.5 h-3.5 text-primary" />
                             <span>{sessionTime}</span>
                           </div>
-                          <div className="flex items-center gap-1.5 text-slate-600 bg-white px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold">
-                            <UsersIcon className="w-3.5 h-3.5 text-slate-400" />
+                          <div className="flex items-center gap-1.5 text-muted-foreground bg-card px-2.5 py-1 rounded-lg border border-border text-xs font-semibold">
+                            <UsersIcon className="w-3.5 h-3.5 text-muted-foreground/70" />
                             <span>{participantCount} Clients</span>
                           </div>
                         </div>
@@ -1671,7 +1671,7 @@ export default function Sessions() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-[#07AC7D] text-sm font-semibold hover:bg-[#F1FAF6] h-9 px-3"
+                            className="text-primary text-xs font-semibold hover:bg-primary/10 h-8 px-2.5"
                             onClick={() => window.open(session.meeting_link, "_blank")}
                           >
                             Join / View
@@ -1679,10 +1679,10 @@ export default function Sessions() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-slate-400 hover:text-red-600 hover:bg-red-50 h-8 w-8"
+                            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-7 w-7"
                             onClick={() => handleDelete(session.id, session.title, session.instructor)}
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </Button>
                         </div>
                       </div>
@@ -1702,20 +1702,20 @@ export default function Sessions() {
             /* =================================================== */
             <div className="space-y-5">
               {/* Back Button, Playlist Switcher & Info Bar */}
-              <div className="bg-white p-5 sm:p-6 rounded-xl border border-[#E2E8F0] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="bg-card p-5 sm:p-6 rounded-2xl border border-border shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="space-y-2.5">
                   <div className="flex flex-wrap items-center gap-3.5">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setSelectedPlaylist(null)}
-                      className="text-[#526581] hover:text-slate-900 hover:bg-slate-100 h-7 text-xs -ml-2 font-medium"
+                      className="text-muted-foreground hover:text-foreground hover:bg-muted h-7 text-xs -ml-2 font-medium"
                     >
                       ← Back to Playlists
                     </Button>
-                    <span className="text-slate-300 text-xs">|</span>
+                    <span className="text-muted-foreground/40 text-xs">|</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-normal text-[#64748B] whitespace-nowrap shrink-0">Switch Playlist:</span>
+                      <span className="text-xs font-normal text-muted-foreground whitespace-nowrap shrink-0">Switch Playlist:</span>
                       <Select
                         value={String(selectedPlaylist.id)}
                         onValueChange={(val) => {
@@ -1723,7 +1723,7 @@ export default function Sessions() {
                           if (target) setSelectedPlaylist(target);
                         }}
                       >
-                        <SelectTrigger className="h-8 text-[13px] border-slate-200 bg-slate-50/70 min-w-[210px] font-medium text-[#1E293B] hover:bg-slate-100">
+                        <SelectTrigger className="h-8 text-[13px] border-border bg-muted/50 min-w-[210px] font-medium text-foreground hover:bg-muted">
                           <SelectValue placeholder="Select Playlist" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1738,19 +1738,19 @@ export default function Sessions() {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2.5">
-                    <h2 className="text-[20px] font-semibold text-[#111827] leading-snug">{selectedPlaylist.title}</h2>
-                    <Badge variant="secondary" className="bg-[#F1FAF6] text-[#07AC7D] border border-emerald-100 hover:bg-[#E8F8F8] hover:text-[#06966D] text-xs font-semibold px-2.5 py-0.5">
+                    <h2 className="text-[20px] font-semibold text-foreground leading-snug">{selectedPlaylist.title}</h2>
+                    <Badge variant="secondary" className="bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 text-xs font-semibold px-2.5 py-0.5">
                       {selectedPlaylist.category}
                     </Badge>
-                    <Badge variant="outline" className="text-xs border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-semibold px-2.5 py-0.5">
+                    <Badge variant="outline" className="text-xs border-border text-muted-foreground hover:bg-muted hover:text-foreground font-semibold px-2.5 py-0.5">
                       {selectedPlaylist.level}
                     </Badge>
-                    <Badge className="bg-slate-900 text-white text-xs font-semibold px-2.5 py-0.5">
+                    <Badge className="bg-secondary text-secondary-foreground text-xs font-semibold px-2.5 py-0.5">
                       {selectedPlaylist.videos?.length || 0} Videos
                     </Badge>
                   </div>
 
-                  <p className="text-sm font-normal text-[#526581] max-w-2xl leading-relaxed">
+                  <p className="text-sm font-normal text-muted-foreground max-w-2xl leading-relaxed">
                     {selectedPlaylist.description || "Manage video lessons inside this workout playlist."}
                   </p>
                 </div>
@@ -1770,7 +1770,7 @@ export default function Sessions() {
                       setIsPlaylistModalOpen(true);
                     }}
                     variant="outline"
-                    className="border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900 text-[13px] h-8 font-semibold px-3"
+                    className="border-border text-foreground hover:bg-muted text-[13px] h-8 font-semibold px-3"
                   >
                     <Edit3 className="w-3.5 h-3.5 mr-1.5" /> Edit Playlist
                   </Button>
@@ -1780,7 +1780,7 @@ export default function Sessions() {
                       setAddVideoMode("library");
                       setIsVideoModalOpen(true);
                     }}
-                    className="bg-[#07AC7D] hover:bg-[#06966D] text-white text-[13px] h-8 px-3.5 font-semibold shadow-sm"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground text-[13px] h-8 px-3.5 font-semibold shadow-sm"
                   >
                     <Plus className="w-4 h-4 mr-1.5" /> Add Video
                   </Button>
@@ -1788,10 +1788,10 @@ export default function Sessions() {
               </div>
 
               {/* SECTION 1: Videos in Selected Playlist */}
-              <Card className="border border-slate-200/80 shadow-sm rounded-2xl overflow-hidden bg-white">
-                <CardHeader className="px-4 py-3 border-b border-slate-100 bg-slate-50/50 flex flex-row items-center justify-between">
-                  <CardTitle className="text-[20px] font-semibold text-[#111827] flex items-center gap-2">
-                    <Play className="w-4 h-4 text-[#07AC7D]" />
+              <Card className="border border-border shadow-sm rounded-2xl overflow-hidden bg-card">
+                <CardHeader className="px-4 py-3 border-b border-border bg-muted/40 flex flex-row items-center justify-between">
+                  <CardTitle className="text-[20px] font-semibold text-foreground flex items-center gap-2">
+                    <Play className="w-4 h-4 text-primary" />
                     Videos in "{selectedPlaylist.title}"
                   </CardTitle>
                   <Button
@@ -1799,7 +1799,7 @@ export default function Sessions() {
                       setAddVideoMode("library");
                       setIsVideoModalOpen(true);
                     }}
-                    className="bg-[#07AC7D] hover:bg-[#06966D] text-white text-sm h-8 px-3 font-semibold"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm h-8 px-3 font-semibold"
                   >
                     <Plus className="w-4 h-4 mr-1" /> Add Video
                   </Button>
@@ -1807,15 +1807,15 @@ export default function Sessions() {
                 <CardContent className="p-0">
                   {(!selectedPlaylist.videos || selectedPlaylist.videos.length === 0) ? (
                     <div className="text-center py-8 px-4">
-                      <Video className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                      <h3 className="text-base font-semibold text-slate-900">No Videos in this Playlist</h3>
-                      <p className="text-sm font-normal text-[#64748B] mt-0.5 mb-3">Click below to select or upload videos for this playlist.</p>
+                      <Video className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
+                      <h3 className="text-base font-semibold text-foreground">No Videos in this Playlist</h3>
+                      <p className="text-sm font-normal text-muted-foreground mt-0.5 mb-3">Click below to select or upload videos for this playlist.</p>
                       <Button
                         onClick={() => {
                           setAddVideoMode("library");
                           setIsVideoModalOpen(true);
                         }}
-                        className="bg-[#07AC7D] hover:bg-[#06966D] text-white text-sm h-8 px-3 font-semibold"
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm h-8 px-3 font-semibold"
                       >
                         <Plus className="w-3.5 h-3.5 mr-1" /> Select / Add Video
                       </Button>
@@ -1824,7 +1824,7 @@ export default function Sessions() {
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
-                          <tr className="border-b border-slate-200 bg-slate-50/70 text-left text-xs font-semibold text-[#64748B] uppercase tracking-wider">
+                          <tr className="border-b border-border bg-muted/40 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                             <th className="py-2.5 px-3 text-center">Plan ID</th>
                             <th className="py-2.5 px-4">Title</th>
                             <th className="py-2.5 px-3 text-center">Category</th>
@@ -1836,34 +1836,34 @@ export default function Sessions() {
                             <th className="py-2.5 px-4 text-right">Actions</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-border">
                           {selectedPlaylist.videos.map((vid: any, index: number) => (
-                            <tr key={vid.id || index} className="hover:bg-slate-50/80 transition-colors">
-                              <td className="py-3 px-3 text-center font-mono font-bold text-slate-700 text-xs">
+                            <tr key={vid.id || index} className="hover:bg-muted/50 transition-colors">
+                              <td className="py-3 px-3 text-center font-mono font-bold text-muted-foreground text-xs">
                                 {vid.plan_id || index + 1}
                               </td>
-                              <td className="py-3 px-4 font-medium text-slate-900">
+                              <td className="py-3 px-4 font-medium text-foreground">
                                 <div className="flex items-center gap-3">
                                   {vid.thumbnail_url ? (
-                                    <img src={vid.thumbnail_url} alt="" className="w-12 h-8 rounded object-cover border border-slate-200 shrink-0" />
+                                    <img src={vid.thumbnail_url} alt="" className="w-12 h-8 rounded object-cover border border-border shrink-0" />
                                   ) : (
-                                    <div className="w-12 h-8 rounded bg-slate-900 flex items-center justify-center text-slate-400 text-[8px] shrink-0 font-mono">
+                                    <div className="w-12 h-8 rounded bg-muted flex items-center justify-center text-muted-foreground text-[8px] shrink-0 font-mono">
                                       VID
                                     </div>
                                   )}
                                   <div>
-                                    <p className="font-semibold text-sm text-slate-900 line-clamp-1">{vid.title}</p>
-                                    <p className="text-[12px] font-normal text-[#64748B] line-clamp-1">{vid.description || "No description."}</p>
+                                    <p className="font-semibold text-sm text-foreground line-clamp-1">{vid.title}</p>
+                                    <p className="text-[12px] font-normal text-muted-foreground line-clamp-1">{vid.description || "No description."}</p>
                                   </div>
                                 </div>
                               </td>
                               <td className="py-3 px-3 text-center">
-                                <Badge variant="outline" className="text-[11px] py-0.5 px-2 border-slate-200 text-slate-600 bg-slate-50 font-medium">
+                                <Badge variant="outline" className="text-[11px] py-0.5 px-2 border-border text-muted-foreground bg-muted font-medium">
                                   {vid.category || selectedPlaylist.category || "General"}
                                 </Badge>
                               </td>
                               <td className="py-3 px-3 text-center">
-                                <span className="text-xs font-semibold text-slate-700">
+                                <span className="text-xs font-semibold text-foreground">
                                   {vid.trainer_name || `Trainer ${vid.plan_id || index + 1}`}
                                 </span>
                               </td>
@@ -1872,7 +1872,7 @@ export default function Sessions() {
                                   href={vid.video_url_small || vid.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded border border-blue-200"
+                                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-400 hover:text-blue-300 bg-blue-500/10 px-2 py-1 rounded border border-blue-500/20"
                                 >
                                   <Play className="w-3 h-3" /> SD 360p
                                 </a>
@@ -1882,18 +1882,18 @@ export default function Sessions() {
                                   href={vid.video_url_large || vid.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 hover:text-emerald-800 bg-emerald-50 px-2 py-1 rounded border border-emerald-200"
+                                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20"
                                 >
                                   <Play className="w-3 h-3" /> HD 720p
                                 </a>
                               </td>
                               <td className="py-3 px-3 text-center">
-                                <Badge variant="secondary" className={`text-xs font-semibold px-2.5 py-0.5 ${vid.status === "published" ? "bg-[#F1FAF6] text-[#07AC7D] border border-emerald-100" : "bg-amber-100 text-amber-800 border border-amber-200"}`}>
+                                <Badge variant="secondary" className={`text-xs font-semibold px-2.5 py-0.5 ${vid.status === "published" ? "bg-primary/10 text-primary border border-primary/20" : "bg-amber-500/10 text-amber-400 border border-amber-500/20"}`}>
                                   {vid.status === "published" ? "Published" : "Draft"}
                                 </Badge>
                               </td>
                               <td className="py-3 px-3 text-center">
-                                <Badge variant="outline" className="text-[11px] py-0.5 px-2 border-slate-200 text-purple-700 bg-purple-50 font-medium capitalize">
+                                <Badge variant="outline" className="text-[11px] py-0.5 px-2 border-border text-purple-400 bg-purple-500/10 font-medium capitalize">
                                   {vid.audience || "Customers"}
                                 </Badge>
                               </td>
@@ -1901,7 +1901,7 @@ export default function Sessions() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50"
+                                  className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                                   title="Remove from playlist"
                                   onClick={() => handleDeleteVideoFromPlaylist(vid.id)}
                                 >
@@ -1929,14 +1929,14 @@ export default function Sessions() {
                 });
 
                 return (
-                  <Card className="border border-slate-200/80 shadow-sm rounded-2xl overflow-hidden bg-white mt-6">
-                    <CardHeader className="px-4 py-3 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                  <Card className="border border-border shadow-sm rounded-2xl overflow-hidden bg-card mt-6">
+                    <CardHeader className="px-4 py-3 border-b border-border bg-muted/40 flex flex-col md:flex-row md:items-center justify-between gap-3">
                       <div>
-                        <CardTitle className="text-[20px] font-semibold text-[#111827] flex items-center gap-2">
-                          <Video className="w-4 h-4 text-[#07AC7D]" />
+                        <CardTitle className="text-[20px] font-semibold text-foreground flex items-center gap-2">
+                          <Video className="w-4 h-4 text-primary" />
                           Available Videos in Video Library
                         </CardTitle>
-                        <p className="text-sm font-normal text-[#526581] mt-0.5">
+                        <p className="text-sm font-normal text-muted-foreground mt-0.5">
                           Select from existing master videos in your database and add them directly into this playlist.
                         </p>
                       </div>
@@ -1960,7 +1960,7 @@ export default function Sessions() {
                             });
                             setIsVideoModalOpen(true);
                           }}
-                          className="bg-[#07AC7D] hover:bg-[#06966D] text-white text-sm h-8 px-3 font-semibold shrink-0 flex items-center gap-1.5"
+                          className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm h-8 px-3 font-semibold shrink-0 flex items-center gap-1.5"
                         >
                           <Plus className="w-4 h-4" /> Upload New Video
                         </Button>
@@ -1977,19 +1977,19 @@ export default function Sessions() {
                     </CardHeader>
 
                     {/* Filter Bar */}
-                    <div className="p-3 border-b border-slate-100 bg-slate-50/30 flex flex-wrap items-center gap-3">
+                    <div className="p-3 border-b border-border bg-muted/20 flex flex-wrap items-center gap-3">
                       <div className="relative flex-1 min-w-[200px]">
-                        <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                        <Search className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground" />
                         <Input
                           placeholder="Search available videos..."
                           value={librarySearch}
                           onChange={(e) => setLibrarySearch(e.target.value)}
-                          className="pl-9 h-8 text-sm font-normal border-slate-200 bg-white placeholder:text-[#64748B]"
+                          className="pl-9 h-8 text-sm font-normal border-input bg-card placeholder:text-muted-foreground text-foreground"
                         />
                       </div>
 
                       <Select value={libraryCategoryFilter} onValueChange={setLibraryCategoryFilter}>
-                        <SelectTrigger className="w-[140px] h-8 text-sm font-medium border-slate-200 bg-white text-[#1E293B] hover:bg-slate-50">
+                        <SelectTrigger className="w-[140px] h-8 text-sm font-medium border-input bg-card text-foreground hover:bg-muted">
                           <SelectValue placeholder="Category" />
                         </SelectTrigger>
                         <SelectContent>
@@ -2004,7 +2004,7 @@ export default function Sessions() {
                       </Select>
 
                       <Select value={libraryLevelFilter} onValueChange={setLibraryLevelFilter}>
-                        <SelectTrigger className="w-[130px] h-8 text-sm font-medium border-slate-200 bg-white text-[#1E293B] hover:bg-slate-50">
+                        <SelectTrigger className="w-[130px] h-8 text-sm font-medium border-input bg-card text-foreground hover:bg-muted">
                           <SelectValue placeholder="Level" />
                         </SelectTrigger>
                         <SelectContent>
@@ -2018,17 +2018,17 @@ export default function Sessions() {
 
                     <CardContent className="p-0">
                       {availableVids.length === 0 ? (
-                        <div className="text-center py-8 text-sm font-normal text-[#64748B]">
+                        <div className="text-center py-8 text-sm font-normal text-muted-foreground">
                           No available videos match your search or filter criteria.
                         </div>
                       ) : (
-                        <div className="divide-y divide-slate-100">
+                        <div className="divide-y divide-border">
                           {availableVids.map((vid: any) => {
                             const isChecked = selectedLibraryVideoIds.includes(String(vid.id));
                             return (
                               <div
                                 key={vid.id}
-                                className={`p-3 px-4 flex items-center justify-between gap-4 transition-colors ${isChecked ? "bg-emerald-50/40" : "hover:bg-slate-50/70"
+                                className={`p-3 px-4 flex items-center justify-between gap-4 transition-colors ${isChecked ? "bg-primary/10" : "hover:bg-muted/50"
                                   }`}
                               >
                                 <div className="flex items-center gap-3.5 min-w-0 flex-1">
@@ -2044,36 +2044,36 @@ export default function Sessions() {
                                   />
 
                                   {vid.thumbnail_url ? (
-                                    <img src={vid.thumbnail_url} alt="" className="w-14 h-9 rounded object-cover border border-slate-200 shrink-0" />
+                                    <img src={vid.thumbnail_url} alt="" className="w-14 h-9 rounded object-cover border border-border shrink-0" />
                                   ) : (
-                                    <div className="w-14 h-9 rounded bg-slate-900 flex items-center justify-center text-slate-400 text-[9px] shrink-0 font-mono">
+                                    <div className="w-14 h-9 rounded bg-muted flex items-center justify-center text-muted-foreground text-[9px] shrink-0 font-mono">
                                       VIDEO
                                     </div>
                                   )}
 
                                   <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-2 mb-0.5">
-                                      <p className="font-semibold text-sm text-slate-900 truncate">{vid.title}</p>
-                                      <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-slate-200 text-slate-500 font-normal">
+                                      <p className="font-semibold text-sm text-foreground truncate">{vid.title}</p>
+                                      <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-border text-muted-foreground font-normal">
                                         {vid.category || "General"}
                                       </Badge>
-                                      <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-slate-200 text-slate-500 font-normal">
+                                      <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-border text-muted-foreground font-normal">
                                         {vid.level || "Beginner"}
                                       </Badge>
                                     </div>
-                                    <p className="text-[13px] text-[#64748B] truncate">{vid.description || "No description provided."}</p>
+                                    <p className="text-[13px] text-muted-foreground truncate">{vid.description || "No description provided."}</p>
                                   </div>
                                 </div>
 
                                 <div className="flex items-center gap-2 shrink-0">
-                                  <span className="text-[13px] font-mono font-medium text-[#526581] mr-1">
+                                  <span className="text-[13px] font-mono font-medium text-muted-foreground mr-1">
                                     {vid.duration || "05:00"}
                                   </span>
 
                                   <Button
                                     size="sm"
                                     onClick={() => handleBatchAddVideosToPlaylist([String(vid.id)])}
-                                    className="bg-[#07AC7D] hover:bg-[#06966D] text-white text-xs h-8 px-3 font-semibold"
+                                    className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs h-8 px-3 font-semibold"
                                   >
                                     <Plus className="w-3.5 h-3.5 mr-1" /> Add
                                   </Button>
@@ -2085,7 +2085,7 @@ export default function Sessions() {
                                       e.stopPropagation();
                                       handleDeleteTutorial(vid.id, vid.title);
                                     }}
-                                    className="h-8 w-8 border-slate-200 text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-200"
+                                    className="h-8 w-8 border-border text-muted-foreground hover:text-destructive hover:bg-destructive/10 hover:border-destructive/20"
                                     title={`Delete "${vid.title}" permanently from database`}
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
@@ -2107,20 +2107,20 @@ export default function Sessions() {
             /* =================================================== */
             <div className="space-y-6">
               {/* Filters & Create Playlist Button */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-card p-4 rounded-2xl border border-border shadow-sm">
                 <div className="flex flex-wrap items-center gap-3 flex-1">
                   <div className="relative w-full sm:w-64">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       placeholder="Search playlists..."
                       value={tutorialSearch}
                       onChange={(e) => setTutorialSearch(e.target.value)}
-                      className="pl-9 h-9 text-sm font-normal border-slate-200 bg-slate-50/50 placeholder:text-[#64748B]"
+                      className="pl-9 h-9 text-sm font-normal border-border bg-input placeholder:text-muted-foreground"
                     />
                   </div>
 
                   <Select value={playlistCategoryFilter} onValueChange={setPlaylistCategoryFilter}>
-                    <SelectTrigger className="w-36 h-9 text-sm font-medium border-slate-200 bg-slate-50/50 text-[#1E293B]">
+                    <SelectTrigger className="w-36 h-9 text-sm font-medium border-border bg-input text-foreground">
                       <SelectValue placeholder="Category" />
                     </SelectTrigger>
                     <SelectContent>
@@ -2133,7 +2133,7 @@ export default function Sessions() {
                   </Select>
 
                   <Select value={playlistLevelFilter} onValueChange={setPlaylistLevelFilter}>
-                    <SelectTrigger className="w-32 h-9 text-sm font-medium border-slate-200 bg-slate-50/50 text-[#1E293B]">
+                    <SelectTrigger className="w-32 h-9 text-sm font-medium border-border bg-input text-foreground">
                       <SelectValue placeholder="Level" />
                     </SelectTrigger>
                     <SelectContent>
@@ -2161,7 +2161,7 @@ export default function Sessions() {
                       });
                       setIsPlaylistModalOpen(true);
                     }}
-                    className="bg-[#07AC7D] hover:bg-[#06966D] text-white h-9 px-4 text-sm font-semibold shadow-sm shrink-0"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 px-4 text-sm font-semibold shadow-sm shrink-0"
                   >
                     <Plus className="w-4 h-4 mr-1.5" /> Create Playlist
                   </Button>
@@ -2170,17 +2170,17 @@ export default function Sessions() {
 
               {/* Playlists Grid */}
               {loadingTutorials ? (
-                <p className="text-center py-10 text-slate-400 text-sm">Loading playlists...</p>
+                <p className="text-center py-10 text-muted-foreground text-sm">Loading playlists...</p>
               ) : playlists.filter(p => {
                 const matchSearch = p.title.toLowerCase().includes(tutorialSearch.toLowerCase()) || p.description?.toLowerCase().includes(tutorialSearch.toLowerCase());
                 const matchCat = playlistCategoryFilter === "all" || p.category === playlistCategoryFilter;
                 const matchLvl = playlistLevelFilter === "all" || p.level === playlistLevelFilter;
                 return matchSearch && matchCat && matchLvl;
               }).length === 0 ? (
-                <Card className="border border-dashed border-slate-300 bg-slate-50/50 p-8 text-center rounded-2xl">
-                  <Play className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                  <h3 className="text-base font-semibold text-slate-700">No Playlists Found</h3>
-                  <p className="text-xs text-slate-400 max-w-sm mx-auto mt-1 mb-4">
+                <Card className="border border-dashed border-border bg-muted/40 p-8 text-center rounded-2xl">
+                  <Play className="w-10 h-10 text-muted-foreground/60 mx-auto mb-3" />
+                  <h3 className="text-base font-semibold text-foreground">No Playlists Found</h3>
+                  <p className="text-xs text-muted-foreground max-w-sm mx-auto mt-1 mb-4">
                     Create workout series playlists to organize your instructional videos for clients.
                   </p>
                   <Button
@@ -2188,7 +2188,7 @@ export default function Sessions() {
                       setEditingPlaylist(null);
                       setIsPlaylistModalOpen(true);
                     }}
-                    className="bg-[#07AC7D] hover:bg-[#06966D] text-white text-xs px-4 h-9 font-semibold"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs px-4 h-9 font-semibold"
                   >
                     <Plus className="w-4 h-4 mr-1.5" /> Create First Playlist
                   </Button>
@@ -2201,7 +2201,7 @@ export default function Sessions() {
                     const matchLvl = playlistLevelFilter === "all" || p.level === playlistLevelFilter;
                     return matchSearch && matchCat && matchLvl;
                   }).map((pl) => (
-                    <Card key={pl.id} className="border border-slate-200/80 hover:border-[#07AC7D]/40 shadow-sm hover:shadow-md transition-all rounded-2xl overflow-hidden group bg-white flex flex-col">
+                    <Card key={pl.id} className="border border-border hover:border-primary/40 shadow-sm hover:shadow-md transition-all rounded-2xl overflow-hidden group bg-card flex flex-col">
                       {/* Playlist Thumbnail Container */}
                       <div className="relative aspect-video bg-slate-900 overflow-hidden flex items-center justify-center cursor-pointer" onClick={() => setSelectedPlaylist(pl)}>
                         <img
@@ -2219,27 +2219,27 @@ export default function Sessions() {
                       <CardContent className="p-4 flex-1 flex flex-col justify-between">
                         <div>
                           <div className="flex items-center gap-2 mb-2">
-                            <Badge variant="secondary" className="bg-[#F1FAF6] text-[#07AC7D] border-emerald-100 text-[10px] font-semibold px-2 py-0.5">
+                            <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-[10px] font-semibold px-2 py-0.5">
                               {pl.category || "Cardio"}
                             </Badge>
-                            <Badge variant="outline" className="text-[10px] border-slate-200 text-slate-500 font-medium px-2 py-0.5">
+                            <Badge variant="outline" className="text-[10px] border-border text-muted-foreground font-medium px-2 py-0.5">
                               {pl.level || "Beginner"}
                             </Badge>
                           </div>
 
                           <h3
                             onClick={() => setSelectedPlaylist(pl)}
-                            className="font-semibold text-[18px] text-[#111827] group-hover:text-[#07AC7D] transition-colors line-clamp-1 mb-1 cursor-pointer"
+                            className="font-semibold text-[18px] text-foreground group-hover:text-primary transition-colors line-clamp-1 mb-1 cursor-pointer"
                           >
                             {pl.title}
                           </h3>
-                          <p className="text-sm text-[#526581] line-clamp-2 leading-relaxed font-normal">
+                          <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed font-normal">
                             {pl.description || "No playlist description provided."}
                           </p>
                         </div>
 
-                        <div className="flex items-center justify-between border-t border-slate-100 pt-3 mt-4">
-                          <span className="text-xs text-[#64748B] font-medium">
+                        <div className="flex items-center justify-between border-t border-border pt-3 mt-4">
+                          <span className="text-xs text-muted-foreground font-medium">
                             {pl.video_count || pl.videos?.length || 0} videos • {pl.level}
                           </span>
 
@@ -2247,7 +2247,7 @@ export default function Sessions() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="h-8 text-sm font-semibold border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900 px-3"
+                              className="h-8 text-sm font-semibold border-border text-foreground hover:bg-muted px-3"
                               onClick={() => {
                                 setEditingPlaylist(pl);
                                 setPlaylistFormData({
@@ -2265,7 +2265,7 @@ export default function Sessions() {
                             </Button>
                             <Button
                               size="sm"
-                              className="h-8 text-sm font-semibold bg-[#07AC7D] hover:bg-[#06966D] text-white px-3"
+                              className="h-8 text-sm font-semibold bg-primary hover:bg-primary/90 text-primary-foreground px-3"
                               onClick={() => setSelectedPlaylist(pl)}
                             >
                               Manage Videos
@@ -2273,7 +2273,7 @@ export default function Sessions() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50"
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                               onClick={() => handleDeletePlaylist(pl)}
                             >
                               <Trash2 className="w-4 h-4" />
@@ -2294,45 +2294,45 @@ export default function Sessions() {
       {/* MODAL 1: CREATE / EDIT PLAYLIST DIALOG             */}
       {/* =================================================== */}
       <Dialog open={isPlaylistModalOpen} onOpenChange={setIsPlaylistModalOpen}>
-        <DialogContent className="sm:max-w-[500px] border border-slate-200 shadow-xl rounded-2xl">
+        <DialogContent className="sm:max-w-[500px] border border-border shadow-xl rounded-2xl bg-card">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-slate-900">
+            <DialogTitle className="text-lg font-bold text-foreground">
               {editingPlaylist ? "Edit Video Playlist" : "Create Video Playlist"}
             </DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
+            <DialogDescription className="text-xs text-muted-foreground">
               Organize video tutorials into a playlist series for your clients.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
             <div className="grid gap-1.5">
-              <Label className="text-xs font-semibold text-slate-700">Playlist Title</Label>
+              <Label className="text-xs font-semibold text-foreground">Playlist Title</Label>
               <Input
                 placeholder="e.g. Cardio Basics"
                 value={playlistFormData.title}
                 onChange={(e) => setPlaylistFormData({ ...playlistFormData, title: e.target.value })}
-                className="border-slate-200 h-9 text-sm"
+                className="border-border bg-input text-foreground h-9 text-sm"
               />
             </div>
 
             <div className="grid gap-1.5">
-              <Label className="text-xs font-semibold text-slate-700">Description</Label>
+              <Label className="text-xs font-semibold text-foreground">Description</Label>
               <Textarea
                 placeholder="Brief summary of what clients will learn in this video series..."
                 value={playlistFormData.description}
                 onChange={(e) => setPlaylistFormData({ ...playlistFormData, description: e.target.value })}
-                className="border-slate-200 text-sm min-h-[80px]"
+                className="border-border bg-input text-foreground text-sm min-h-[80px]"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-1.5">
-                <Label className="text-xs font-semibold text-slate-700">Category</Label>
+                <Label className="text-xs font-semibold text-foreground">Category</Label>
                 <Select
                   value={playlistFormData.category}
                   onValueChange={(v) => setPlaylistFormData({ ...playlistFormData, category: v })}
                 >
-                  <SelectTrigger className="border-slate-200 h-9 text-sm">
+                  <SelectTrigger className="border-border bg-input text-foreground h-9 text-sm">
                     <SelectValue placeholder="Category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -2347,12 +2347,12 @@ export default function Sessions() {
               </div>
 
               <div className="grid gap-1.5">
-                <Label className="text-xs font-semibold text-slate-700">Level</Label>
+                <Label className="text-xs font-semibold text-foreground">Level</Label>
                 <Select
                   value={playlistFormData.level}
                   onValueChange={(v) => setPlaylistFormData({ ...playlistFormData, level: v })}
                 >
-                  <SelectTrigger className="border-slate-200 h-9 text-sm">
+                  <SelectTrigger className="border-border bg-input text-foreground h-9 text-sm">
                     <SelectValue placeholder="Level" />
                   </SelectTrigger>
                   <SelectContent>
@@ -2365,13 +2365,13 @@ export default function Sessions() {
             </div>
 
             <div className="grid gap-1.5">
-              <Label className="text-xs font-semibold text-slate-700">Thumbnail Image</Label>
+              <Label className="text-xs font-semibold text-foreground">Thumbnail Image</Label>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <Input
                   placeholder="https://images.unsplash.com/... or upload"
                   value={playlistFormData.thumbnail_url}
                   onChange={(e) => setPlaylistFormData({ ...playlistFormData, thumbnail_url: e.target.value })}
-                  className="border-slate-200 h-9 text-sm flex-1"
+                  className="border-border bg-input text-foreground h-9 text-sm flex-1"
                 />
                 <div className="relative">
                   <Input
@@ -2383,7 +2383,7 @@ export default function Sessions() {
                   />
                   <Label
                     htmlFor="playlist-thumb-file-upload"
-                    className="h-9 px-3 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded-md text-xs font-medium flex items-center justify-center cursor-pointer gap-1.5 transition-colors shrink-0"
+                    className="h-9 px-3 bg-muted hover:bg-muted/80 border border-border text-foreground rounded-md text-xs font-medium flex items-center justify-center cursor-pointer gap-1.5 transition-colors shrink-0"
                   >
                     <Upload className="w-3.5 h-3.5" /> Upload File
                   </Label>
@@ -2391,8 +2391,8 @@ export default function Sessions() {
               </div>
               {playlistFormData.thumbnail_url && (
                 <div className="mt-1 flex items-center gap-2">
-                  <img src={playlistFormData.thumbnail_url} alt="Thumbnail preview" className="w-12 h-8 rounded object-cover border border-slate-200" />
-                  <span className="text-[10px] text-emerald-600 font-medium">✓ Thumbnail image set</span>
+                  <img src={playlistFormData.thumbnail_url} alt="Thumbnail preview" className="w-12 h-8 rounded object-cover border border-border" />
+                  <span className="text-[10px] text-primary font-medium">✓ Thumbnail image set</span>
                 </div>
               )}
             </div>
@@ -2402,14 +2402,14 @@ export default function Sessions() {
             <Button
               variant="outline"
               onClick={() => setIsPlaylistModalOpen(false)}
-              className="h-9 text-xs border-slate-200"
+              className="h-9 text-xs border-border text-foreground"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSavePlaylist}
               disabled={isPublishing}
-              className="bg-[#07AC7D] hover:bg-[#06966D] text-white h-9 text-xs font-semibold"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 text-xs font-semibold"
             >
               {isPublishing ? "Saving..." : editingPlaylist ? "Update Playlist" : "Create Playlist"}
             </Button>
@@ -2421,24 +2421,24 @@ export default function Sessions() {
       {/* MODAL 2: ADD VIDEO TO PLAYLIST DIALOG              */}
       {/* =================================================== */}
       <Dialog open={isVideoModalOpen} onOpenChange={setIsVideoModalOpen}>
-        <DialogContent className="sm:max-w-[560px] border border-slate-200 shadow-xl rounded-2xl">
+        <DialogContent className="sm:max-w-[560px] border border-border shadow-xl rounded-2xl bg-card">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-slate-900">
+            <DialogTitle className="text-lg font-bold text-foreground">
               Add Video to {selectedPlaylist?.title || "Playlist"}
             </DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
+            <DialogDescription className="text-xs text-muted-foreground">
               Choose existing videos from your Master Video Library or upload a brand new video.
             </DialogDescription>
           </DialogHeader>
 
           {/* Mode Switcher Tabs */}
-          <div className="flex border-b border-slate-200 mt-1 mb-3">
+          <div className="flex border-b border-border mt-1 mb-3">
             <button
               type="button"
               onClick={() => setAddVideoMode("library")}
               className={`pb-2.5 px-4 text-xs font-bold border-b-2 transition-all ${addVideoMode === "library"
-                ? "border-[#07AC7D] text-[#07AC7D]"
-                : "border-transparent text-slate-500 hover:text-slate-800"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
             >
               Select from Video Library
@@ -2447,8 +2447,8 @@ export default function Sessions() {
               type="button"
               onClick={() => setAddVideoMode("upload")}
               className={`pb-2.5 px-4 text-xs font-bold border-b-2 transition-all ${addVideoMode === "upload"
-                ? "border-[#07AC7D] text-[#07AC7D]"
-                : "border-transparent text-slate-500 hover:text-slate-800"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
             >
               + Upload New Video
@@ -2459,12 +2459,12 @@ export default function Sessions() {
             /* MODE A: SELECT FROM MASTER LIBRARY */
             <div className="space-y-3">
               <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                <Search className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground" />
                 <Input
                   placeholder="Search video library..."
                   value={librarySearch}
                   onChange={(e) => setLibrarySearch(e.target.value)}
-                  className="pl-9 h-9 text-xs border-slate-200"
+                  className="pl-9 h-9 text-xs border-border bg-input text-foreground"
                 />
               </div>
 
@@ -2477,9 +2477,9 @@ export default function Sessions() {
                 });
 
                 return (
-                  <ScrollArea className="h-[280px] rounded-xl border border-slate-200 p-2 bg-slate-50/40">
+                  <ScrollArea className="h-[280px] rounded-xl border border-border p-2 bg-muted/40">
                     {availableVids.length === 0 ? (
-                      <div className="text-center py-12 text-xs text-slate-400">
+                      <div className="text-center py-12 text-xs text-muted-foreground">
                         No videos available in library to add.
                       </div>
                     ) : (
@@ -2497,8 +2497,8 @@ export default function Sessions() {
                                 }
                               }}
                               className={`p-2.5 rounded-lg border transition-all cursor-pointer flex items-center justify-between gap-3 ${isChecked
-                                ? "bg-emerald-50/80 border-[#07AC7D]"
-                                : "bg-white border-slate-200/80 hover:border-slate-300"
+                                ? "bg-primary/10 border-primary"
+                                : "bg-card border-border hover:border-primary/40"
                                 }`}
                             >
                               <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -2508,7 +2508,7 @@ export default function Sessions() {
                                 />
 
                                 {vid.thumbnail_url ? (
-                                  <img src={vid.thumbnail_url} alt="" className="w-10 h-7 rounded object-cover border border-slate-200 shrink-0" />
+                                  <img src={vid.thumbnail_url} alt="" className="w-10 h-7 rounded object-cover border border-border shrink-0" />
                                 ) : (
                                   <div className="w-10 h-7 rounded bg-slate-900 flex items-center justify-center text-slate-400 text-[8px] shrink-0 font-mono">
                                     VID
@@ -2516,13 +2516,13 @@ export default function Sessions() {
                                 )}
 
                                 <div className="min-w-0 flex-1">
-                                  <p className="font-semibold text-xs text-slate-900 truncate">{vid.title}</p>
-                                  <p className="text-[10px] text-slate-400 truncate">{vid.category || "General"} • {vid.level || "Beginner"}</p>
+                                  <p className="font-semibold text-xs text-foreground truncate">{vid.title}</p>
+                                  <p className="text-[10px] text-muted-foreground truncate">{vid.category || "General"} • {vid.level || "Beginner"}</p>
                                 </div>
                               </div>
 
                               <div className="flex items-center gap-2 shrink-0">
-                                <span className="text-[10px] font-mono text-slate-500 shrink-0">
+                                <span className="text-[10px] font-mono text-muted-foreground shrink-0">
                                   {vid.duration || "05:00"}
                                 </span>
 
@@ -2533,7 +2533,7 @@ export default function Sessions() {
                                     e.stopPropagation();
                                     handleDeleteTutorial(vid.id, vid.title);
                                   }}
-                                  className="h-7 w-7 text-slate-400 hover:text-red-600 hover:bg-red-50"
+                                  className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                                   title={`Delete "${vid.title}" permanently`}
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
@@ -2552,14 +2552,14 @@ export default function Sessions() {
                 <Button
                   variant="outline"
                   onClick={() => setIsVideoModalOpen(false)}
-                  className="h-9 text-xs border-slate-200"
+                  className="h-9 text-xs border-border text-foreground"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={() => handleBatchAddVideosToPlaylist(selectedLibraryVideoIds)}
                   disabled={isPublishing || selectedLibraryVideoIds.length === 0}
-                  className="bg-[#07AC7D] hover:bg-[#06966D] text-white h-9 text-xs font-semibold"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 text-xs font-semibold"
                 >
                   {isPublishing ? "Adding..." : `Add Selected Videos (${selectedLibraryVideoIds.length})`}
                 </Button>
@@ -2572,22 +2572,22 @@ export default function Sessions() {
                 {/* Row 1: Title & Category */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="grid gap-1.5">
-                    <Label className="text-xs font-semibold text-slate-700">Video Title *</Label>
+                    <Label className="text-xs font-semibold text-foreground">Video Title *</Label>
                     <Input
                       placeholder="e.g. Tutorial 1"
                       value={videoFormData.title}
                       onChange={(e) => setVideoFormData({ ...videoFormData, title: e.target.value })}
-                      className="border-slate-200 h-9 text-sm"
+                      className="border-border bg-input text-foreground h-9 text-sm"
                     />
                   </div>
 
                   <div className="grid gap-1.5">
-                    <Label className="text-xs font-semibold text-slate-700">Category *</Label>
+                    <Label className="text-xs font-semibold text-foreground">Category *</Label>
                     <Select
                       value={videoFormData.category}
                       onValueChange={(val) => setVideoFormData({ ...videoFormData, category: val })}
                     >
-                      <SelectTrigger className="border-slate-200 h-9 text-sm">
+                      <SelectTrigger className="border-border bg-input text-foreground h-9 text-sm">
                         <SelectValue placeholder="Select Category" />
                       </SelectTrigger>
                       <SelectContent>
@@ -2613,38 +2613,38 @@ export default function Sessions() {
                 {/* Row 2: Trainer & Duration */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="grid gap-1.5">
-                    <Label className="text-xs font-semibold text-slate-700">Trainer</Label>
+                    <Label className="text-xs font-semibold text-foreground">Trainer</Label>
                     <Input
                       placeholder="e.g. Trainer 1"
                       value={videoFormData.trainer_name}
                       onChange={(e) => setVideoFormData({ ...videoFormData, trainer_name: e.target.value })}
-                      className="border-slate-200 h-9 text-sm"
+                      className="border-border bg-input text-foreground h-9 text-sm"
                     />
                   </div>
 
                   <div className="grid gap-1.5">
-                    <Label className="text-xs font-semibold text-slate-700">Duration</Label>
-                    <div className="h-9 px-3 bg-slate-100 border border-slate-200 rounded-md text-xs font-medium text-slate-600 flex items-center">
+                    <Label className="text-xs font-semibold text-foreground">Duration</Label>
+                    <div className="h-9 px-3 bg-muted border border-border rounded-md text-xs font-medium text-muted-foreground flex items-center">
                       {videoFormData.duration ? `${videoFormData.duration} (Auto-detected)` : "Auto-calculated on video upload"}
                     </div>
                   </div>
                 </div>
 
                 {/* Row 3: Video Small (360p/480p) & Video Large (720p/1080p) Uploads */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-muted/40 rounded-xl border border-border">
                   <div className="grid gap-1.5">
-                    <Label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                    <Label className="text-xs font-semibold text-foreground flex items-center justify-between">
                       <span>Video Small (360p/480p)</span>
-                      <span className="text-[10px] text-slate-400 font-normal">SD Resolution</span>
+                      <span className="text-[10px] text-muted-foreground font-normal">SD Resolution</span>
                     </Label>
                     <div className="flex gap-1.5">
                       <Input
                         placeholder="URL or Upload..."
                         value={videoFormData.video_url_small}
                         onChange={(e) => setVideoFormData({ ...videoFormData, video_url_small: e.target.value })}
-                        className="border-slate-200 h-8 text-xs bg-white"
+                        className="border-border h-8 text-xs bg-input text-foreground"
                       />
-                      <Label className="cursor-pointer bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 px-2.5 h-8 rounded-md flex items-center text-xs font-medium shrink-0">
+                      <Label className="cursor-pointer bg-muted border border-border hover:bg-muted/80 text-foreground px-2.5 h-8 rounded-md flex items-center text-xs font-medium shrink-0">
                         Upload
                         <input
                           type="file"
@@ -2657,18 +2657,18 @@ export default function Sessions() {
                   </div>
 
                   <div className="grid gap-1.5">
-                    <Label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                    <Label className="text-xs font-semibold text-foreground flex items-center justify-between">
                       <span>Video Large (720p/1080p)</span>
-                      <span className="text-[10px] text-slate-400 font-normal">HD Resolution</span>
+                      <span className="text-[10px] text-muted-foreground font-normal">HD Resolution</span>
                     </Label>
                     <div className="flex gap-1.5">
                       <Input
                         placeholder="URL or Upload..."
                         value={videoFormData.video_url_large}
                         onChange={(e) => setVideoFormData({ ...videoFormData, video_url_large: e.target.value })}
-                        className="border-slate-200 h-8 text-xs bg-white"
+                        className="border-border h-8 text-xs bg-input text-foreground"
                       />
-                      <Label className="cursor-pointer bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 px-2.5 h-8 rounded-md flex items-center text-xs font-medium shrink-0">
+                      <Label className="cursor-pointer bg-muted border border-border hover:bg-muted/80 text-foreground px-2.5 h-8 rounded-md flex items-center text-xs font-medium shrink-0">
                         Upload
                         <input
                           type="file"
@@ -2684,12 +2684,12 @@ export default function Sessions() {
                 {/* Row 4: Status & Audience */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="grid gap-1.5">
-                    <Label className="text-xs font-semibold text-slate-700">Status</Label>
+                    <Label className="text-xs font-semibold text-foreground">Status</Label>
                     <Select
                       value={videoFormData.status}
                       onValueChange={(val) => setVideoFormData({ ...videoFormData, status: val, is_published: val === "published" })}
                     >
-                      <SelectTrigger className="border-slate-200 h-9 text-sm">
+                      <SelectTrigger className="border-border bg-input text-foreground h-9 text-sm">
                         <SelectValue placeholder="Select Status" />
                       </SelectTrigger>
                       <SelectContent>
@@ -2700,12 +2700,12 @@ export default function Sessions() {
                   </div>
 
                   <div className="grid gap-1.5">
-                    <Label className="text-xs font-semibold text-slate-700">Audience</Label>
+                    <Label className="text-xs font-semibold text-foreground">Audience</Label>
                     <Select
                       value={videoFormData.audience}
                       onValueChange={(val) => setVideoFormData({ ...videoFormData, audience: val })}
                     >
-                      <SelectTrigger className="border-slate-200 h-9 text-sm">
+                      <SelectTrigger className="border-border bg-input text-foreground h-9 text-sm">
                         <SelectValue placeholder="Select Audience" />
                       </SelectTrigger>
                       <SelectContent>
@@ -2718,13 +2718,13 @@ export default function Sessions() {
 
                 {/* Row 5: Thumbnail & Description */}
                 <div className="grid gap-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">Thumbnail Image</Label>
+                  <Label className="text-xs font-semibold text-foreground">Thumbnail Image</Label>
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                     <Input
                       placeholder="https://images.unsplash.com/... or upload"
                       value={videoFormData.thumbnail_url}
                       onChange={(e) => setVideoFormData({ ...videoFormData, thumbnail_url: e.target.value })}
-                      className="border-slate-200 h-9 text-sm flex-1"
+                      className="border-border bg-input text-foreground h-9 text-sm flex-1"
                     />
                     <div className="relative">
                       <Input
@@ -2736,7 +2736,7 @@ export default function Sessions() {
                       />
                       <Label
                         htmlFor="video-thumb-file-upload"
-                        className="h-9 px-3 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 rounded-md text-xs font-medium flex items-center justify-center cursor-pointer gap-1.5 transition-colors shrink-0"
+                        className="h-9 px-3 bg-muted hover:bg-muted/80 border border-border text-foreground rounded-md text-xs font-medium flex items-center justify-center cursor-pointer gap-1.5 transition-colors shrink-0"
                       >
                         <Upload className="w-3.5 h-3.5" /> Upload File
                       </Label>
@@ -2744,19 +2744,19 @@ export default function Sessions() {
                   </div>
                   {videoFormData.thumbnail_url && (
                     <div className="mt-1 flex items-center gap-2">
-                      <img src={videoFormData.thumbnail_url} alt="Thumbnail preview" className="w-12 h-8 rounded object-cover border border-slate-200" />
-                      <span className="text-[10px] text-emerald-600 font-medium">✓ Thumbnail image set</span>
+                      <img src={videoFormData.thumbnail_url} alt="Thumbnail preview" className="w-12 h-8 rounded object-cover border border-border" />
+                      <span className="text-[10px] text-primary font-medium">✓ Thumbnail image set</span>
                     </div>
                   )}
                 </div>
 
                 <div className="grid gap-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">Description</Label>
+                  <Label className="text-xs font-semibold text-foreground">Description</Label>
                   <Textarea
                     placeholder="Brief instructions or steps for this video lesson..."
                     value={videoFormData.description}
                     onChange={(e) => setVideoFormData({ ...videoFormData, description: e.target.value })}
-                    className="border-slate-200 text-sm min-h-[60px]"
+                    className="border-border bg-input text-foreground text-sm min-h-[60px]"
                   />
                 </div>
 
@@ -2764,14 +2764,14 @@ export default function Sessions() {
                   <Button
                     variant="outline"
                     onClick={() => setIsVideoModalOpen(false)}
-                    className="h-9 text-xs border-slate-200"
+                    className="h-9 text-xs border-border text-foreground"
                   >
                     Cancel
                   </Button>
                   <Button
                     onClick={handleSaveVideoToPlaylist}
                     disabled={isPublishing}
-                    className="bg-[#07AC7D] hover:bg-[#06966D] text-white h-9 text-xs font-semibold"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 text-xs font-semibold"
                   >
                     {isPublishing ? "Adding..." : "Create & Add Video"}
                   </Button>
@@ -2787,13 +2787,15 @@ export default function Sessions() {
 
 function StatCard({ title, value, icon, bgColor }: any) {
   return (
-    <Card className="border border-slate-200/80 shadow-sm rounded-2xl">
-      <CardContent className="pt-5 flex items-center justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-[#64748B] mb-1 truncate">{title}</p>
-          <p className="text-[30px] sm:text-[32px] font-bold text-[#111827] leading-none">{value}</p>
+    <Card className="border border-border shadow-sm rounded-2xl bg-card">
+      <CardContent className="p-5 sm:p-6">
+        <div className="flex items-start justify-between mb-3">
+          <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${bgColor}`}>
+            {icon}
+          </div>
         </div>
-        <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${bgColor}`}>{icon}</div>
+        <p className="text-sm font-medium text-muted-foreground">{title}</p>
+        <p className="text-[30px] sm:text-[32px] font-bold text-foreground mt-1 leading-tight">{value}</p>
       </CardContent>
     </Card>
   );

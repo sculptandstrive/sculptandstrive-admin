@@ -44,33 +44,31 @@ interface DayCount {
 
 interface UpcomingSession {
   id: string;
-  title: string;
-  instructor: string;
-  type: string;          // "live" | "recorded"
-  scheduled_at: string;  // ISO timestamp
+  name: string;
+  type: string;
+  time: string;
+  category: string;
 }
-
-// ---- Visual helpers (UI only, no data logic changed) ----
 
 const STAT_THEMES = {
   emerald: {
-    iconBg: "bg-emerald-100",
-    iconColor: "text-emerald-600",
-    trendColor: "text-emerald-600",
+    iconBg: "bg-emerald-100 dark:bg-emerald-950/40",
+    iconColor: "text-emerald-600 dark:text-emerald-400",
+    trendColor: "text-emerald-600 dark:text-emerald-400",
     sparkStroke: "#10b981",
     sparkFill: "rgba(16,185,129,0.12)",
   },
   violet: {
-    iconBg: "bg-violet-100",
-    iconColor: "text-violet-600",
-    trendColor: "text-violet-600",
+    iconBg: "bg-violet-100 dark:bg-purple-950/40",
+    iconColor: "text-violet-600 dark:text-purple-400",
+    trendColor: "text-violet-600 dark:text-purple-400",
     sparkStroke: "#7c3aed",
     sparkFill: "rgba(124,58,237,0.12)",
   },
   blue: {
-    iconBg: "bg-blue-100",
-    iconColor: "text-blue-600",
-    trendColor: "text-blue-600",
+    iconBg: "bg-blue-100 dark:bg-blue-950/40",
+    iconColor: "text-blue-600 dark:text-blue-400",
+    trendColor: "text-blue-600 dark:text-blue-400",
     sparkStroke: "#2563eb",
     sparkFill: "rgba(37,99,235,0.12)",
   },
@@ -119,9 +117,9 @@ function StatCardVisual({
           </div>
           <MiniSparkline stroke={t.sparkStroke} fill={t.sparkFill} />
         </div>
-        <p className="text-sm font-medium text-[#64748B]">{title}</p>
-        <p className="text-[30px] sm:text-[32px] font-bold text-[#111827] mt-1 leading-tight">{value}</p>
-        <div className={`flex items-center gap-1 mt-2 text-xs font-semibold ${t.trendColor}`}>
+        <p className="text-sm font-medium text-muted-foreground">{title}</p>
+        <p className="text-3xl font-semibold text-foreground tracking-tight leading-none mt-1.5">{value}</p>
+        <div className={`flex items-center gap-1 mt-2.5 text-xs font-semibold ${t.trendColor}`}>
           <TrendingUp className="w-3.5 h-3.5" />
           <span>{caption}</span>
         </div>
@@ -329,10 +327,9 @@ export default function Dashboard() {
 
       {/* Main content: left = activity + graph, right = reserved sidebar slot */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-8 space-y-6">
-          <Card className="border border-border rounded-2xl shadow-sm bg-card">
+        <div className="lg:col-span-8 space-y-6">          <Card className="border border-border rounded-2xl shadow-sm bg-card">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-[20px] font-semibold text-[#111827] leading-[1.3]">
+              <CardTitle className="text-[20px] font-semibold text-foreground leading-[1.3]">
                 Recent Activity
               </CardTitle>
               {activities.length > 5 && (
@@ -376,7 +373,7 @@ export default function Dashboard() {
                           </p>
                         </div>
                         <div className="flex items-center gap-1 text-xs text-muted-foreground flex-shrink-0">
-                          <Clock className="w-3 h-3" />
+                          <Clock className="w-3.5 h-3.5" />
                           {new Date(activity.admin_created_at).toLocaleTimeString(
                             [],
                             { hour: "2-digit", minute: "2-digit" },
@@ -393,7 +390,7 @@ export default function Dashboard() {
           {/* Platform Overview graph — placed here, same column, below Recent Activity */}
           <Card className="border border-border rounded-2xl shadow-sm bg-card">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-[20px] font-semibold text-[#111827] leading-[1.3]">
+              <CardTitle className="text-[20px] font-semibold text-foreground leading-[1.3]">
                 Platform Overview
               </CardTitle>
               <span className="text-xs font-medium text-muted-foreground border border-border rounded-md px-2.5 py-1">
@@ -448,7 +445,7 @@ export default function Dashboard() {
         <div className="lg:col-span-4 space-y-6">
           <Card className="border border-border rounded-2xl shadow-sm bg-card">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-[18px] font-semibold text-[#111827]">Upcoming Sessions</CardTitle>
+              <CardTitle className="text-[18px] font-semibold text-foreground">Upcoming Sessions</CardTitle>
               <button
                 onClick={() => navigate("/sessions")}
                 className="text-xs font-semibold text-accent hover:underline"
@@ -478,10 +475,10 @@ export default function Dashboard() {
                     >
                       <div
                         className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          isRecorded ? "bg-violet-100" : "bg-emerald-100"
+                          isRecorded ? "bg-violet-100 dark:bg-violet-900/30" : "bg-emerald-100 dark:bg-emerald-900/30"
                         }`}
                       >
-                        <Activity className={`w-5 h-5 ${isRecorded ? "text-violet-600" : "text-emerald-600"}`} />
+                        <Activity className={`w-5 h-5 ${isRecorded ? "text-violet-600 dark:text-violet-400" : "text-emerald-600 dark:text-emerald-400"}`} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-foreground truncate">{session.title}</p>
@@ -491,7 +488,7 @@ export default function Dashboard() {
                       </div>
                       <span
                         className={`text-[11px] font-semibold rounded-full px-2.5 py-1 flex-shrink-0 ${
-                          isRecorded ? "text-violet-700 bg-violet-100" : "text-emerald-700 bg-emerald-100"
+                          isRecorded ? "text-violet-700 bg-violet-100 dark:bg-violet-950/60 dark:text-violet-300" : "text-emerald-700 bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300"
                         }`}
                       >
                         {isRecorded ? "Recorded" : "Live"}
@@ -505,7 +502,7 @@ export default function Dashboard() {
 
           <Card className="border border-border rounded-2xl shadow-sm bg-card">
             <CardHeader>
-              <CardTitle className="text-[18px] font-semibold text-[#111827]">Quick Actions</CardTitle>
+              <CardTitle className="text-[18px] font-semibold text-foreground">Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-1">
               {[
@@ -513,15 +510,15 @@ export default function Dashboard() {
                   label: "Create New Session",
                   path: "/sessions",
                   icon: PlusCircle,
-                  iconBg: "bg-emerald-100",
-                  iconColor: "text-emerald-600",
+                  iconBg: "bg-emerald-100 dark:bg-emerald-950/50",
+                  iconColor: "text-emerald-600 dark:text-emerald-400",
                 },
                 {
                   label: "Add New Member",
                   path: "/users",
                   icon: UserPlus,
-                  iconBg: "bg-violet-100",
-                  iconColor: "text-violet-600",
+                  iconBg: "bg-violet-100 dark:bg-violet-950/50",
+                  iconColor: "text-violet-600 dark:text-violet-400",
                 },
               ].map((action) => (
                 <button
@@ -541,7 +538,7 @@ export default function Dashboard() {
 
           <Card className="border border-border rounded-2xl shadow-sm bg-card">
             <CardHeader>
-              <CardTitle className="text-[18px] font-semibold text-[#111827]">Platform Usage</CardTitle>
+              <CardTitle className="text-[18px] font-semibold text-foreground">Platform Usage</CardTitle>
             </CardHeader>
             <CardContent>
               {loading ? (

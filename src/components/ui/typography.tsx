@@ -2,18 +2,18 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Standard Admin Typography System
- * H1 – Page Title: 28px Bold (#111827)
- * H2 – Main Section: 20px Semibold (#111827)
- * H3 – Card/Subsection: 18px Semibold (#111827)
- * Body: 14px Regular (#526581)
- * Body Medium: 14px Medium (#111827 / #526581)
- * Small: 12px Regular (#64748B)
- * Small Medium / Label: 12px Medium (#64748B)
- * Button: 14px Semibold (#FFFFFF / #111827)
+ * Standard Admin Typography System with Full Dark/Light Theme Support
+ * H1 – Page Title: 28px Bold (text-foreground)
+ * H2 – Main Section: 20px Semibold (text-foreground)
+ * H3 – Card/Subsection: 18px Semibold (text-foreground)
+ * Body: 14px Regular (text-muted-foreground)
+ * Body Medium: 14px Medium (text-foreground)
+ * Small: 12px Regular (text-muted-foreground)
+ * Small Medium / Label: 12px Medium (text-muted-foreground)
+ * Button: 14px Semibold (text-white / text-foreground)
  * Badge: 12px Semibold
  * Chart Text: 12px Regular
- * Large Number / Stat: 30-32px Bold (#111827)
+ * Large Number / Stat: 30-32px Bold (text-foreground)
  */
 
 export const PageTitle = React.forwardRef<
@@ -22,7 +22,7 @@ export const PageTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h1
     ref={ref}
-    className={cn("text-[28px] font-bold tracking-tight leading-tight text-[#111827]", className)}
+    className={cn("text-[28px] font-bold tracking-tight leading-tight text-foreground", className)}
     {...props}
   />
 ));
@@ -34,7 +34,7 @@ export const PageSubtitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm font-normal text-[#526581] mt-1.5", className)}
+    className={cn("text-sm font-normal text-muted-foreground mt-1.5", className)}
     {...props}
   />
 ));
@@ -46,7 +46,7 @@ export const SectionTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h2
     ref={ref}
-    className={cn("text-[20px] font-semibold text-[#111827] leading-snug", className)}
+    className={cn("text-[20px] font-semibold text-foreground leading-snug", className)}
     {...props}
   />
 ));
@@ -58,7 +58,7 @@ export const CardTitleText = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h3
     ref={ref}
-    className={cn("text-[18px] font-semibold text-[#111827]", className)}
+    className={cn("text-[18px] font-semibold text-foreground", className)}
     {...props}
   />
 ));
@@ -70,7 +70,7 @@ export const BodyText = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm font-normal text-[#526581]", className)}
+    className={cn("text-sm font-normal text-muted-foreground", className)}
     {...props}
   />
 ));
@@ -83,7 +83,7 @@ export const SmallLabel = React.forwardRef<
   <span
     ref={ref}
     className={cn(
-      "text-xs font-medium text-[#64748B]",
+      "text-xs font-medium text-muted-foreground",
       className
     )}
     {...props}
@@ -97,7 +97,7 @@ export const TableHeaderText = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <th
     ref={ref}
-    className={cn("text-xs font-semibold text-[#64748B] uppercase tracking-wider", className)}
+    className={cn("text-xs font-semibold text-muted-foreground uppercase tracking-wider", className)}
     {...props}
   />
 ));
@@ -109,7 +109,7 @@ export const TableContentText = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <td
     ref={ref}
-    className={cn("text-sm font-medium text-[#111827]", className)}
+    className={cn("text-sm font-medium text-foreground", className)}
     {...props}
   />
 ));
@@ -122,11 +122,12 @@ export const MetricValue = React.forwardRef<
   <span
     ref={ref}
     className={cn(
-      size === "sm" ? "text-[24px] font-bold text-[#111827]" : "text-[30px] sm:text-[32px] font-bold text-[#111827]",
+      size === "sm" ? "text-[24px] font-bold text-foreground" : "text-[30px] sm:text-[32px] font-bold text-foreground",
       className
     )}
     {...props}
   />
 ));
 MetricValue.displayName = "MetricValue";
+
 
