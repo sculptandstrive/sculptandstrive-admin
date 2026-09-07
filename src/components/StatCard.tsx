@@ -192,7 +192,7 @@ export function StatCard({
 
         {/* Main Number & Unit */}
         <div className={cn("flex items-baseline", compact ? "mt-1" : "mt-1.5")}>
-          <span className="text-2xl font-medium text-foreground tracking-tight leading-none">
+          <span className="text-2xl font-semibold text-foreground tracking-tight leading-none">
             {value}
           </span>
           {unit && (

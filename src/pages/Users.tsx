@@ -746,15 +746,15 @@ export default function Users() {
               <div className="grid grid-cols-3 gap-4 p-4 rounded-2xl bg-muted/40 border border-border">
                 <div className="text-center">
                   <span className="text-sm font-medium text-muted-foreground block mb-1">Workouts Assigned</span>
-                  <span className="text-[30px] sm:text-[32px] font-bold text-foreground leading-none">{profileData.workoutsSummary.totalCount}</span>
+                  <span className="text-2xl font-semibold text-foreground tracking-tight leading-none">{profileData.workoutsSummary.totalCount}</span>
                 </div>
                 <div className="text-center border-x border-border">
                   <span className="text-sm font-medium text-muted-foreground block mb-1">Sessions Done</span>
-                  <span className="text-[30px] sm:text-[32px] font-bold text-emerald-500 leading-none">{profileData.workoutsSummary.completedCount}</span>
+                  <span className="text-2xl font-semibold text-emerald-500 tracking-tight leading-none">{profileData.workoutsSummary.completedCount}</span>
                 </div>
                 <div className="text-center">
                   <span className="text-sm font-medium text-muted-foreground block mb-1">Est. Kcal Burned</span>
-                  <span className="text-[30px] sm:text-[32px] font-bold text-amber-500 leading-none">{profileData.workoutsSummary.totalCalories.toLocaleString()}</span>
+                  <span className="text-2xl font-semibold text-amber-500 tracking-tight leading-none">{profileData.workoutsSummary.totalCalories.toLocaleString()}</span>
                 </div>
               </div>
 

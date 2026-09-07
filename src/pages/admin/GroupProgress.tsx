@@ -167,7 +167,7 @@ return (
       <Card className="bg-card border border-border shadow-sm rounded-2xl">
         <CardContent className="p-5">
           <p className="text-sm font-medium text-muted-foreground">Top Performer</p>
-          <p className="text-[20px] font-bold text-emerald-600 dark:text-emerald-400 mt-1.5 truncate">{groupStats.topPerformer}</p>
+          <p className="text-xl font-semibold text-emerald-600 dark:text-emerald-400 mt-1.5 truncate leading-none">{groupStats.topPerformer}</p>
         </CardContent>
       </Card>
     </div>
