@@ -267,7 +267,7 @@ export default function ProgressPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
-                  <p className="text-3xl font-semibold text-foreground tracking-tight leading-none mt-1.5">
+                  <p className="text-2xl font-semibold text-foreground tracking-tight leading-none mt-1.5">
                     {stat.value.toLocaleString()}
                   </p>
                   {stat.change && (

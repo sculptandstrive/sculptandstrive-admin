@@ -80,7 +80,7 @@ export default function Dashboard() {
   const [sessionCount, setSessionCount] = useState<number>(0);
   const [memberCount, setMemberCount] = useState<MemberCount>({ user: 0, trial_user: 0 });
   const [activities, setActivities] = useState<any[]>([]);
-  const [logAllActivity, setAllActivity] = useState<Boolean>(false);
+  const [logAllActivity, setAllActivity] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [weeklyTrend, setWeeklyTrend] = useState<DayCount[]>([]);
   const [trendLoading, setTrendLoading] = useState(true);

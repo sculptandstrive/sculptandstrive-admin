@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import SegmentedControl from "@/components/SegmentedControl";
+import { VideoUploadModal } from "@/components/video/VideoUploadModal";
 
 const isValidUUID = (str: any): boolean => {
   if (typeof str !== "string") return false;
@@ -113,7 +114,7 @@ export default function Sessions() {
     },
     {
       platform: "youtube",
-      regex: /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+      regex: /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
       regex2: /^(https?:\/\/)?(www\.)?youtube\.com\/shorts\/[\w-]+$/i
     },
   ];
@@ -2418,369 +2419,36 @@ export default function Sessions() {
       </Dialog>
 
       {/* =================================================== */}
-      {/* MODAL 2: ADD VIDEO TO PLAYLIST DIALOG              */}
+      {/* MODAL 2: ADD VIDEO TO PLAYLIST / MASTER LIBRARY     */}
       {/* =================================================== */}
-      <Dialog open={isVideoModalOpen} onOpenChange={setIsVideoModalOpen}>
-        <DialogContent className="sm:max-w-[560px] border border-border shadow-xl rounded-2xl bg-card">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-foreground">
-              Add Video to {selectedPlaylist?.title || "Playlist"}
-            </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground">
-              Choose existing videos from your Master Video Library or upload a brand new video.
-            </DialogDescription>
-          </DialogHeader>
-
-          {/* Mode Switcher Tabs */}
-          <div className="flex border-b border-border mt-1 mb-3">
-            <button
-              type="button"
-              onClick={() => setAddVideoMode("library")}
-              className={`pb-2.5 px-4 text-xs font-bold border-b-2 transition-all ${addVideoMode === "library"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
-            >
-              Select from Video Library
-            </button>
-            <button
-              type="button"
-              onClick={() => setAddVideoMode("upload")}
-              className={`pb-2.5 px-4 text-xs font-bold border-b-2 transition-all ${addVideoMode === "upload"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
-            >
-              + Upload New Video
-            </button>
-          </div>
-
-          {addVideoMode === "library" ? (
-            /* MODE A: SELECT FROM MASTER LIBRARY */
-            <div className="space-y-3">
-              <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground" />
-                <Input
-                  placeholder="Search video library..."
-                  value={librarySearch}
-                  onChange={(e) => setLibrarySearch(e.target.value)}
-                  className="pl-9 h-9 text-xs border-border bg-input text-foreground"
-                />
-              </div>
-
-              {(() => {
-                const inPlaylistIds = new Set((selectedPlaylist?.videos || []).map((v: any) => String(v.id)));
-                const availableVids = tutorials.filter((t: any) => {
-                  const notInPl = !inPlaylistIds.has(String(t.id));
-                  const matchesSearch = !librarySearch || t.title?.toLowerCase().includes(librarySearch.toLowerCase());
-                  return notInPl && matchesSearch;
-                });
-
-                return (
-                  <ScrollArea className="h-[280px] rounded-xl border border-border p-2 bg-muted/40">
-                    {availableVids.length === 0 ? (
-                      <div className="text-center py-12 text-xs text-muted-foreground">
-                        No videos available in library to add.
-                      </div>
-                    ) : (
-                      <div className="space-y-1.5">
-                        {availableVids.map((vid: any) => {
-                          const isChecked = selectedLibraryVideoIds.includes(String(vid.id));
-                          return (
-                            <div
-                              key={vid.id}
-                              onClick={() => {
-                                if (isChecked) {
-                                  setSelectedLibraryVideoIds((prev) => prev.filter((id) => id !== String(vid.id)));
-                                } else {
-                                  setSelectedLibraryVideoIds((prev) => [...prev, String(vid.id)]);
-                                }
-                              }}
-                              className={`p-2.5 rounded-lg border transition-all cursor-pointer flex items-center justify-between gap-3 ${isChecked
-                                ? "bg-primary/10 border-primary"
-                                : "bg-card border-border hover:border-primary/40"
-                                }`}
-                            >
-                              <div className="flex items-center gap-3 min-w-0 flex-1">
-                                <Checkbox
-                                  checked={isChecked}
-                                  onCheckedChange={() => { }}
-                                />
-
-                                {vid.thumbnail_url ? (
-                                  <img src={vid.thumbnail_url} alt="" className="w-10 h-7 rounded object-cover border border-border shrink-0" />
-                                ) : (
-                                  <div className="w-10 h-7 rounded bg-slate-900 flex items-center justify-center text-slate-400 text-[8px] shrink-0 font-mono">
-                                    VID
-                                  </div>
-                                )}
-
-                                <div className="min-w-0 flex-1">
-                                  <p className="font-semibold text-xs text-foreground truncate">{vid.title}</p>
-                                  <p className="text-[10px] text-muted-foreground truncate">{vid.category || "General"} • {vid.level || "Beginner"}</p>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center gap-2 shrink-0">
-                                <span className="text-[10px] font-mono text-muted-foreground shrink-0">
-                                  {vid.duration || "05:00"}
-                                </span>
-
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteTutorial(vid.id, vid.title);
-                                  }}
-                                  className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                                  title={`Delete "${vid.title}" permanently`}
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </Button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </ScrollArea>
-                );
-              })()}
-
-              <DialogFooter className="gap-2 pt-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsVideoModalOpen(false)}
-                  className="h-9 text-xs border-border text-foreground"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() => handleBatchAddVideosToPlaylist(selectedLibraryVideoIds)}
-                  disabled={isPublishing || selectedLibraryVideoIds.length === 0}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 text-xs font-semibold"
-                >
-                  {isPublishing ? "Adding..." : `Add Selected Videos (${selectedLibraryVideoIds.length})`}
-                </Button>
-              </DialogFooter>
-            </div>
-          ) : (
-            /* MODE B: UPLOAD NEW VIDEO */
-            <ScrollArea className="max-h-[65vh] pr-1">
-              <div className="space-y-4 py-1">
-                {/* Row 1: Title & Category */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="grid gap-1.5">
-                    <Label className="text-xs font-semibold text-foreground">Video Title *</Label>
-                    <Input
-                      placeholder="e.g. Tutorial 1"
-                      value={videoFormData.title}
-                      onChange={(e) => setVideoFormData({ ...videoFormData, title: e.target.value })}
-                      className="border-border bg-input text-foreground h-9 text-sm"
-                    />
-                  </div>
-
-                  <div className="grid gap-1.5">
-                    <Label className="text-xs font-semibold text-foreground">Category *</Label>
-                    <Select
-                      value={videoFormData.category}
-                      onValueChange={(val) => setVideoFormData({ ...videoFormData, category: val })}
-                    >
-                      <SelectTrigger className="border-border bg-input text-foreground h-9 text-sm">
-                        <SelectValue placeholder="Select Category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Weight Loss">Weight Loss</SelectItem>
-                        <SelectItem value="Muscle Gain">Muscle Gain</SelectItem>
-                        <SelectItem value="Strength Training">Strength Training</SelectItem>
-                        <SelectItem value="Cardio">Cardio</SelectItem>
-                        <SelectItem value="HIIT">HIIT</SelectItem>
-                        <SelectItem value="Pilates">Pilates</SelectItem>
-                        <SelectItem value="Functional Training">Functional Training</SelectItem>
-                        <SelectItem value="Home Workouts">Home Workouts</SelectItem>
-                        <SelectItem value="Gym Workouts">Gym Workouts</SelectItem>
-                        <SelectItem value="Senior Fitness">Senior Fitness</SelectItem>
-                        <SelectItem value="Kids Fitness">Kids Fitness</SelectItem>
-                        <SelectItem value="Prenatal & Postnatal Fitness">Prenatal & Postnatal Fitness</SelectItem>
-                        <SelectItem value="Yoga & Flexibility">Yoga & Flexibility</SelectItem>
-                        <SelectItem value="General">General</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Row 2: Trainer & Duration */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="grid gap-1.5">
-                    <Label className="text-xs font-semibold text-foreground">Trainer</Label>
-                    <Input
-                      placeholder="e.g. Trainer 1"
-                      value={videoFormData.trainer_name}
-                      onChange={(e) => setVideoFormData({ ...videoFormData, trainer_name: e.target.value })}
-                      className="border-border bg-input text-foreground h-9 text-sm"
-                    />
-                  </div>
-
-                  <div className="grid gap-1.5">
-                    <Label className="text-xs font-semibold text-foreground">Duration</Label>
-                    <div className="h-9 px-3 bg-muted border border-border rounded-md text-xs font-medium text-muted-foreground flex items-center">
-                      {videoFormData.duration ? `${videoFormData.duration} (Auto-detected)` : "Auto-calculated on video upload"}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Row 3: Video Small (360p/480p) & Video Large (720p/1080p) Uploads */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-muted/40 rounded-xl border border-border">
-                  <div className="grid gap-1.5">
-                    <Label className="text-xs font-semibold text-foreground flex items-center justify-between">
-                      <span>Video Small (360p/480p)</span>
-                      <span className="text-[10px] text-muted-foreground font-normal">SD Resolution</span>
-                    </Label>
-                    <div className="flex gap-1.5">
-                      <Input
-                        placeholder="URL or Upload..."
-                        value={videoFormData.video_url_small}
-                        onChange={(e) => setVideoFormData({ ...videoFormData, video_url_small: e.target.value })}
-                        className="border-border h-8 text-xs bg-input text-foreground"
-                      />
-                      <Label className="cursor-pointer bg-muted border border-border hover:bg-muted/80 text-foreground px-2.5 h-8 rounded-md flex items-center text-xs font-medium shrink-0">
-                        Upload
-                        <input
-                          type="file"
-                          accept="video/*"
-                          className="hidden"
-                          onChange={(e) => handleUploadSmallVideo(e)}
-                        />
-                      </Label>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-1.5">
-                    <Label className="text-xs font-semibold text-foreground flex items-center justify-between">
-                      <span>Video Large (720p/1080p)</span>
-                      <span className="text-[10px] text-muted-foreground font-normal">HD Resolution</span>
-                    </Label>
-                    <div className="flex gap-1.5">
-                      <Input
-                        placeholder="URL or Upload..."
-                        value={videoFormData.video_url_large}
-                        onChange={(e) => setVideoFormData({ ...videoFormData, video_url_large: e.target.value })}
-                        className="border-border h-8 text-xs bg-input text-foreground"
-                      />
-                      <Label className="cursor-pointer bg-muted border border-border hover:bg-muted/80 text-foreground px-2.5 h-8 rounded-md flex items-center text-xs font-medium shrink-0">
-                        Upload
-                        <input
-                          type="file"
-                          accept="video/*"
-                          className="hidden"
-                          onChange={(e) => handleUploadLargeVideo(e)}
-                        />
-                      </Label>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Row 4: Status & Audience */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="grid gap-1.5">
-                    <Label className="text-xs font-semibold text-foreground">Status</Label>
-                    <Select
-                      value={videoFormData.status}
-                      onValueChange={(val) => setVideoFormData({ ...videoFormData, status: val, is_published: val === "published" })}
-                    >
-                      <SelectTrigger className="border-border bg-input text-foreground h-9 text-sm">
-                        <SelectValue placeholder="Select Status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="draft">Draft</SelectItem>
-                        <SelectItem value="published">Published</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="grid gap-1.5">
-                    <Label className="text-xs font-semibold text-foreground">Audience</Label>
-                    <Select
-                      value={videoFormData.audience}
-                      onValueChange={(val) => setVideoFormData({ ...videoFormData, audience: val })}
-                    >
-                      <SelectTrigger className="border-border bg-input text-foreground h-9 text-sm">
-                        <SelectValue placeholder="Select Audience" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="customers">Customers</SelectItem>
-                        <SelectItem value="all">All</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Row 5: Thumbnail & Description */}
-                <div className="grid gap-1.5">
-                  <Label className="text-xs font-semibold text-foreground">Thumbnail Image</Label>
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                    <Input
-                      placeholder="https://images.unsplash.com/... or upload"
-                      value={videoFormData.thumbnail_url}
-                      onChange={(e) => setVideoFormData({ ...videoFormData, thumbnail_url: e.target.value })}
-                      className="border-border bg-input text-foreground h-9 text-sm flex-1"
-                    />
-                    <div className="relative">
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleVideoThumbnailUpload}
-                        className="hidden"
-                        id="video-thumb-file-upload"
-                      />
-                      <Label
-                        htmlFor="video-thumb-file-upload"
-                        className="h-9 px-3 bg-muted hover:bg-muted/80 border border-border text-foreground rounded-md text-xs font-medium flex items-center justify-center cursor-pointer gap-1.5 transition-colors shrink-0"
-                      >
-                        <Upload className="w-3.5 h-3.5" /> Upload File
-                      </Label>
-                    </div>
-                  </div>
-                  {videoFormData.thumbnail_url && (
-                    <div className="mt-1 flex items-center gap-2">
-                      <img src={videoFormData.thumbnail_url} alt="Thumbnail preview" className="w-12 h-8 rounded object-cover border border-border" />
-                      <span className="text-[10px] text-primary font-medium">✓ Thumbnail image set</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="grid gap-1.5">
-                  <Label className="text-xs font-semibold text-foreground">Description</Label>
-                  <Textarea
-                    placeholder="Brief instructions or steps for this video lesson..."
-                    value={videoFormData.description}
-                    onChange={(e) => setVideoFormData({ ...videoFormData, description: e.target.value })}
-                    className="border-border bg-input text-foreground text-sm min-h-[60px]"
-                  />
-                </div>
-
-                <DialogFooter className="gap-2 pt-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsVideoModalOpen(false)}
-                    className="h-9 text-xs border-border text-foreground"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleSaveVideoToPlaylist}
-                    disabled={isPublishing}
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 text-xs font-semibold"
-                  >
-                    {isPublishing ? "Adding..." : "Create & Add Video"}
-                  </Button>
-                </DialogFooter>
-              </div>
-            </ScrollArea>
-          )}
-        </DialogContent>
-      </Dialog>
+      <VideoUploadModal
+        open={isVideoModalOpen}
+        onOpenChange={setIsVideoModalOpen}
+        selectedPlaylist={selectedPlaylist}
+        allCategories={allCategories}
+        allLevels={allLevels}
+        masterTutorials={tutorials}
+        onSuccess={(newVideo) => {
+          if (newVideo) {
+            setTutorials((prev) => [newVideo, ...prev]);
+            if (selectedPlaylist) {
+              const updatedVideos = [...(selectedPlaylist.videos || []), newVideo];
+              const updatedPl = {
+                ...selectedPlaylist,
+                videos: updatedVideos,
+                video_count: updatedVideos.length,
+              };
+              setSelectedPlaylist(updatedPl);
+              setPlaylists((prev) =>
+                prev.map((p) => (p.id === updatedPl.id ? updatedPl : p))
+              );
+            }
+          }
+          fetchTutorials();
+        }}
+        onDeleteMasterTutorial={handleDeleteTutorial}
+        onBatchAddLibraryVideos={handleBatchAddVideosToPlaylist}
+      />
     </>
   );
 }
@@ -2791,7 +2459,7 @@ function StatCard({ title, value, icon, bgColor }: any) {
       <CardContent className="p-5 flex items-center justify-between gap-4">
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <p className="text-3xl font-semibold text-foreground tracking-tight leading-none mt-1.5">{value}</p>
+          <p className="text-2xl font-semibold text-foreground tracking-tight leading-none mt-1.5">{value}</p>
         </div>
         <div className={`h-11 w-11 rounded-xl flex items-center justify-center shrink-0 ${bgColor}`}>{icon}</div>
       </CardContent>

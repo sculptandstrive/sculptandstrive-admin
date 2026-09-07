@@ -711,7 +711,7 @@ export default function NutritionAdmin() {
                 <p className="text-sm font-medium text-muted-foreground">
                   {label}
                 </p>
-                <p className="text-3xl font-semibold text-foreground tracking-tight leading-none mt-1.5">
+                <p className="text-2xl font-semibold text-foreground tracking-tight leading-none mt-1.5">
                   {value}
                 </p>
               </div>

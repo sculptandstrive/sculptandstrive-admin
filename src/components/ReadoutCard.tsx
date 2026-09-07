@@ -9,8 +9,8 @@ interface ReadoutCardProps {
   description?: string;
   children?: ReactNode;
   colorClass?: string;
-  handleDBSave?: ()=>void
-  showSave?: Boolean
+  handleDBSave?: () => void;
+  showSave?: boolean;
 }
 
 const ReadoutCard = ({ label, value, unit, description, handleDBSave, children, colorClass = "text-accent", showSave }: ReadoutCardProps) => {

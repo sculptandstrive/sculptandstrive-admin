@@ -17,6 +17,15 @@ export default {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         display: ['Inter', 'system-ui', 'sans-serif'],
       },
+      fontSize: {
+        'xs': ['0.875rem', { lineHeight: '1.25rem' }],   // 14px base
+        'sm': ['1rem', { lineHeight: '1.5rem' }],        // 16px base
+        'base': ['1.125rem', { lineHeight: '1.75rem' }], // 18px base
+        'lg': ['1.25rem', { lineHeight: '1.85rem' }],    // 20px base
+        'xl': ['1.375rem', { lineHeight: '2rem' }],      // 22px base
+        '2xl': ['1.625rem', { lineHeight: '2.25rem' }],  // 26px base
+        '3xl': ['2rem', { lineHeight: '2.5rem' }],       // 32px base
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

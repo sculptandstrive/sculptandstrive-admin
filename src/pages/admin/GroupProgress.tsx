@@ -148,20 +148,20 @@ return (
       <Card className="bg-card border border-border shadow-sm rounded-2xl">
         <CardContent className="p-5">
           <p className="text-sm font-medium text-muted-foreground">Avg Completion</p>
-          <p className="text-3xl font-semibold text-emerald-600 dark:text-emerald-400 tracking-tight leading-none mt-1.5">{groupStats.avgCompletion}%</p>
+          <p className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400 tracking-tight leading-none mt-1.5">{groupStats.avgCompletion}%</p>
           <Progress value={groupStats.avgCompletion} className="h-1.5 bg-muted mt-2.5" />
         </CardContent>
       </Card>
       <Card className="bg-card border border-border shadow-sm rounded-2xl">
         <CardContent className="p-5">
           <p className="text-sm font-medium text-muted-foreground">Total Weight Loss</p>
-          <p className="text-3xl font-semibold text-emerald-600 dark:text-emerald-400 tracking-tight leading-none mt-1.5">{groupStats.totalWeightLoss} kg</p>
+          <p className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400 tracking-tight leading-none mt-1.5">{groupStats.totalWeightLoss} kg</p>
         </CardContent>
       </Card>
       <Card className="bg-card border border-border shadow-sm rounded-2xl">
         <CardContent className="p-5">
           <p className="text-sm font-medium text-muted-foreground">Avg Attendance</p>
-          <p className="text-3xl font-semibold text-foreground tracking-tight leading-none mt-1.5">{groupStats.avgAttendance}%</p>
+          <p className="text-2xl font-semibold text-foreground tracking-tight leading-none mt-1.5">{groupStats.avgAttendance}%</p>
         </CardContent>
       </Card>
       <Card className="bg-card border border-border shadow-sm rounded-2xl">

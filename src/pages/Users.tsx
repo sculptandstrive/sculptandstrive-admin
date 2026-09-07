@@ -1,5 +1,25 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Users as UsersIcon, Shield, ShieldAlert, ShieldCheck, UserCog, Search, RefreshCw, Loader2, UserPlus, Play } from "lucide-react";
+import { 
+  Users as UsersIcon, 
+  Shield, 
+  ShieldAlert, 
+  ShieldCheck, 
+  UserCog, 
+  Search, 
+  RefreshCw, 
+  Loader2, 
+  UserPlus, 
+  Play,
+  CheckCircle,
+  Clock,
+  XCircle,
+  Dumbbell,
+  Calendar,
+  Trophy,
+  Flame,
+  Award
+} from "lucide-react";
+import { format } from "date-fns";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -99,6 +119,7 @@ export default function Users() {
       completedCount: number;
       totalCalories: number;
     };
+    userWorkouts: any[];
     videos: any[];
     videosLoading: boolean;
   } | null>(null);
@@ -108,7 +129,7 @@ export default function Users() {
       setProfileLoading(true);
       setProfileData(null);
 
-      const [healthRes, checkinsRes, photosRes, workoutsRes] = await Promise.all([
+      const [healthRes, checkinsRes, photosRes, workoutsRes, progressRes] = await Promise.all([
         supabase
           .from("health_history")
           .select("*")
@@ -126,12 +147,25 @@ export default function Users() {
           .order("taken_at", { ascending: false }),
         supabase
           .from("workouts")
-          .select("completed, calories_burned")
+          .select("id, completed, calories_burned")
+          .eq("user_id", userId),
+        supabase
+          .from("workout_progress")
+          .select("id, workout_id, workout_name, scheduled_date, status, duration_minutes, calories_burned, completed_at")
           .eq("user_id", userId)
+          .order("scheduled_date", { ascending: false })
+          .limit(30),
       ]);
 
       const workouts = workoutsRes.data || [];
-      const completed = workouts.filter((w: any) => w.completed);
+      const progressLogs = progressRes.data || [];
+      const completedProgressLogs = progressLogs.filter((p: any) => p.status === "completed");
+
+      const completedCount = completedProgressLogs.length > 0
+        ? completedProgressLogs.length
+        : workouts.filter((w: any) => w.completed).length;
+
+      const totalCount = Math.max(workouts.length, progressLogs.length);
       const calories = workouts.reduce((sum: number, w: any) => sum + (w.calories_burned || 0), 0);
 
       setProfileData({
@@ -139,10 +173,11 @@ export default function Users() {
         checkins: checkinsRes.data || [],
         photos: photosRes.data || [],
         workoutsSummary: {
-          totalCount: workouts.length,
-          completedCount: completed.length,
+          totalCount,
+          completedCount,
           totalCalories: calories,
         },
+        userWorkouts: progressLogs,
         videos: [],
         videosLoading: true,
       });
@@ -431,7 +466,7 @@ export default function Users() {
     }
     setUpdating(true);
     try {
-      let newExpiry = new Date();
+      const newExpiry = new Date();
       if (roleChangeDialog.newRole === 'user') {
         newExpiry.setDate(newExpiry.getDate() + 29);
       }
@@ -793,6 +828,83 @@ export default function Users() {
                     </div>
                   )}
                 </div>
+              </div>
+
+              {/* Workout History Sessions Row */}
+              <div className="space-y-4 pt-4 border-t border-border">
+                <div className="flex items-center justify-between border-b border-border pb-1.5">
+                  <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+                    <Dumbbell className="w-3.5 h-3.5 text-primary" />
+                    Workout Session Logs
+                  </h4>
+                  <span className="text-[11px] font-medium text-muted-foreground">
+                    {profileData.userWorkouts?.length || 0} recorded
+                  </span>
+                </div>
+
+                {!profileData.userWorkouts || profileData.userWorkouts.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic py-8 text-center bg-muted/40 rounded-2xl border border-border">
+                    No workout sessions recorded yet.
+                  </p>
+                ) : (
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                    {profileData.userWorkouts.map((w: any) => {
+                      const isCompleted = w.status === "completed";
+                      const isInProgress = w.status === "in_progress";
+
+                      return (
+                        <div
+                          key={w.id}
+                          className="flex items-center justify-between p-3 rounded-2xl bg-card border border-border text-xs"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            {isCompleted ? (
+                              <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                            ) : isInProgress ? (
+                              <Clock className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                            ) : (
+                              <XCircle className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                            )}
+                            <div className="min-w-0">
+                              <p className="font-semibold text-foreground truncate">
+                                {w.workout_name || "Workout Session"}
+                              </p>
+                              <p className="text-[11px] text-muted-foreground">
+                                {format(new Date(w.scheduled_date), "EEE, MMM d, yyyy")}
+                                {w.completed_at && ` • at ${format(new Date(w.completed_at), "h:mm a")}`}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2.5 flex-shrink-0 ml-4">
+                            {w.duration_minutes > 0 && (
+                              <span className="text-muted-foreground text-[11px]">
+                                {w.duration_minutes}m
+                              </span>
+                            )}
+                            {w.calories_burned > 0 && (
+                              <span className="text-muted-foreground text-[11px]">
+                                {w.calories_burned} kcal
+                              </span>
+                            )}
+                            <Badge
+                              variant="outline"
+                              className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-lg ${
+                                isCompleted
+                                  ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                                  : isInProgress
+                                  ? "bg-blue-500/10 text-blue-600 border-blue-500/20"
+                                  : "bg-muted text-muted-foreground"
+                              }`}
+                            >
+                              {w.status}
+                            </Badge>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Progress Photos Row */}

@@ -7,7 +7,7 @@ interface CalculatorLayoutProps {
   title: string;
   subtitle?: string;
   children: ReactNode;
-  showBack?: Boolean;
+  showBack?: boolean;
 }
 
 const CalculatorLayout = ({ title, subtitle, children, showBack = true }: CalculatorLayoutProps) => {

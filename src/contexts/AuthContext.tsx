@@ -50,25 +50,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
      const {
        data: { subscription },
      } = supabase.auth.onAuthStateChange((event, session) => {
-       if (event === 'TOKEN_REFRESH_FAILED' || event === 'SIGNED_OUT') {
-         try {
-           for (let i = 0; i < localStorage.length; i++) {
-             const key = localStorage.key(i);
-             if (key && key.includes('-auth-token')) {
-               localStorage.removeItem(key);
-             }
-           }
-         } catch (e) {}
-         setSession(null);
-         setUser(null);
-         setLoading(false);
-         return;
-       }
+        if (event === 'TOKEN_REFRESH_FAILED' || event === 'SIGNED_OUT') {
+          try {
+            for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i);
+              if (key && key.includes('-auth-token')) {
+                localStorage.removeItem(key);
+              }
+            }
+          } catch {
+            // Ignore storage clearing error
+          }
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+          return;
+        }
 
-       setSession(session);
-       setUser(session?.user ?? null);
-       setLoading(false);
-     }); 
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }); 
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session }, error }) => {
@@ -80,7 +82,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               localStorage.removeItem(key);
             }
           }
-        } catch (e) {}
+        } catch {
+          // Ignore storage clearing error
+        }
         setSession(null);
         setUser(null);
         setLoading(false);

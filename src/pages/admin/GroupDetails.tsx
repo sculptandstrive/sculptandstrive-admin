@@ -231,25 +231,25 @@ return (
       <Card className="bg-card border border-border shadow-sm rounded-2xl">
         <CardContent className="p-5">
           <p className="text-sm font-medium text-muted-foreground">Total Members</p>
-          <p className="text-3xl font-semibold text-foreground tracking-tight leading-none mt-1.5">{stats.totalMembers}</p>
+          <p className="text-2xl font-semibold text-foreground tracking-tight leading-none mt-1.5">{stats.totalMembers}</p>
         </CardContent>
       </Card>
       <Card className="bg-card border border-border shadow-sm rounded-2xl">
         <CardContent className="p-5">
           <p className="text-sm font-medium text-muted-foreground">Avg Completion</p>
-          <p className="text-3xl font-semibold text-emerald-600 dark:text-emerald-400 tracking-tight leading-none mt-1.5">{stats.avgCompletion}%</p>
+          <p className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400 tracking-tight leading-none mt-1.5">{stats.avgCompletion}%</p>
         </CardContent>
       </Card>
       <Card className="bg-card border border-border shadow-sm rounded-2xl">
         <CardContent className="p-5">
           <p className="text-sm font-medium text-muted-foreground">Avg Weight Loss</p>
-          <p className="text-3xl font-semibold text-emerald-600 dark:text-emerald-400 tracking-tight leading-none mt-1.5">{stats.avgWeightLoss} kg</p>
+          <p className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400 tracking-tight leading-none mt-1.5">{stats.avgWeightLoss} kg</p>
         </CardContent>
       </Card>
       <Card className="bg-card border border-border shadow-sm rounded-2xl">
         <CardContent className="p-5">
           <p className="text-sm font-medium text-muted-foreground">Check-ins</p>
-          <p className="text-3xl font-semibold text-foreground tracking-tight leading-none mt-1.5">
+          <p className="text-2xl font-semibold text-foreground tracking-tight leading-none mt-1.5">
             {stats.completedCheckins}/{stats.totalCheckins}
           </p>
         </CardContent>
