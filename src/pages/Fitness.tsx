@@ -235,7 +235,7 @@ export default function Fitness() {
               .from("profiles")
               .select("full_name")
               .eq("user_id", data.user_id)
-              .single();
+              .maybeSingle();
             return {
               ...data,
               full_name: user?.full_name?.split(" ")[0] || null,

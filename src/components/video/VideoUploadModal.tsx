@@ -640,7 +640,7 @@ export function VideoUploadModal({
         .from("tutorials")
         .insert([videoPayload])
         .select()
-        .single();
+        .maybeSingle();
 
       if (vidError) {
         console.warn("Primary insert failed, retrying with core columns:", vidError.message);
@@ -659,7 +659,7 @@ export function VideoUploadModal({
           .from("tutorials")
           .insert([corePayload])
           .select()
-          .single();
+          .maybeSingle();
 
         if (fallbackErr) throw fallbackErr;
         createdVideo = fallbackData;
@@ -693,7 +693,7 @@ export function VideoUploadModal({
                 },
               ])
               .select()
-              .single();
+              .maybeSingle();
             if (createdPl?.id) dbPlaylistId = createdPl.id;
           }
         }

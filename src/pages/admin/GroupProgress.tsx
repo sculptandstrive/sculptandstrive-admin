@@ -51,7 +51,7 @@ export default function GroupProgress() {
         .from("workout_groups")
         .select("name")
         .eq("id", id)
-        .single();
+        .maybeSingle();
       
       setGroupName(groupData?.name || "Group");
 
