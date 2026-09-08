@@ -2,16 +2,36 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
-
-if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  console.error("Missing Supabase environment variables. Please set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.");
+function cleanEnvVar(val: string | undefined): string | undefined {
+  if (!val) return undefined;
+  let cleaned = String(val).trim();
+  cleaned = cleaned.replace(/%(0a|0d|20)/gi, '');
+  try {
+    cleaned = decodeURIComponent(cleaned);
+  } catch (e) {
+    // ignore
+  }
+  return cleaned
+    .replace(/%(0a|0d|20)/gi, '')
+    .replace(/[\r\n\t\s\u200B-\u200D\uFEFF]/g, '')
+    .trim();
 }
 
+const DEFAULT_URL = "https://zoxqjjuokxiyxusqapvv.supabase.co";
+const DEFAULT_KEY = "sb_publishable_si6AX2a9wvUOanT9rzYO3g_Z00nBcWv";
+
+const rawUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const rawKey = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY) as string | undefined;
+
+const cleanedUrl = cleanEnvVar(rawUrl);
+const cleanedKey = cleanEnvVar(rawKey);
+
+const SUPABASE_URL = cleanedUrl || DEFAULT_URL;
+const SUPABASE_PUBLISHABLE_KEY = cleanedKey || DEFAULT_KEY;
+
 export const supabase = createClient<Database>(
-  SUPABASE_URL || 'https://placeholder.supabase.co',
-  SUPABASE_PUBLISHABLE_KEY || 'placeholder-key',
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY,
   {
     auth: {
       storage: localStorage,

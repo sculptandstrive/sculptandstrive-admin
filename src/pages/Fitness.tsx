@@ -1178,18 +1178,18 @@ export default function Fitness() {
         {/* ── Exercises List ── */}
         <Card className="lg:col-span-2 border border-border rounded-2xl shadow-sm bg-card">
           <CardHeader className="pb-3">
-            <div className="flex flex-col md:flex-row gap-3 justify-between items-center w-full">
-              <CardTitle className="text-[20px] font-semibold text-foreground leading-snug">
+            <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 justify-between items-start sm:items-center w-full">
+              <CardTitle className="text-base sm:text-[20px] font-semibold text-foreground leading-snug">
                 {activeFilter} Exercises List
               </CardTitle>
-              <div className="flex items-center gap-3 w-full md:w-auto">
+              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
                 <Input
                   placeholder="Search exercises..."
                   value={exerciseSearchQuery}
                   onChange={(e) => setExerciseSearchQuery(e.target.value)}
-                  className="max-w-[220px] h-9 text-xs border-border bg-background text-foreground placeholder:text-muted-foreground rounded-[8px] focus-visible:border-[#07AC7D] focus-visible:ring-[3px] focus-visible:ring-[#07AC7D]/[.12]"
+                  className="flex-1 sm:max-w-[220px] h-8 sm:h-9 text-xs border-border bg-background text-foreground placeholder:text-muted-foreground rounded-[8px] focus-visible:border-[#07AC7D] focus-visible:ring-[3px] focus-visible:ring-[#07AC7D]/[.12]"
                 />
-                <span className="text-xs text-muted-foreground uppercase tracking-wider whitespace-nowrap">
+                <span className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider whitespace-nowrap">
                   {exercisesWithCategory.length} results
                 </span>
               </div>
@@ -1200,32 +1200,32 @@ export default function Fitness() {
               exercisesWithCategory.map((ex: any) => (
                 <div
                   key={ex.id}
-                  className="flex flex-row items-center justify-between gap-2 p-3 rounded-xl bg-slate-50/80 dark:bg-secondary/40 hover:bg-slate-100/80 dark:hover:bg-secondary/70 border border-slate-200/60 dark:border-border/60 transition-colors group"
+                  className="flex flex-row items-center justify-between gap-2 p-2.5 sm:p-3 rounded-xl bg-slate-50/80 dark:bg-secondary/40 hover:bg-slate-100/80 dark:hover:bg-secondary/70 border border-slate-200/60 dark:border-border/60 transition-colors group"
                 >
-                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                    <div className="w-9 h-9 rounded-lg bg-[#07AC7D] flex items-center justify-center flex-shrink-0">
-                      <Dumbbell className="w-4 h-4 text-white" />
+                  <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
+                    <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-[#07AC7D] flex items-center justify-center flex-shrink-0">
+                      <Dumbbell className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-foreground truncate leading-tight">
+                      <p className="text-xs sm:text-sm font-semibold text-foreground truncate leading-tight">
                         {ex.name}
                       </p>
-                      <div className="flex flex-wrap items-center gap-1 mt-1">
+                      <div className="flex flex-wrap items-center gap-1 mt-0.5 sm:mt-1">
                         {ex.category_name && (
                           <Badge
                             variant="outline"
-                            className="text-[10px] bg-violet-50 dark:bg-violet-950/50 border-violet-200 dark:border-violet-800 text-violet-700 dark:text-violet-300 px-1.5 py-0 font-semibold leading-4 h-4"
+                            className="text-[9px] sm:text-[10px] bg-violet-50 dark:bg-violet-950/50 border-violet-200 dark:border-violet-800 text-violet-700 dark:text-violet-300 px-1 sm:px-1.5 py-0 font-semibold leading-4 h-3.5 sm:h-4"
                           >
                             {ex.category_name}
                           </Badge>
                         )}
                         {ex.sub_category && ex.sub_category !== "none" && (
-                          <Badge variant="outline" className="text-[10px] bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 px-1.5 py-0 font-semibold leading-4 h-4">
+                          <Badge variant="outline" className="text-[9px] sm:text-[10px] bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 px-1 sm:px-1.5 py-0 font-semibold leading-4 h-3.5 sm:h-4">
                             {ex.sub_category}
                           </Badge>
                         )}
                         {ex.difficulty && (
-                          <Badge variant="outline" className={`text-[10px] px-1.5 py-0 font-semibold leading-4 h-4 ${ex.difficulty === "Beginner" ? "bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300" :
+                          <Badge variant="outline" className={`text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0 font-semibold leading-4 h-3.5 sm:h-4 ${ex.difficulty === "Beginner" ? "bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300" :
                             ex.difficulty === "Intermediate" ? "bg-amber-50 dark:bg-amber-950/50 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300" :
                               "bg-red-50 dark:bg-red-950/50 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300"
                             }`}>
@@ -1235,7 +1235,7 @@ export default function Fitness() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 flex-shrink-0">
+                  <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
                     <Dialog
                       open={isEditExerciseOpen && editExercise.id === ex.id}
                       onOpenChange={(open) => {
@@ -1464,11 +1464,11 @@ export default function Fitness() {
                 {allPlans.map((plan) => (
                   <div
                     key={plan.id}
-                    className="flex flex-col md:flex-row items-center justify-between gap-3 p-3 rounded-xl bg-slate-50/80 dark:bg-secondary/40 hover:bg-slate-100/80 dark:hover:bg-secondary/70 border border-slate-200/60 dark:border-border/60 transition-colors"
+                    className="flex flex-row items-center justify-between gap-2 p-2.5 sm:p-3 rounded-xl bg-slate-50/80 dark:bg-secondary/40 hover:bg-slate-100/80 dark:hover:bg-secondary/70 border border-slate-200/60 dark:border-border/60 transition-colors"
                   >
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className="w-9 h-9 rounded-lg bg-[#07AC7D] flex items-center justify-center flex-shrink-0">
-                        <Dumbbell className="w-4.5 h-4.5 text-white" />
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-[#07AC7D] flex items-center justify-center flex-shrink-0">
+                        <Dumbbell className="w-4 h-4 text-white" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold text-foreground truncate">{plan.name}</p>

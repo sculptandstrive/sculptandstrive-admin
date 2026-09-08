@@ -297,12 +297,17 @@ export default function Users() {
     try {
       const { data: roleData, error: roleError } = await supabase
         .from("user_roles")
-        .select("user_id")
-        .eq("role", "coach");
+        .select("user_id, role");
 
-      if (roleError) throw roleError;
+      if (roleError || !roleData || roleData.length === 0) {
+        setCoachesList([]);
+        return;
+      }
 
-      const coachUserIds = (roleData || []).map((r) => r.user_id);
+      const coachUserIds = roleData
+        .filter((r: any) => r.role === "coach" || r.role === "trainer" || r.role === "admin")
+        .map((r: any) => r.user_id);
+
       if (coachUserIds.length === 0) {
         setCoachesList([]);
         return;
@@ -322,7 +327,8 @@ export default function Users() {
       }));
       setCoachesList(formatted);
     } catch (error: any) {
-      console.error("Error fetching coaches list:", error?.message || error);
+      console.warn("Coaches fetch note:", error?.message || error);
+      setCoachesList([]);
     } finally {
       setLoadingCoaches(false);
     }

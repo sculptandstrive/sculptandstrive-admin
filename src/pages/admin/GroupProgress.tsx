@@ -55,21 +55,28 @@ export default function GroupProgress() {
       
       setGroupName(groupData?.name || "Group");
 
-      // Fetch members with progress (mock data for now)
+      // Fetch group members
       const { data: membersData } = await supabase
         .from("group_members")
-        .select(`
-          user_id,
-          profiles (
-            full_name
-          )
-        `)
+        .select("user_id")
         .eq("group_id", id);
 
-      const mockProgress: MemberProgress[] = (membersData || []).map((m: any, i: number) => ({
-        id: m.user_id,
-        user_id: m.user_id,
-        full_name: m.profiles?.full_name || "Unknown",
+      const memberUserIds = (membersData || []).map((m: any) => m.user_id);
+      let profileMap = new Map();
+      if (memberUserIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("user_id, full_name")
+          .in("user_id", memberUserIds);
+        if (profilesData) {
+          profileMap = new Map(profilesData.map((p: any) => [p.user_id, p.full_name]));
+        }
+      }
+
+      const mockProgress: MemberProgress[] = (memberUserIds || []).map((uid: string) => ({
+        id: uid,
+        user_id: uid,
+        full_name: profileMap.get(uid) || "Unknown",
         workout_completion: Math.floor(Math.random() * 40) + 60,
         weight_change: (Math.random() * 6 - 2).toFixed(1),
         nutrition_adherence: Math.floor(Math.random() * 40) + 60,

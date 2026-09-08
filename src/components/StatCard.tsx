@@ -105,7 +105,7 @@ export function MiniSparkline({
   return (
     <svg
       viewBox="0 0 112 44"
-      className={cn("w-16 sm:w-28 h-6 sm:h-10", className)}
+      className={cn("w-12 sm:w-28 h-5 sm:h-10", className)}
       preserveAspectRatio="none"
     >
       <defs>
@@ -173,24 +173,24 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "bg-card border border-border/80 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between h-full relative overflow-hidden group",
+        "bg-card border border-border/80 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between items-center sm:items-start text-center sm:text-left h-full relative overflow-hidden group",
         compact ? "p-3 sm:p-4.5" : "p-3.5 sm:p-5",
         className
       )}
     >
-      <div>
+      <div className="flex flex-col items-center sm:items-start w-full">
         {/* Top Header: Icon Box + Mobile Trend Pill */}
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-1.5 w-full">
           <div
             className={cn(
-              "rounded-xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
-              compact ? "w-8 h-8 sm:w-10 sm:h-10" : "w-9 h-9 sm:w-11 sm:h-11",
+              "rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 mx-auto sm:mx-0",
+              compact ? "w-8 h-8 sm:w-10 sm:h-10" : "w-8 h-8 sm:w-11 sm:h-11",
               resolvedIconBg
             )}
           >
             <Icon
               className={cn(
-                compact ? "w-4 h-4 sm:w-4.5 sm:h-4.5" : "w-4.5 h-4.5 sm:w-5 sm:h-5",
+                compact ? "w-4 h-4 sm:w-4.5 sm:h-4.5" : "w-4 h-4 sm:w-5 sm:h-5",
                 resolvedIconColor
               )}
             />
@@ -200,7 +200,7 @@ export function StatCard({
           {trendText && (
             <div
               className={cn(
-                "sm:hidden inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold",
+                "sm:hidden inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold mt-1 sm:mt-0",
                 resolvedIconBg,
                 t.trendColor
               )}
@@ -213,7 +213,7 @@ export function StatCard({
         {/* Title */}
         <p
           className={cn(
-            "text-xs sm:text-sm font-medium text-muted-foreground truncate",
+            "text-xs sm:text-sm font-medium text-muted-foreground truncate w-full text-center sm:text-left",
             compact ? "mt-2 sm:mt-2.5" : "mt-2.5 sm:mt-3.5"
           )}
         >
@@ -221,8 +221,8 @@ export function StatCard({
         </p>
 
         {/* Main Number & Unit */}
-        <div className={cn("flex items-baseline", compact ? "mt-0.5 sm:mt-1" : "mt-1 sm:mt-1.5")}>
-          <span className="text-xl sm:text-2xl font-bold text-foreground tracking-tight leading-none">
+        <div className={cn("flex items-baseline justify-center sm:justify-start w-full", compact ? "mt-1" : "mt-1 sm:mt-1.5")}>
+          <span className="text-lg sm:text-2xl font-bold text-foreground tracking-tight leading-none">
             {value}
           </span>
           {unit && (
@@ -236,7 +236,7 @@ export function StatCard({
       {/* Bottom: Desktop Trend and Sparkline */}
       <div
         className={cn(
-          "flex items-end justify-between pt-1",
+          "flex items-center sm:items-end justify-center sm:justify-between w-full pt-1.5",
           compact ? "mt-1.5 sm:mt-2.5" : "mt-2 sm:mt-3"
         )}
       >
@@ -246,13 +246,13 @@ export function StatCard({
             <span className="text-muted-foreground font-normal">{trendLabel}</span>
           </div>
         ) : caption ? (
-          <p className="text-[10px] sm:text-xs text-muted-foreground">{caption}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground text-center sm:text-left">{caption}</p>
         ) : (
-          <div />
+          <div className="hidden sm:block" />
         )}
 
         {showSparkline && (
-          <div className="shrink-0 -mb-1 ml-auto">
+          <div className="shrink-0 -mb-1 mx-auto sm:ml-auto sm:mr-0">
             <MiniSparkline theme={t} />
           </div>
         )}
