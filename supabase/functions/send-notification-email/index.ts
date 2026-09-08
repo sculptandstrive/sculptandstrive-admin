@@ -36,14 +36,14 @@ serve(async (req) => {
     const emailRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
-        Authorization: Bearer $RESEND_API_KEY,
+        "Authorization": "Bearer " + RESEND_API_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         from: "notifications@sculptandstrive.com",
         to: email,
         subject: notification.title || "New Notification",
-        html: <p>${notification.description || ""}</p>,
+        html: "<p>" + (notification.description || "") + "</p>",
       }),
     });
 
