@@ -101,7 +101,9 @@ export default function Groups() {
       .from("user_roles")
       .select(`
         user_id,
-        profiles:user_id(full_name)
+        profiles (
+          full_name
+        )
       `)
       .eq("role", "coach");
     if (!error && data) {

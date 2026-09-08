@@ -508,12 +508,12 @@ export default function Users() {
       </PageHeader>
 
       <Card className="border border-border rounded-2xl shadow-sm overflow-hidden bg-card">
-        <CardHeader className="p-5 border-b border-border flex flex-row items-center justify-between space-y-0 bg-muted/40">
-          <CardTitle className="flex items-center gap-2 text-[20px] font-semibold text-foreground">
+        <CardHeader className="p-4 sm:p-5 border-b border-border flex flex-row items-center justify-between space-y-0 bg-muted/40">
+          <CardTitle className="flex items-center gap-2 text-[18px] sm:text-[20px] font-semibold text-foreground">
             <UsersIcon className="w-4 h-4 text-primary" />
             Registry ({filteredUsers.length})
           </CardTitle>
-          <div className="relative">
+          <div className="relative hidden sm:block">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Filter by name/email..."
@@ -524,7 +524,64 @@ export default function Users() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          {/* ── Mobile Card List (hidden on md+) ── */}
+          <div className="md:hidden divide-y divide-border">
+            {filteredUsers.map((user) => (
+              <div key={user.id} className="p-3 space-y-2.5">
+                {/* Name + Role row */}
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary shrink-0">
+                    {(user.full_name?.[0] || user.email?.[0] || "U").toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-foreground truncate">{user.full_name || "Unnamed User"}</p>
+                    <p className="text-xs text-muted-foreground truncate">{user.email || "not set"}</p>
+                  </div>
+                  <Badge variant="outline" className={`${(roleConfig[user.role] || roleConfig.user).color} text-[10px] px-1.5 py-0 border-none uppercase font-semibold shrink-0`}>
+                    {user.role === 'trial_user' ? 'Trial' : user.role}
+                  </Badge>
+                </div>
+                {/* Action buttons row */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2.5 text-[11px] font-semibold bg-card border-border text-foreground hover:bg-muted rounded-lg flex-1 min-w-0"
+                    onClick={() => { setSelectedUserId(user.user_id); setIsAssignGroupOpen(true); }}
+                  >
+                    <UsersIcon className="w-3 h-3 mr-1 shrink-0" />
+                    Group
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2.5 text-[11px] font-semibold bg-card border-border text-foreground hover:bg-muted rounded-lg flex-1 min-w-0"
+                    onClick={() => { setSelectedProfileUser(user); setProfileDialogOpen(true); fetchClientProfile(user.user_id); }}
+                  >
+                    Profile
+                  </Button>
+                  <Select
+                    value={user.role}
+                    onValueChange={(val: AppRole) => handleRoleChange(user, val)}
+                    disabled={user.role === 'admin' || user.user_id === currentUser?.id || updating}
+                  >
+                    <SelectTrigger className="h-7 w-24 text-[11px] font-semibold bg-card border-input text-foreground rounded-lg disabled:opacity-75 disabled:cursor-not-allowed focus:border-primary focus:ring-primary/20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin" className="text-xs font-semibold text-destructive" disabled>ADMIN</SelectItem>
+                      <SelectItem value="user" className="text-xs font-medium">USER</SelectItem>
+                      <SelectItem value="trial_user" className="text-xs font-medium">TRIAL USER</SelectItem>
+                      <SelectItem value="coach" className="text-xs font-medium text-purple-400">COACH</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* ── Desktop Table (hidden on mobile) ── */}
+          <div className="hidden md:block overflow-x-auto">
             <Table className="min-w-full table-fixed border-collapse">
               <TableHeader className="bg-muted/40">
                 <TableRow>
@@ -568,31 +625,22 @@ export default function Users() {
                           variant="outline"
                           size="sm"
                           className="h-8 w-28 text-xs font-semibold bg-card border-border text-foreground hover:bg-muted rounded-xl"
-                          onClick={() => {
-                            setSelectedUserId(user.user_id);
-                            setIsAssignGroupOpen(true);
-                          }}
+                          onClick={() => { setSelectedUserId(user.user_id); setIsAssignGroupOpen(true); }}
                         >
                           <UsersIcon className="w-3.5 h-3.5 mr-1" />
                           Assign Group
                         </Button>
-
-                        
                         <Button
                           variant="outline"
                           size="sm"
                           className="h-8 w-28 text-xs font-semibold bg-card border-border text-foreground hover:bg-muted rounded-xl"
-                          onClick={() => {
-                            setSelectedProfileUser(user);
-                            setProfileDialogOpen(true);
-                            fetchClientProfile(user.user_id);
-                          }}
+                          onClick={() => { setSelectedProfileUser(user); setProfileDialogOpen(true); fetchClientProfile(user.user_id); }}
                         >
                           View Profile
                         </Button>
-                        <Select 
-                          value={user.role} 
-                          onValueChange={(val: AppRole) => handleRoleChange(user, val)} 
+                        <Select
+                          value={user.role}
+                          onValueChange={(val: AppRole) => handleRoleChange(user, val)}
                           disabled={user.role === 'admin' || user.user_id === currentUser?.id || updating}
                         >
                           <SelectTrigger className="h-8 w-28 text-xs font-semibold bg-card border-input text-foreground rounded-xl disabled:opacity-75 disabled:cursor-not-allowed focus:border-primary focus:ring-primary/20">

@@ -60,7 +60,9 @@ export default function GroupProgress() {
         .from("group_members")
         .select(`
           user_id,
-          profiles:user_id(full_name)
+          profiles (
+            full_name
+          )
         `)
         .eq("group_id", id);
 
