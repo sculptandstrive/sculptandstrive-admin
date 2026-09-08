@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { AdminNotificationBell } from "@/components/AdminNotificationBell";
 import {
   Calendar as CalendarIcon, Video, Users as UsersIcon,
   Clock, Plus, Trash2, RefreshCw, Search, Play, Edit3, Image as ImageIcon, Upload
@@ -829,9 +830,16 @@ export default function Sessions() {
   };
 
   const handleBatchAddVideosToPlaylist = async (videoIds: string[]) => {
-    if (!selectedPlaylist) return toast.error("No playlist selected");
-    if (!videoIds.length) return toast.error("Please select at least one video");
+    if (!selectedPlaylist) {
+      toast.error("No playlist selected");
+      return;
+    }
+    if (!videoIds.length) {
+      toast.error("Please select at least one video");
+      return;
+    }
     try {
+      
       setIsPublishing(true);
       const existingIds = new Set((selectedPlaylist.videos || []).map((v: any) => String(v.id)));
       const toAddIds = videoIds.filter((id) => !existingIds.has(String(id)));
@@ -1199,6 +1207,16 @@ export default function Sessions() {
         description="Manage your Live workouts and Video Tutorials."
       >
         <div className="flex gap-2">
+              
+          <AdminNotificationBell />
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => { fetchData(); fetchTutorials(); }}
+            className="text-slate-400 shrink-0 h-9 w-9 border-slate-200"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading || loadingTutorials ? "animate-spin" : ""}`} />
+          </Button>
           <Button
             variant="outline"
             size="icon"
