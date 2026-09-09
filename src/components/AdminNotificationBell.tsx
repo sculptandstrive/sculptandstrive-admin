@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Bell } from "lucide-react";
+import { Bell, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -24,10 +24,26 @@ export function AdminNotificationBell() {
       .from("notifications")
       .select("id, title, description, created_at")
       .eq("recipient_type", "admin")
+      .eq("is_completed", false)
       .order("created_at", { ascending: false })
       .limit(20);
 
     if (!error) setNotifications(data || []);
+  };
+
+  const dismissNotification = async (id: string) => {
+    // Optimistically remove from UI immediately
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+
+    const { error } = await supabase
+      .from("notifications")
+      .update({ is_completed: true })
+      .eq("id", id);
+
+    if (error) {
+      console.log("Failed to dismiss:", error);
+      fetchNotifications(); // revert on failure
+    }
   };
 
   useEffect(() => {
@@ -73,12 +89,21 @@ export function AdminNotificationBell() {
             <p className="p-4 text-sm text-slate-400 text-center">No notifications yet</p>
           ) : (
             notifications.map((n) => (
-              <div key={n.id} className="p-3 border-b border-slate-50 last:border-0 hover:bg-slate-50">
-                <p className="text-sm font-medium text-slate-900">{n.title}</p>
-                <p className="text-xs text-slate-500 mt-0.5">{n.description}</p>
-                <p className="text-[10px] text-slate-400 mt-1">
-                  {new Date(n.created_at).toLocaleString()}
-                </p>
+              <div key={n.id} className="p-3 border-b border-slate-50 last:border-0 hover:bg-slate-50 flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-slate-900">{n.title}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{n.description}</p>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    {new Date(n.created_at).toLocaleString()}
+                  </p>
+                </div>
+                <button
+                  onClick={() => dismissNotification(n.id)}
+                  className="text-slate-300 hover:text-slate-600 shrink-0 mt-0.5"
+                  aria-label="Dismiss"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
               </div>
             ))
           )}
