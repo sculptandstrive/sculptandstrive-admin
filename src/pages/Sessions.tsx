@@ -617,7 +617,7 @@ export default function Sessions() {
         scheduled_at: scheduledDateTime.toISOString(),
         admin_is_mass: formData.isMass,
         admin_status: "upcoming"
-      }]).select().single();
+      }]).select().maybeSingle();
 
       if (sessErr) {
         toast.error(sessErr.message);
@@ -775,7 +775,7 @@ export default function Sessions() {
         if (error) throw error;
         toast.success("Playlist updated successfully!");
       } else {
-        const { data: newPlData, error } = await supabase.from("tutorial_playlists").insert([payload]).select().single();
+        const { data: newPlData, error } = await supabase.from("tutorial_playlists").insert([payload]).select().maybeSingle();
         if (error || !newPlData) {
           // Local fallback
           const newPl = {
@@ -1019,7 +1019,7 @@ export default function Sessions() {
         .from("tutorials")
         .insert([videoPayload])
         .select()
-        .single();
+        .maybeSingle();
 
       if (vidError) {
         console.warn("Primary tutorial insert failed, retrying with core schema fields:", vidError.message);
@@ -1039,7 +1039,7 @@ export default function Sessions() {
           .from("tutorials")
           .insert([corePayload])
           .select()
-          .single();
+          .maybeSingle();
 
         if (fallbackErr) {
           console.error("Supabase tutorial insert error:", fallbackErr);
@@ -1078,7 +1078,7 @@ export default function Sessions() {
               is_published: true,
             }])
             .select()
-            .single();
+            .maybeSingle();
 
           if (createdPl?.id) {
             dbPlaylistId = createdPl.id;

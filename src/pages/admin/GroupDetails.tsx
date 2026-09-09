@@ -79,7 +79,7 @@ export default function GroupDetails() {
           profiles:coach_id(full_name)
         `)
         .eq("id", id)
-        .single();
+        .maybeSingle();
 
       if (groupErr) throw groupErr;
 

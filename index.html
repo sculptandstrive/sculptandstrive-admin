@@ -10,6 +10,30 @@
     <link rel="icon" href="/src/assets/favicon-16x16.png">
     <link rel="icon" href="/src/assets/favicon-32x32.png">
     <link rel="icon" href="/src/assets/favicon.ico">
+    <script>
+      (function() {
+        function isIgnored(msg) {
+          if (!msg) return false;
+          var str = typeof msg === 'string' ? msg : (msg.message || msg.reason || String(msg));
+          return str.indexOf('startTime') !== -1 ||
+                 str.indexOf('reportAllChanges') !== -1 ||
+                 str.indexOf('requestIdleCallback') !== -1;
+        }
+        window.addEventListener('error', function(e) {
+          if (isIgnored(e.message) || isIgnored(e.error)) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            return true;
+          }
+        }, true);
+        window.addEventListener('unhandledrejection', function(e) {
+          if (isIgnored(e.reason)) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+          }
+        }, true);
+      })();
+    </script>
   </head>
 
   <body>

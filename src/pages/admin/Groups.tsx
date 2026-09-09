@@ -97,19 +97,39 @@ export default function Groups() {
   };
 
   const fetchCoaches = async () => {
-    const { data, error } = await supabase
-      .from("user_roles")
-      .select(`
-        user_id,
-        profiles:user_id(full_name)
-      `)
-      .eq("role", "coach");
-    if (!error && data) {
-      const formattedCoaches = data.map((item: any) => ({
-        user_id: item.user_id,
-        full_name: item.profiles?.full_name || "Unknown Coach",
+    try {
+      const { data: roleData, error: roleError } = await supabase
+        .from("user_roles")
+        .select("user_id, role");
+
+      if (roleError || !roleData || roleData.length === 0) {
+        setCoaches([]);
+        return;
+      }
+
+      const coachIds = roleData
+        .filter((r: any) => r.role === "coach" || r.role === "trainer" || r.role === "admin")
+        .map((r: any) => r.user_id);
+
+      if (coachIds.length === 0) {
+        setCoaches([]);
+        return;
+      }
+
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", coachIds);
+
+      const profileMap = new Map((profileData || []).map((p: any) => [p.user_id, p.full_name]));
+      const formattedCoaches = coachIds.map((uid: string) => ({
+        user_id: uid,
+        full_name: profileMap.get(uid) || "Unknown Coach",
       }));
       setCoaches(formattedCoaches);
+    } catch (err) {
+      console.error("Error fetching coaches:", err);
+      setCoaches([]);
     }
   };
 

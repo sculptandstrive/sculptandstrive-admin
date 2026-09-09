@@ -95,11 +95,17 @@ export const STAT_CARD_THEMES: Record<StatCardThemeKey, StatCardTheme> = {
   },
 };
 
-export function MiniSparkline({ theme }: { theme: StatCardTheme }) {
+export function MiniSparkline({
+  theme,
+  className,
+}: {
+  theme: StatCardTheme;
+  className?: string;
+}) {
   return (
     <svg
       viewBox="0 0 112 44"
-      className="w-24 sm:w-28 h-9 sm:h-10"
+      className={cn("w-12 sm:w-28 h-5 sm:h-10", className)}
       preserveAspectRatio="none"
     >
       <defs>
@@ -167,60 +173,86 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "bg-card border border-border/80 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between h-full",
-        compact ? "p-4 sm:p-4.5" : "p-4.5 sm:p-5",
+        "bg-card border border-border/80 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between items-center sm:items-start text-center sm:text-left h-full relative overflow-hidden group",
+        compact ? "p-3 sm:p-4.5" : "p-3.5 sm:p-5",
         className
       )}
     >
-      <div>
-        {/* Top-left Icon Box */}
-        <div className={cn(
-          "rounded-xl flex items-center justify-center shrink-0",
-          compact ? "w-10 h-10" : "w-11 h-11",
-          resolvedIconBg
-        )}>
-          <Icon className={cn(compact ? "w-4.5 h-4.5" : "w-5 h-5", resolvedIconColor)} />
+      <div className="flex flex-col items-center sm:items-start w-full">
+        {/* Top Header: Icon Box + Mobile Trend Pill */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-1.5 w-full">
+          <div
+            className={cn(
+              "rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 mx-auto sm:mx-0",
+              compact ? "w-8 h-8 sm:w-10 sm:h-10" : "w-8 h-8 sm:w-11 sm:h-11",
+              resolvedIconBg
+            )}
+          >
+            <Icon
+              className={cn(
+                compact ? "w-4 h-4 sm:w-4.5 sm:h-4.5" : "w-4 h-4 sm:w-5 sm:h-5",
+                resolvedIconColor
+              )}
+            />
+          </div>
+
+          {/* Mobile Trend Badge */}
+          {trendText && (
+            <div
+              className={cn(
+                "sm:hidden inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold mt-1 sm:mt-0",
+                resolvedIconBg,
+                t.trendColor
+              )}
+            >
+              <span>↑ {trendText}</span>
+            </div>
+          )}
         </div>
 
         {/* Title */}
-        <p className={cn(
-          "text-sm font-medium text-muted-foreground",
-          compact ? "mt-2.5" : "mt-3.5"
-        )}>
+        <p
+          className={cn(
+            "text-xs sm:text-sm font-medium text-muted-foreground truncate w-full text-center sm:text-left",
+            compact ? "mt-2 sm:mt-2.5" : "mt-2.5 sm:mt-3.5"
+          )}
+        >
           {title}
         </p>
 
         {/* Main Number & Unit */}
-        <div className={cn("flex items-baseline", compact ? "mt-1" : "mt-1.5")}>
-          <span className="text-2xl font-semibold text-foreground tracking-tight leading-none">
+        <div className={cn("flex items-baseline justify-center sm:justify-start w-full", compact ? "mt-1" : "mt-1 sm:mt-1.5")}>
+          <span className="text-lg sm:text-2xl font-bold text-foreground tracking-tight leading-none">
             {value}
           </span>
           {unit && (
-            <span className="text-sm font-normal text-muted-foreground ml-1.5">
+            <span className="text-xs sm:text-sm font-normal text-muted-foreground ml-1">
               {unit}
             </span>
           )}
         </div>
       </div>
 
-      {/* Bottom: Trend and Sparkline */}
-      <div className={cn(
-        "flex items-end justify-between pt-1",
-        compact ? "mt-2.5" : "mt-3"
-      )}>
+      {/* Bottom: Desktop Trend and Sparkline */}
+      <div
+        className={cn(
+          "flex items-center sm:items-end justify-center sm:justify-between w-full pt-1.5",
+          compact ? "mt-1.5 sm:mt-2.5" : "mt-2 sm:mt-3"
+        )}
+      >
         {trendText ? (
-          <div className="flex items-center text-xs font-semibold leading-none pb-0.5">
+          <div className="hidden sm:flex items-center text-xs font-semibold leading-none pb-0.5">
             <span className={`${t.trendColor} font-bold mr-1`}>↑ {trendText}</span>
             <span className="text-muted-foreground font-normal">{trendLabel}</span>
           </div>
         ) : caption ? (
-          <p className="text-xs text-muted-foreground">{caption}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground text-center sm:text-left">{caption}</p>
         ) : (
-          <div />
+          <div className="hidden sm:block" />
         )}
 
         {showSparkline && (
-          <div className="shrink-0 -mb-1 ml-auto">
+          <div className="shrink-0 -mb-1 mx-auto sm:ml-auto sm:mr-0">
             <MiniSparkline theme={t} />
           </div>
         )}
