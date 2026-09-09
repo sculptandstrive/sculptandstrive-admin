@@ -144,30 +144,13 @@ export default function Support() {
       const current = tickets.find((t) => t.id === id) || selectedTicket;
       if (!current) return;
 
-      const combinedMessage = current.admin_response && current.admin_response.trim()
-        ? `${current.user_message.trim()}${ADMIN_DELIMITER}${current.admin_response.trim()}`
-        : current.user_message.trim();
-
       let { error } = await supabase
         .from("tickets")
         .update({
           status: newStatus,
-          message: combinedMessage,
-          admin_response: current.admin_response || null,
+          updated_at: new Date().toISOString(),
         })
         .eq("id", id);
-
-      // Fallback if admin_response column does not exist
-      if (error && (error.code === "PGRST204" || error.message?.includes("admin_response"))) {
-        const retry = await supabase
-          .from("tickets")
-          .update({
-            status: newStatus,
-            message: combinedMessage,
-          })
-          .eq("id", id);
-        error = retry.error;
-      }
 
       if (error) {
         toast({
@@ -206,29 +189,16 @@ export default function Support() {
 
     try {
       const responseTrimmed = adminResponseText.trim();
-      const combinedMessage = `${selectedTicket.user_message.trim()}${ADMIN_DELIMITER}${responseTrimmed}`;
-      // By default when responding, set status to closed if user hasn't explicitly chosen otherwise
       const targetStatus = selectedTicket.status === "open" ? "viewing" : selectedTicket.status;
 
       let { error } = await supabase
         .from("tickets")
         .update({
           admin_response: responseTrimmed,
-          message: combinedMessage,
           status: targetStatus,
+          updated_at: new Date().toISOString(),
         })
         .eq("id", selectedTicket.id);
-
-      if (error && (error.code === "PGRST204" || error.message?.includes("admin_response"))) {
-        const retry = await supabase
-          .from("tickets")
-          .update({
-            message: combinedMessage,
-            status: targetStatus,
-          })
-          .eq("id", selectedTicket.id);
-        error = retry.error;
-      }
 
       if (error) {
         toast({
@@ -324,13 +294,13 @@ export default function Support() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "open":
-        return <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 text-xs font-semibold">● Open</Badge>;
+        return <Badge variant="outline" className="bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/25 text-xs font-semibold px-2.5 py-0.5 uppercase tracking-wide">● Open</Badge>;
       case "viewing":
-        return <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-xs font-semibold flex items-center gap-1"><Eye className="w-3 h-3" /> Viewing</Badge>;
+        return <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-xs font-semibold flex items-center gap-1 px-2.5 py-0.5 uppercase tracking-wide"><Eye className="w-3 h-3" /> Viewing</Badge>;
       case "closed":
-        return <Badge variant="outline" className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 text-xs font-semibold flex items-center gap-1"><CheckCheck className="w-3 h-3" /> Closed</Badge>;
+        return <Badge variant="outline" className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 text-xs font-semibold flex items-center gap-1 px-2.5 py-0.5 uppercase tracking-wide"><CheckCheck className="w-3 h-3" /> Closed</Badge>;
       default:
-        return <Badge variant="secondary" className="bg-muted text-muted-foreground border-border text-xs font-semibold">{status}</Badge>;
+        return <Badge variant="secondary" className="bg-muted text-muted-foreground border-border text-xs font-semibold uppercase">{status}</Badge>;
     }
   };
 
