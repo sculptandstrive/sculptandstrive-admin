@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { AdminNotificationBell } from "@/components/AdminNotificationBell";
 import {
   Calendar as CalendarIcon, Video, Users as UsersIcon,
   Clock, Plus, Trash2, RefreshCw, Search, Play, Edit3, Image as ImageIcon, Upload
@@ -1207,8 +1206,6 @@ export default function Sessions() {
         description="Manage your Live workouts and Video Tutorials."
       >
         <div className="flex gap-2">
-              
-          <AdminNotificationBell />
           <Button
             variant="outline"
             size="icon"
