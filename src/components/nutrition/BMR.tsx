@@ -549,8 +549,8 @@ const BMR = () => {
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-center h-full min-h-[300px] bg-card rounded-lg border">
-                <p className="text-muted-foreground text-sm">
+              <div className="flex flex-col items-center justify-center text-center h-full min-h-[250px] sm:min-h-[300px] bg-card rounded-lg border border-border p-6 w-full">
+                <p className="text-muted-foreground text-sm sm:text-base max-w-xs sm:max-w-sm leading-relaxed">
                   Enter your details and click Calculate to see results.
                 </p>
               </div>

@@ -71,35 +71,40 @@ export function AdminNotificationBell() {
         <Button
           variant="outline"
           size="icon"
-          className="relative border-slate-200 h-9 w-9"
+          className="relative border-border bg-card hover:bg-muted text-foreground h-9 w-9 rounded-lg"
           aria-label="Notifications"
         >
-          <Bell className="w-[18px] h-[18px] text-[#334155]" />
+          <Bell className="w-[18px] h-[18px] text-muted-foreground" />
           {notifications.length > 0 && (
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#EF4444] rounded-full" />
+            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-background" />
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 p-0">
-        <div className="p-3 border-b border-slate-100 font-semibold text-sm text-slate-800">
-          Notifications
+      <PopoverContent align="end" className="w-80 p-0 bg-popover text-popover-foreground border border-border shadow-xl rounded-xl overflow-hidden">
+        <div className="p-3.5 border-b border-border font-semibold text-sm text-foreground flex items-center justify-between">
+          <span>Notifications</span>
+          {notifications.length > 0 && (
+            <span className="text-xs font-normal text-muted-foreground">
+              {notifications.length} new
+            </span>
+          )}
         </div>
-        <div className="max-h-80 overflow-y-auto">
+        <div className="max-h-80 overflow-y-auto divide-y divide-border/60">
           {notifications.length === 0 ? (
-            <p className="p-4 text-sm text-slate-400 text-center">No notifications yet</p>
+            <p className="p-5 text-sm text-muted-foreground text-center">No notifications yet</p>
           ) : (
             notifications.map((n) => (
-              <div key={n.id} className="p-3 border-b border-slate-50 last:border-0 hover:bg-slate-50 flex items-start justify-between gap-2">
+              <div key={n.id} className="p-3.5 hover:bg-muted/50 transition-colors flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-slate-900">{n.title}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{n.description}</p>
-                  <p className="text-[10px] text-slate-400 mt-1">
+                  <p className="text-sm font-semibold text-foreground">{n.title}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-normal">{n.description}</p>
+                  <p className="text-[10px] text-muted-foreground/70 mt-1 font-medium">
                     {new Date(n.created_at).toLocaleString()}
                   </p>
                 </div>
                 <button
                   onClick={() => dismissNotification(n.id)}
-                  className="text-slate-300 hover:text-slate-600 shrink-0 mt-0.5"
+                  className="text-muted-foreground/50 hover:text-foreground shrink-0 mt-0.5 p-0.5 rounded hover:bg-muted"
                   aria-label="Dismiss"
                 >
                   <X className="w-3.5 h-3.5" />

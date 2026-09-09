@@ -910,7 +910,7 @@ export default function Fitness() {
               <ChevronDown className="w-4 h-4 ml-2 opacity-50" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 bg-popover text-popover-foreground border-border">
+          <DropdownMenuContent align="end" className="w-52 sm:w-56 max-h-[260px] sm:max-h-[300px] overflow-y-auto bg-popover text-popover-foreground border-border shadow-lg">
             <DropdownMenuItem onClick={() => setActiveFilter("All")}>
               All Categories
             </DropdownMenuItem>

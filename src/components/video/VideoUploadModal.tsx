@@ -55,7 +55,7 @@ const isValidUUID = (str: any): boolean => {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
 };
 
-export function formatFileSize(bytes: number): string {
+function formatFileSize(bytes: number): string {
   if (bytes === 0) return "0 B";
   if (bytes < 1024) return bytes + " B";
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
@@ -933,13 +933,15 @@ export function VideoUploadModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[620px] max-h-[90vh] p-0 overflow-hidden border border-border shadow-2xl rounded-2xl bg-card flex flex-col">
-        <DialogHeader className="p-5 pb-3 border-b border-border bg-card">
-          <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
-            <Video className="w-5 h-5 text-primary" />
-            {selectedPlaylist
-              ? `Add Video to "${selectedPlaylist.title}"`
-              : "Upload New Workout Video"}
+      <DialogContent className="w-[95vw] sm:max-w-[620px] max-h-[90vh] p-0 overflow-hidden border border-border shadow-2xl rounded-2xl bg-card flex flex-col my-auto">
+        <DialogHeader className="shrink-0 p-4 sm:p-5 pb-3 border-b border-border bg-card z-10">
+          <DialogTitle className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
+            <Video className="w-5 h-5 text-primary shrink-0" />
+            <span className="truncate">
+              {selectedPlaylist
+                ? `Add Video to "${selectedPlaylist.title}"`
+                : "Upload New Workout Video"}
+            </span>
           </DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground">
             {selectedPlaylist
@@ -980,7 +982,7 @@ export function VideoUploadModal({
           /* =================================================== */
           /* MODE A: SELECT FROM MASTER LIBRARY                  */
           /* =================================================== */
-          <div className="p-5 space-y-3 flex-1 overflow-y-auto">
+          <div className="p-4 sm:p-5 space-y-3 flex-1 overflow-y-auto">
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground" />
               <Input
@@ -1111,236 +1113,234 @@ export function VideoUploadModal({
           /* =================================================== */
           /* MODE B: UPLOAD NEW VIDEO                            */
           /* =================================================== */
-          <ScrollArea className="p-5 max-h-[72vh]">
-            <div className="space-y-4 py-1">
-              {/* Row 1: Title & Category */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="grid gap-1.5">
-                  <Label className="text-xs font-semibold text-foreground">Video Title *</Label>
-                  <Input
-                    placeholder="e.g. Full Body HIIT Workout"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="border-border bg-input text-foreground h-9 text-sm"
-                  />
-                </div>
-
-                <div className="grid gap-1.5">
-                  <Label className="text-xs font-semibold text-foreground">Category *</Label>
-                  <Select value={category} onValueChange={setCategory}>
-                    <SelectTrigger className="border-border bg-input text-foreground h-9 text-sm">
-                      <SelectValue placeholder="Select Category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {allCategories.length > 0 ? (
-                        allCategories.map((c) => (
-                          <SelectItem key={c.id} value={c.name}>
-                            {c.name}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <>
-                          <SelectItem value="Weight Loss">Weight Loss</SelectItem>
-                          <SelectItem value="Muscle Gain">Muscle Gain</SelectItem>
-                          <SelectItem value="Strength Training">Strength Training</SelectItem>
-                          <SelectItem value="Cardio">Cardio</SelectItem>
-                          <SelectItem value="HIIT">HIIT</SelectItem>
-                          <SelectItem value="Yoga & Flexibility">Yoga & Flexibility</SelectItem>
-                          <SelectItem value="General">General</SelectItem>
-                        </>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Row 2: Level, Trainer & Duration */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="grid gap-1.5">
-                  <Label className="text-xs font-semibold text-foreground">Difficulty Level</Label>
-                  <Select value={level} onValueChange={setLevel}>
-                    <SelectTrigger className="border-border bg-input text-foreground h-9 text-sm">
-                      <SelectValue placeholder="Select Level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {allLevels.length > 0 ? (
-                        allLevels.map((l) => (
-                          <SelectItem key={l.id} value={String(l.level)}>
-                            Level {l.level}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <>
-                          <SelectItem value="Beginner">Beginner</SelectItem>
-                          <SelectItem value="Intermediate">Intermediate</SelectItem>
-                          <SelectItem value="Advanced">Advanced</SelectItem>
-                        </>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid gap-1.5">
-                  <Label className="text-xs font-semibold text-foreground">Trainer Name</Label>
-                  <Input
-                    placeholder="e.g. Coach Alex"
-                    value={trainerName}
-                    onChange={(e) => setTrainerName(e.target.value)}
-                    className="border-border bg-input text-foreground h-9 text-sm"
-                  />
-                </div>
-
-                <div className="grid gap-1.5">
-                  <Label className="text-xs font-semibold text-foreground">Duration</Label>
-                  <div className="h-9 px-3 bg-muted border border-border rounded-md text-xs font-medium text-muted-foreground flex items-center gap-1.5 font-mono">
-                    <Clock className="w-3.5 h-3.5 text-primary" />
-                    {duration} (Auto-detected)
-                  </div>
-                </div>
-              </div>
-
-              {/* Row 3: Dual Video Uploads (Small 360p & Large 720p/1080p) */}
-              <div className="space-y-3">
-                {renderVideoUploadCard("small")}
-                {renderVideoUploadCard("large")}
-              </div>
-
-              {/* Row 4: Status & Audience */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="grid gap-1.5">
-                  <Label className="text-xs font-semibold text-foreground">Publishing Status</Label>
-                  <Select
-                    value={status}
-                    onValueChange={(val: any) => setStatus(val)}
-                  >
-                    <SelectTrigger className="border-border bg-input text-foreground h-9 text-sm">
-                      <SelectValue placeholder="Select Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="published">Published (Visible to Clients)</SelectItem>
-                      <SelectItem value="draft">Draft (Private Admin Review)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid gap-1.5">
-                  <Label className="text-xs font-semibold text-foreground">Audience</Label>
-                  <Select
-                    value={audience}
-                    onValueChange={(val: any) => setAudience(val)}
-                  >
-                    <SelectTrigger className="border-border bg-input text-foreground h-9 text-sm">
-                      <SelectValue placeholder="Select Audience" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Clients</SelectItem>
-                      <SelectItem value="customers">Paid Customers Only</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Row 5: Thumbnail Preview & Custom Upload */}
-              <div className="space-y-2 p-3.5 bg-muted/40 rounded-xl border border-border">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                    <ImageIcon className="w-3.5 h-3.5 text-primary" /> Video Thumbnail
-                  </Label>
-                  <span className="text-[10px] text-muted-foreground">
-                    Auto-generated from video or custom
-                  </span>
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-center gap-3">
-                  {thumbnailPreview ? (
-                    <div className="relative w-28 h-18 aspect-video bg-black rounded-lg overflow-hidden border border-border shrink-0">
-                      <img
-                        src={thumbnailPreview}
-                        alt="Thumbnail"
-                        className="w-full h-full object-cover"
-                      />
-                      {isAutoThumbnail && (
-                        <span className="absolute bottom-1 right-1 bg-black/80 text-[8px] text-white font-bold px-1 py-0.5 rounded flex items-center gap-0.5">
-                          <Sparkles className="w-2 h-2 text-primary" /> Auto
-                        </span>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="w-28 h-18 aspect-video bg-muted rounded-lg border border-dashed border-border flex flex-col items-center justify-center text-muted-foreground text-[9px] shrink-0">
-                      <ImageIcon className="w-4 h-4 mb-0.5 opacity-40" />
-                      No preview
-                    </div>
-                  )}
-
-                  <div className="flex-1 space-y-1.5">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      id="custom-thumb-file"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          setCustomThumbnailFile(file);
-                          setThumbnailPreview(URL.createObjectURL(file));
-                          setIsAutoThumbnail(false);
-                          toast.success("Custom thumbnail selected!");
-                        }
-                      }}
-                    />
-                    <Label
-                      htmlFor="custom-thumb-file"
-                      className="inline-flex h-8 px-3 bg-muted hover:bg-muted/80 border border-border text-foreground rounded-md text-xs font-semibold items-center justify-center cursor-pointer gap-1.5 transition-colors"
-                    >
-                      <Upload className="w-3.5 h-3.5 text-primary" />
-                      {thumbnailPreview ? "Replace Thumbnail" : "Upload Custom Thumbnail"}
-                    </Label>
-                    <p className="text-[10px] text-muted-foreground">
-                      PNG, JPG, or WebP (16:9 ratio recommended)
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Row 6: Description */}
+          <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+            {/* Row 1: Title & Category */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="grid gap-1.5">
-                <Label className="text-xs font-semibold text-foreground">Description</Label>
-                <Textarea
-                  placeholder="Brief summary or instructions for this workout..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="border-border bg-input text-foreground text-sm min-h-[60px]"
+                <Label className="text-xs font-semibold text-foreground">Video Title *</Label>
+                <Input
+                  placeholder="e.g. Full Body HIIT Workout"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="border-border bg-input text-foreground h-9 text-sm"
                 />
               </div>
 
-              <DialogFooter className="gap-2 pt-3 border-t border-border">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => onOpenChange(false)}
-                  className="h-9 text-xs border-border text-foreground"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleSubmitNewVideo}
-                  disabled={isSubmitting}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 text-xs font-semibold"
-                >
-                  {isSubmitting ? (
-                    <span className="flex items-center gap-1.5">
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Saving Video...
-                    </span>
-                  ) : status === "draft" ? (
-                    "Save as Draft"
-                  ) : (
-                    "Publish Video"
-                  )}
-                </Button>
-              </DialogFooter>
+              <div className="grid gap-1.5">
+                <Label className="text-xs font-semibold text-foreground">Category *</Label>
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger className="border-border bg-input text-foreground h-9 text-sm">
+                    <SelectValue placeholder="Select Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allCategories.length > 0 ? (
+                      allCategories.map((c) => (
+                        <SelectItem key={c.id} value={c.name}>
+                          {c.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <>
+                        <SelectItem value="Weight Loss">Weight Loss</SelectItem>
+                        <SelectItem value="Muscle Gain">Muscle Gain</SelectItem>
+                        <SelectItem value="Strength Training">Strength Training</SelectItem>
+                        <SelectItem value="Cardio">Cardio</SelectItem>
+                        <SelectItem value="HIIT">HIIT</SelectItem>
+                        <SelectItem value="Yoga & Flexibility">Yoga & Flexibility</SelectItem>
+                        <SelectItem value="General">General</SelectItem>
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </ScrollArea>
+
+            {/* Row 2: Level, Trainer & Duration */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid gap-1.5">
+                <Label className="text-xs font-semibold text-foreground">Difficulty Level</Label>
+                <Select value={level} onValueChange={setLevel}>
+                  <SelectTrigger className="border-border bg-input text-foreground h-9 text-sm">
+                    <SelectValue placeholder="Select Level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allLevels.length > 0 ? (
+                      allLevels.map((l) => (
+                        <SelectItem key={l.id} value={String(l.level)}>
+                          Level {l.level}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <>
+                        <SelectItem value="Beginner">Beginner</SelectItem>
+                        <SelectItem value="Intermediate">Intermediate</SelectItem>
+                        <SelectItem value="Advanced">Advanced</SelectItem>
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-1.5">
+                <Label className="text-xs font-semibold text-foreground">Trainer Name</Label>
+                <Input
+                  placeholder="e.g. Coach Alex"
+                  value={trainerName}
+                  onChange={(e) => setTrainerName(e.target.value)}
+                  className="border-border bg-input text-foreground h-9 text-sm"
+                />
+              </div>
+
+              <div className="grid gap-1.5">
+                <Label className="text-xs font-semibold text-foreground">Duration</Label>
+                <div className="h-9 px-3 bg-muted border border-border rounded-md text-xs font-medium text-muted-foreground flex items-center gap-1.5 font-mono">
+                  <Clock className="w-3.5 h-3.5 text-primary" />
+                  {duration} (Auto-detected)
+                </div>
+              </div>
+            </div>
+
+            {/* Row 3: Dual Video Uploads (Small 360p & Large 720p/1080p) */}
+            <div className="space-y-3">
+              {renderVideoUploadCard("small")}
+              {renderVideoUploadCard("large")}
+            </div>
+
+            {/* Row 4: Status & Audience */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid gap-1.5">
+                <Label className="text-xs font-semibold text-foreground">Publishing Status</Label>
+                <Select
+                  value={status}
+                  onValueChange={(val: any) => setStatus(val)}
+                >
+                  <SelectTrigger className="border-border bg-input text-foreground h-9 text-sm">
+                    <SelectValue placeholder="Select Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="published">Published (Visible to Clients)</SelectItem>
+                    <SelectItem value="draft">Draft (Private Admin Review)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-1.5">
+                <Label className="text-xs font-semibold text-foreground">Audience</Label>
+                <Select
+                  value={audience}
+                  onValueChange={(val: any) => setAudience(val)}
+                >
+                  <SelectTrigger className="border-border bg-input text-foreground h-9 text-sm">
+                    <SelectValue placeholder="Select Audience" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Clients</SelectItem>
+                    <SelectItem value="customers">Paid Customers Only</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Row 5: Thumbnail Preview & Custom Upload */}
+            <div className="space-y-2 p-3.5 bg-muted/40 rounded-xl border border-border">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                  <ImageIcon className="w-3.5 h-3.5 text-primary" /> Video Thumbnail
+                </Label>
+                <span className="text-[10px] text-muted-foreground">
+                  Auto-generated from video or custom
+                </span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                {thumbnailPreview ? (
+                  <div className="relative w-28 h-18 aspect-video bg-black rounded-lg overflow-hidden border border-border shrink-0">
+                    <img
+                      src={thumbnailPreview}
+                      alt="Thumbnail"
+                      className="w-full h-full object-cover"
+                    />
+                    {isAutoThumbnail && (
+                      <span className="absolute bottom-1 right-1 bg-black/80 text-[8px] text-white font-bold px-1 py-0.5 rounded flex items-center gap-0.5">
+                        <Sparkles className="w-2 h-2 text-primary" /> Auto
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <div className="w-28 h-18 aspect-video bg-muted rounded-lg border border-dashed border-border flex flex-col items-center justify-center text-muted-foreground text-[9px] shrink-0">
+                    <ImageIcon className="w-4 h-4 mb-0.5 opacity-40" />
+                    No preview
+                  </div>
+                )}
+
+                <div className="flex-1 space-y-1.5">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    id="custom-thumb-file"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setCustomThumbnailFile(file);
+                        setThumbnailPreview(URL.createObjectURL(file));
+                        setIsAutoThumbnail(false);
+                        toast.success("Custom thumbnail selected!");
+                      }
+                    }}
+                  />
+                  <Label
+                    htmlFor="custom-thumb-file"
+                    className="inline-flex h-8 px-3 bg-muted hover:bg-muted/80 border border-border text-foreground rounded-md text-xs font-semibold items-center justify-center cursor-pointer gap-1.5 transition-colors"
+                  >
+                    <Upload className="w-3.5 h-3.5 text-primary" />
+                    {thumbnailPreview ? "Replace Thumbnail" : "Upload Custom Thumbnail"}
+                  </Label>
+                  <p className="text-[10px] text-muted-foreground">
+                    PNG, JPG, or WebP (16:9 ratio recommended)
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Row 6: Description */}
+            <div className="grid gap-1.5">
+              <Label className="text-xs font-semibold text-foreground">Description</Label>
+              <Textarea
+                placeholder="Brief summary or instructions for this workout..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="border-border bg-input text-foreground text-sm min-h-[60px]"
+              />
+            </div>
+
+            <DialogFooter className="gap-2 pt-3 border-t border-border">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                className="h-9 text-xs border-border text-foreground"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleSubmitNewVideo}
+                disabled={isSubmitting}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 text-xs font-semibold"
+              >
+                {isSubmitting ? (
+                  <span className="flex items-center gap-1.5">
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Saving Video...
+                  </span>
+                ) : status === "draft" ? (
+                  "Save as Draft"
+                ) : (
+                  "Publish Video"
+                )}
+              </Button>
+            </DialogFooter>
+          </div>
         )}
       </DialogContent>
     </Dialog>

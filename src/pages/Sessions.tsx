@@ -1213,15 +1213,7 @@ export default function Sessions() {
             variant="outline"
             size="icon"
             onClick={() => { fetchData(); fetchTutorials(); }}
-            className="text-slate-400 shrink-0 h-9 w-9 border-slate-200"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading || loadingTutorials ? "animate-spin" : ""}`} />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => { fetchData(); fetchTutorials(); }}
-            className="text-slate-400 shrink-0 h-9 w-9 border-slate-200"
+            className="text-muted-foreground shrink-0 h-9 w-9 border border-border bg-card hover:bg-muted rounded-lg"
           >
             <RefreshCw className={`w-4 h-4 ${loading || loadingTutorials ? "animate-spin" : ""}`} />
           </Button>
@@ -1616,16 +1608,16 @@ export default function Sessions() {
 
           <Card className="border border-border shadow-sm rounded-2xl overflow-hidden bg-card">
             <CardHeader className="px-5 py-4 border-b border-border bg-card">
-              <CardTitle className="text-[20px] font-semibold text-[#111827] leading-snug">
+              <CardTitle className="text-[20px] font-semibold text-foreground leading-snug">
                 Live Workout Sessions
               </CardTitle>
             </CardHeader>
             <CardContent className="px-5 py-4">
               <div className="space-y-2.5">
                 {loading ? (
-                  <p className="text-center py-6 text-slate-400 text-sm">Syncing database...</p>
+                  <p className="text-center py-6 text-muted-foreground text-sm">Syncing database...</p>
                 ) : sessions.filter(s => s.type === "live").length === 0 ? (
-                  <p className="text-center py-6 text-slate-400 text-sm">No live sessions scheduled.</p>
+                  <p className="text-center py-6 text-muted-foreground text-sm">No live sessions scheduled.</p>
                 ) : (
                   sessions.filter(s => s.type === "live").map((session) => {
                     const isLive = getLiveStatus(session.scheduled_at, session.type);
@@ -1643,13 +1635,13 @@ export default function Sessions() {
                       <div
                         key={session.id}
                         className={`flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-3.5 rounded-xl border transition-all ${isPast
-                          ? "opacity-60 bg-slate-50/50 border-slate-200/60"
-                          : "hover:border-[#07AC7D]/40 hover:bg-slate-50/70 border-slate-200/60"
+                          ? "bg-card/70 border-border/80 hover:border-border"
+                          : "bg-card border-border hover:border-[#07AC7D]/50"
                           }`}
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-wrap items-center gap-2 mb-0.5">
-                            <h4 className="font-semibold text-sm text-[#111827] truncate">
+                            <h4 className="font-semibold text-sm text-foreground truncate">
                               {session.title}
                             </h4>
                             <div className="flex gap-1.5">
@@ -1659,28 +1651,28 @@ export default function Sessions() {
                                 </Badge>
                               )}
                               {isPast && (
-                                <Badge variant="secondary" className="text-[11px] bg-slate-200 text-slate-600 px-2 py-0 font-semibold">
+                                <Badge variant="secondary" className="text-[11px] bg-muted text-muted-foreground border border-border px-2 py-0 font-semibold">
                                   PAST
                                 </Badge>
                               )}
                               {session.admin_is_mass && (
-                                <Badge variant="outline" className="text-[11px] border-emerald-200 text-[#07AC7D] px-2 py-0 font-semibold">
+                                <Badge variant="outline" className="text-[11px] border-[#07AC7D]/40 text-[#07AC7D] px-2 py-0 font-semibold">
                                   PUBLIC
                                 </Badge>
                               )}
                             </div>
                           </div>
-                          <p className="text-xs text-[#526581] font-normal">
+                          <p className="text-xs text-muted-foreground font-normal">
                             Coach {session.instructor}
                           </p>
                         </div>
 
                         <div className="flex items-center flex-wrap gap-2">
-                          <div className="flex items-center gap-1.5 text-muted-foreground bg-card px-2.5 py-1 rounded-lg border border-border text-xs font-semibold">
-                            <Clock className="w-3.5 h-3.5 text-primary" />
+                          <div className="flex items-center gap-1.5 text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-lg border border-border text-xs font-semibold">
+                            <Clock className="w-3.5 h-3.5 text-[#07AC7D]" />
                             <span>{sessionTime}</span>
                           </div>
-                          <div className="flex items-center gap-1.5 text-muted-foreground bg-card px-2.5 py-1 rounded-lg border border-border text-xs font-semibold">
+                          <div className="flex items-center gap-1.5 text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-lg border border-border text-xs font-semibold">
                             <UsersIcon className="w-3.5 h-3.5 text-muted-foreground/70" />
                             <span>{participantCount} Clients</span>
                           </div>
@@ -1690,7 +1682,7 @@ export default function Sessions() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-primary text-xs font-semibold hover:bg-primary/10 h-8 px-2.5"
+                            className="text-[#07AC7D] text-xs font-semibold hover:bg-[#07AC7D]/10 h-8 px-2.5"
                             onClick={() => window.open(session.meeting_link, "_blank")}
                           >
                             Join / View

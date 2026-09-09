@@ -1,15 +1,6 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sculpt & Strive | Admin Dashboard</title>
-    <meta name="description" content="Admin dashboard for Sculpt and Strive fitness platform - manage sessions, trainers, members, and more." />
-    <meta name="author" content="Sculpt and Strive" />
-    <link rel="icon" href="/src/assets/sculpt-and-strive-logo.jpg">
-    <link rel="icon" href="/src/assets/favicon-16x16.png">
-    <link rel="icon" href="/src/assets/favicon-32x32.png">
-    <link rel="icon" href="/src/assets/favicon.ico">
     <script>
       (function() {
         function isIgnored(msg) {
@@ -19,6 +10,11 @@
                  str.indexOf('reportAllChanges') !== -1 ||
                  str.indexOf('requestIdleCallback') !== -1;
         }
+        var prevOnError = window.onerror;
+        window.onerror = function(msg, url, line, col, error) {
+          if (isIgnored(msg) || isIgnored(error)) return true;
+          if (prevOnError) return prevOnError.apply(this, arguments);
+        };
         window.addEventListener('error', function(e) {
           if (isIgnored(e.message) || isIgnored(e.error)) {
             e.preventDefault();
@@ -34,6 +30,15 @@
         }, true);
       })();
     </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sculpt & Strive | Admin Dashboard</title>
+    <meta name="description" content="Admin dashboard for Sculpt and Strive fitness platform - manage sessions, trainers, members, and more." />
+    <meta name="author" content="Sculpt and Strive" />
+    <link rel="icon" type="image/x-icon" href="/src/assets/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/src/assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/src/assets/favicon-16x16.png">
+    <link rel="apple-touch-icon" href="/src/assets/sculpt-and-strive-logo.jpg">
   </head>
 
   <body>
