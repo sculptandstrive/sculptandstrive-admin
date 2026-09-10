@@ -524,17 +524,26 @@ export default function Users() {
       const { error } = await supabase.functions.invoke("delete-user", {
         body: { user_id: deleteDialog.user.user_id },
       });
-      if (error) throw error;
+      if (error) {
+        // error.context is the raw Response from the edge function —
+        // the real message is inside its JSON body, not error.message
+        let detail = error.message;
+        try {
+          const body = await error.context.json();
+          detail = body.error ?? detail;
+        } catch {}
+        throw new Error(detail);
+      }
       setUsers((prev) => prev.filter((u) => u.user_id !== deleteDialog.user!.user_id));
       toast({ title: "Deleted", description: "User removed." });
     } catch (error: any) {
       toast({ title: "Failed to delete user", description: error.message, variant: "destructive" });
+      console.error("Delete user error:", error);
     } finally {
       setDeleting(false);
       setDeleteDialog({ open: false, user: null });
     }
   };
-
   if (adminLoading) return <div className="p-4"><Skeleton className="h-64 w-full" /></div>;
   if (!isAdmin) return <div className="p-20 text-center"><ShieldAlert className="mx-auto h-12 w-12 text-destructive/50" /></div>;
 
