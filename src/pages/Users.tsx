@@ -525,8 +525,7 @@ export default function Users() {
         body: { user_id: deleteDialog.user.user_id },
       });
       if (error) {
-        // error.context is the raw Response from the edge function —
-        // the real message is inside its JSON body, not error.message
+       
         let detail = error.message;
         try {
           const body = await error.context.json();

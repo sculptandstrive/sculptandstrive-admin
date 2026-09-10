@@ -17,7 +17,7 @@ function json(body: unknown, status = 200) {
 }
 
 Deno.serve(async (req) => {
-  // Browser sends a preflight OPTIONS request before the real POST — must handle it
+  // Browser sends a preflight OPTIONS request before the real POST must handle it
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
   try {
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-    // Extract and verify the caller's JWT directly — no need for a second client
+    // Extract and verify the caller's JWT  
     const authHeader = req.headers.get("Authorization") ?? "";
     const jwt = authHeader.replace(/^Bearer\s+/i, "");
     if (!jwt) {
@@ -60,14 +60,11 @@ Deno.serve(async (req) => {
       return json({ error: "user_id is required" }, 400);
     }
 
-    // Explicitly clean up tables that are NOT cascade-linked to auth.users
-    // (checked via pg_constraint — these either have no FK or a NO ACTION FK)
-    const cleanupSteps: Array<() => Promise<{ error: any }>> = [
+       const cleanupSteps: Array<() => Promise<{ error: any }>> = [
       () => admin.from("user_roles").delete().eq("user_id", user_id),
       () => admin.from("coach_clients").delete().eq("client_id", user_id),
       () => admin.from("coach_clients").delete().eq("coach_id", user_id),
       () => admin.from("session_assignments").delete().eq("client_id", user_id),
-      () => admin.from("plan_assignments").delete().eq("client_id", user_id),
       () => admin.from("exercises").delete().eq("user_id", user_id),
       () => admin.from("workouts").delete().eq("user_id", user_id),
       () => admin.from("workout_plans").update({ created_by: null }).eq("created_by", user_id),
@@ -76,15 +73,13 @@ Deno.serve(async (req) => {
 
     for (const step of cleanupSteps) {
       const { error } = await step();
-      // A table/column that doesn't exist in your schema shouldn't block the whole deletion —
-      // but any other error (permissions, etc.) should stop and surface immediately.
+    
       if (error && !error.message?.includes("does not exist")) {
         return json({ error: `Cleanup failed: ${error.message}` }, 500);
       }
     }
 
-    // Finally delete the auth user — cascades everything with proper FK constraints
-    // (profiles, notifications, workout_progress, nutrition_logs, etc.)
+    
     const { error: deleteError } = await admin.auth.admin.deleteUser(user_id);
     if (deleteError) {
       return json({ error: deleteError.message }, 500);
