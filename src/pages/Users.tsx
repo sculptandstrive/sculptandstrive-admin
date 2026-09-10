@@ -17,7 +17,8 @@ import {
   Calendar,
   Trophy,
   Flame,
-  Award
+  Award,
+  Trash2
 } from "lucide-react";
 import { format } from "date-fns";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -106,6 +107,13 @@ export default function Users() {
     user: UserWithRole | null;
     newRole: AppRole | null;
   }>({ open: false, user: null, newRole: null });
+
+  // ── Delete user state ──
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; user: UserWithRole | null }>({
+    open: false,
+    user: null,
+  });
+  const [deleting, setDeleting] = useState(false);
 
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [selectedProfileUser, setSelectedProfileUser] = useState<UserWithRole | null>(null);
@@ -503,6 +511,30 @@ export default function Users() {
     }
   };
 
+  // ── Delete user handler ──
+  const handleDeleteUser = async () => {
+    if (!deleteDialog.user) return;
+    if (deleteDialog.user.user_id === currentUser?.id) {
+      toast({ title: "Restricted", description: "You cannot delete your own account.", variant: "destructive" });
+      setDeleteDialog({ open: false, user: null });
+      return;
+    }
+    setDeleting(true);
+    try {
+      const { error } = await supabase.functions.invoke("delete-user", {
+        body: { user_id: deleteDialog.user.user_id },
+      });
+      if (error) throw error;
+      setUsers((prev) => prev.filter((u) => u.user_id !== deleteDialog.user!.user_id));
+      toast({ title: "Deleted", description: "User removed." });
+    } catch (error: any) {
+      toast({ title: "Failed to delete user", description: error.message, variant: "destructive" });
+    } finally {
+      setDeleting(false);
+      setDeleteDialog({ open: false, user: null });
+    }
+  };
+
   if (adminLoading) return <div className="p-4"><Skeleton className="h-64 w-full" /></div>;
   if (!isAdmin) return <div className="p-20 text-center"><ShieldAlert className="mx-auto h-12 w-12 text-destructive/50" /></div>;
 
@@ -572,6 +604,15 @@ export default function Users() {
                     onClick={() => { setSelectedProfileUser(user); setProfileDialogOpen(true); fetchClientProfile(user.user_id); }}
                   >
                     Profile
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-7 w-7 shrink-0 text-destructive border-destructive/30 hover:bg-destructive/10 rounded-lg"
+                    onClick={() => setDeleteDialog({ open: true, user })}
+                    disabled={user.user_id === currentUser?.id}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
                   </Button>
                   <Select
                     value={user.role}
@@ -650,6 +691,15 @@ export default function Users() {
                           onClick={() => { setSelectedProfileUser(user); setProfileDialogOpen(true); fetchClientProfile(user.user_id); }}
                         >
                           View Profile
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 shrink-0 text-destructive border-destructive/30 hover:bg-destructive/10 rounded-xl"
+                          onClick={() => setDeleteDialog({ open: true, user })}
+                          disabled={user.user_id === currentUser?.id}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                         <Select
                           value={user.role}
@@ -750,6 +800,29 @@ export default function Users() {
           <AlertDialogFooter className="flex-row gap-2">
             <AlertDialogCancel className="text-xs h-8 flex-1 border-border rounded-xl">Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={confirmRoleChange} className="text-xs h-8 flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl">Confirm</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ── Delete User Confirmation Dialog ── */}
+      <AlertDialog open={deleteDialog.open} onOpenChange={(o) => !deleting && setDeleteDialog((prev) => ({ ...prev, open: o }))}>
+        <AlertDialogContent className="max-w-xs rounded-2xl bg-card border-border text-foreground">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-[18px] font-semibold text-foreground">Delete this user?</AlertDialogTitle>
+            <AlertDialogDescription className="text-xs text-muted-foreground">
+              This permanently deletes <b className="text-foreground">{deleteDialog.user?.email}</b> and all associated data (workouts, check-ins, photos, notifications). This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row gap-2">
+            <AlertDialogCancel className="text-xs h-8 flex-1 border-border rounded-xl">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteUser}
+              disabled={deleting}
+              className="text-xs h-8 flex-1 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-xl"
+            >
+              {deleting ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : null}
+              Delete
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
