@@ -23,20 +23,43 @@ const isIgnoredMessage = (msg?: string) => {
 
 const origWarn = console.warn;
 console.warn = (...args: any[]) => {
-  const msg = args.map((a) => (typeof a === "string" ? a : (a?.message || ""))).join(" ");
+  const msg = args.map((a) => (typeof a === "string" ? a : (a?.message || a?.stack || ""))).join(" ");
   if (isIgnoredMessage(msg)) return;
   origWarn.apply(console, args);
 };
 
 const origError = console.error;
 console.error = (...args: any[]) => {
-  const msg = args.map((a) => (typeof a === "string" ? a : (a?.message || ""))).join(" ");
+  const msg = args.map((a) => (typeof a === "string" ? a : (a?.message || a?.stack || ""))).join(" ");
   if (isIgnoredMessage(msg)) return;
   origError.apply(console, args);
 };
+
+window.addEventListener(
+  "error",
+  (event) => {
+    const msg = event.message || event.error?.message || event.error?.stack || "";
+    if (isIgnoredMessage(msg)) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      return true;
+    }
+  },
+  true
+);
+
+window.addEventListener("unhandledrejection", (event) => {
+  const reason = event.reason;
+  const msg = typeof reason === "string" ? reason : reason?.message || reason?.stack || "";
+  if (isIgnoredMessage(msg)) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }
+});
 
 createRoot(document.getElementById("root")!).render(
   <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ""}>
     <App />
   </GoogleOAuthProvider>
 );
+

@@ -1620,17 +1620,72 @@ export default function Sessions() {
                     const participantCount = session.admin_is_mass
                       ? "ALL"
                       : session.session_assignments?.length || 0;
-                    const sessionTime = new Date(session.scheduled_at).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: false,
-                    });
+                    
+                    let dateLabel = "Today";
+                    let sessionTime = "00:00";
+                    if (session.scheduled_at) {
+                      const d = new Date(session.scheduled_at);
+                      if (!isNaN(d.getTime())) {
+                        const now = new Date();
+                        const isToday =
+                          d.getDate() === now.getDate() &&
+                          d.getMonth() === now.getMonth() &&
+                          d.getFullYear() === now.getFullYear();
+                        const tomorrow = new Date(now);
+                        tomorrow.setDate(now.getDate() + 1);
+                        const isTomorrow =
+                          d.getDate() === tomorrow.getDate() &&
+                          d.getMonth() === tomorrow.getMonth() &&
+                          d.getFullYear() === tomorrow.getFullYear();
+
+                        dateLabel = isToday ? "Today" : isTomorrow ? "Tomorrow" : d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+                        sessionTime = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                      }
+                    }
+
+                    const getPlatformBadge = (p?: string) => {
+                      switch (p?.toLowerCase()) {
+                        case "google_meet":
+                          return { label: "Google Meet", color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" };
+                        case "zoom":
+                          return { label: "Zoom", color: "bg-blue-500/10 text-blue-600 border-blue-500/20" };
+                        case "whatsapp":
+                          return { label: "WhatsApp", color: "bg-green-500/10 text-green-600 border-green-500/20" };
+                        case "youtube":
+                          return { label: "YouTube Live", color: "bg-red-500/10 text-red-600 border-red-500/20" };
+                        default:
+                          return { label: "Live", color: "bg-primary/10 text-primary border-primary/20" };
+                      }
+                    };
+                    const platformBadge = getPlatformBadge(session.platform);
+
+                    const handleOpenMeeting = () => {
+                      if (!session.meeting_link) {
+                        toast.error("No meeting link attached to this session");
+                        return;
+                      }
+                      if (session.platform === "whatsapp") {
+                        const cleanLink = session.meeting_link.startsWith('http')
+                          ? session.meeting_link
+                          : (session.meeting_link.includes('wa.me') || session.meeting_link.includes('chat.whatsapp')
+                            ? `https://${session.meeting_link}`
+                            : `https://wa.me/${session.meeting_link.replace(/\D/g, '')}`);
+                        window.open(cleanLink, "_blank");
+                      } else {
+                        const url = session.meeting_link.startsWith('http')
+                          ? session.meeting_link
+                          : `https://${session.meeting_link}`;
+                        window.open(url, "_blank");
+                      }
+                    };
 
                     return (
                       <div
                         key={session.id}
                         className={`flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-3.5 rounded-xl border transition-all ${isPast
                           ? "bg-card/70 border-border/80 hover:border-border"
+                          : isLive
+                          ? "bg-emerald-500/[0.03] border-emerald-500/40 ring-1 ring-emerald-500/20"
                           : "bg-card border-border hover:border-[#07AC7D]/50"
                           }`}
                       >
@@ -1639,10 +1694,10 @@ export default function Sessions() {
                             <h4 className="font-semibold text-sm text-foreground truncate">
                               {session.title}
                             </h4>
-                            <div className="flex gap-1.5">
+                            <div className="flex gap-1.5 flex-wrap">
                               {isLive && (
-                                <Badge className="bg-[#07AC7D] text-white text-[11px] font-semibold px-2 py-0">
-                                  LIVE NOW
+                                <Badge className="bg-[#07AC7D] text-white text-[11px] font-semibold px-2 py-0 animate-pulse">
+                                  ● LIVE NOW
                                 </Badge>
                               )}
                               {isPast && (
@@ -1650,11 +1705,18 @@ export default function Sessions() {
                                   PAST
                                 </Badge>
                               )}
-                              {session.admin_is_mass && (
+                              {session.admin_is_mass ? (
                                 <Badge variant="outline" className="text-[11px] border-[#07AC7D]/40 text-[#07AC7D] px-2 py-0 font-semibold">
                                   PUBLIC
                                 </Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-[11px] border-blue-500/40 text-blue-600 px-2 py-0 font-semibold">
+                                  1-ON-1
+                                </Badge>
                               )}
+                              <Badge variant="outline" className={`text-[10px] px-1.5 py-0 font-medium ${platformBadge.color}`}>
+                                {platformBadge.label}
+                              </Badge>
                             </div>
                           </div>
                           <p className="text-xs text-muted-foreground font-normal">
@@ -1663,6 +1725,10 @@ export default function Sessions() {
                         </div>
 
                         <div className="flex items-center flex-wrap gap-2">
+                          <div className="flex items-center gap-1.5 text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-lg border border-border text-xs font-semibold">
+                            <CalendarIcon className="w-3.5 h-3.5 text-[#07AC7D]" />
+                            <span>{dateLabel}</span>
+                          </div>
                           <div className="flex items-center gap-1.5 text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-lg border border-border text-xs font-semibold">
                             <Clock className="w-3.5 h-3.5 text-[#07AC7D]" />
                             <span>{sessionTime}</span>
@@ -1678,9 +1744,10 @@ export default function Sessions() {
                             variant="ghost"
                             size="sm"
                             className="text-[#07AC7D] hover:text-[#06966D] dark:text-emerald-400 dark:hover:text-emerald-300 text-xs font-semibold hover:bg-[#07AC7D]/10 h-8 px-2.5 rounded-[8px] transition-colors"
-                            onClick={() => window.open(session.meeting_link, "_blank")}
+                            onClick={handleOpenMeeting}
                           >
-                            Join / View
+                            <Video className="w-3.5 h-3.5 mr-1" />
+                            {session.platform === "whatsapp" ? "Open Chat" : "Join / View"}
                           </Button>
                           <Button
                             variant="ghost"
