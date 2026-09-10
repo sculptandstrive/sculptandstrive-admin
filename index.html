@@ -3,20 +3,111 @@
   <head>
     <script>
       (function() {
-        function isIgnored(msg) {
-          if (!msg) return false;
-          var str = typeof msg === 'string' ? msg : (msg.message || msg.reason || String(msg));
-          return str.indexOf('startTime') !== -1 ||
-                 str.indexOf('reportAllChanges') !== -1 ||
-                 str.indexOf('requestIdleCallback') !== -1;
+        function isIgnored(err) {
+          if (!err) return false;
+          try {
+            var str = typeof err === 'string' ? err : (err.message || err.reason || err.stack || String(err));
+            return str.indexOf('startTime') !== -1 ||
+                   str.indexOf('reportAllChanges') !== -1 ||
+                   str.indexOf('requestIdleCallback') !== -1 ||
+                   str.indexOf('web-vitals') !== -1;
+          } catch(e) {
+            return false;
+          }
         }
+
+        // 1. Console filters
+        var origError = console.error;
+        console.error = function() {
+          for (var i = 0; i < arguments.length; i++) {
+            if (isIgnored(arguments[i])) return;
+          }
+          return origError.apply(console, arguments);
+        };
+
+        var origWarn = console.warn;
+        console.warn = function() {
+          for (var i = 0; i < arguments.length; i++) {
+            if (isIgnored(arguments[i])) return;
+          }
+          return origWarn.apply(console, arguments);
+        };
+
+        // 2. Wrap requestIdleCallback
+        if (typeof window.requestIdleCallback === 'function') {
+          var origRIC = window.requestIdleCallback;
+          window.requestIdleCallback = function(cb, opts) {
+            return origRIC.call(window, function() {
+              try {
+                return cb.apply(this, arguments);
+              } catch (err) {
+                if (isIgnored(err)) return;
+                throw err;
+              }
+            }, opts);
+          };
+        }
+
+        // 3. Wrap requestAnimationFrame
+        if (typeof window.requestAnimationFrame === 'function') {
+          var origRAF = window.requestAnimationFrame;
+          window.requestAnimationFrame = function(cb) {
+            return origRAF.call(window, function() {
+              try {
+                return cb.apply(this, arguments);
+              } catch (err) {
+                if (isIgnored(err)) return;
+                throw err;
+              }
+            });
+          };
+        }
+
+        // 4. Wrap setTimeout
+        var origSetTimeout = window.setTimeout;
+        window.setTimeout = function(cb, delay) {
+          var args = Array.prototype.slice.call(arguments, 2);
+          if (typeof cb === 'function') {
+            var safeCb = function() {
+              try {
+                return cb.apply(this, arguments);
+              } catch (err) {
+                if (isIgnored(err)) return;
+                throw err;
+              }
+            };
+            return origSetTimeout.apply(window, [safeCb, delay].concat(args));
+          }
+          return origSetTimeout.apply(window, arguments);
+        };
+
+        // 5. Wrap PerformanceObserver
+        if (typeof window.PerformanceObserver !== 'undefined') {
+          var OriginalPO = window.PerformanceObserver;
+          var SafePO = function(callback) {
+            var safeCallback = function(list, observer) {
+              try {
+                return callback.call(this, list, observer);
+              } catch (err) {
+                if (isIgnored(err)) return;
+                throw err;
+              }
+            };
+            return new OriginalPO(safeCallback);
+          };
+          SafePO.prototype = OriginalPO.prototype;
+          SafePO.supportedEntryTypes = OriginalPO.supportedEntryTypes;
+          window.PerformanceObserver = SafePO;
+        }
+
+        // 6. Global error & rejection handlers
         var prevOnError = window.onerror;
         window.onerror = function(msg, url, line, col, error) {
-          if (isIgnored(msg) || isIgnored(error)) return true;
+          if (isIgnored(msg) || isIgnored(error) || (error && isIgnored(error.stack))) return true;
           if (prevOnError) return prevOnError.apply(this, arguments);
         };
         window.addEventListener('error', function(e) {
-          if (isIgnored(e.message) || isIgnored(e.error)) {
+          if (isIgnored(e.message) || isIgnored(e.error) || (e.error && isIgnored(e.error.stack))) {
             e.preventDefault();
             e.stopImmediatePropagation();
             return true;
