@@ -1679,7 +1679,7 @@ export default function Sessions() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-[#07AC7D] text-xs font-semibold hover:bg-[#07AC7D]/10 h-8 px-2.5"
+                            className="text-[#07AC7D] hover:text-[#06966D] dark:text-emerald-400 dark:hover:text-emerald-300 text-xs font-semibold hover:bg-[#07AC7D]/10 h-8 px-2.5 rounded-[8px] transition-colors"
                             onClick={() => window.open(session.meeting_link, "_blank")}
                           >
                             Join / View
@@ -1731,7 +1731,7 @@ export default function Sessions() {
                           if (target) setSelectedPlaylist(target);
                         }}
                       >
-                        <SelectTrigger className="h-8 text-[13px] border-border bg-muted/50 min-w-[210px] font-medium text-foreground hover:bg-muted">
+                        <SelectTrigger className="h-8 text-[13px] border-border bg-muted/50 w-full min-w-[150px] sm:min-w-[210px] font-medium text-foreground hover:bg-muted">
                           <SelectValue placeholder="Select Playlist" />
                         </SelectTrigger>
                         <SelectContent>
@@ -2302,7 +2302,7 @@ export default function Sessions() {
       {/* MODAL 1: CREATE / EDIT PLAYLIST DIALOG             */}
       {/* =================================================== */}
       <Dialog open={isPlaylistModalOpen} onOpenChange={setIsPlaylistModalOpen}>
-        <DialogContent className="sm:max-w-[500px] border border-border shadow-xl rounded-2xl bg-card">
+        <DialogContent className="w-[95vw] sm:max-w-[500px] max-h-[90vh] overflow-y-auto border border-border shadow-xl rounded-2xl bg-card">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-foreground">
               {editingPlaylist ? "Edit Video Playlist" : "Create Video Playlist"}

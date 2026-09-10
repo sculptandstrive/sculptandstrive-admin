@@ -1,14 +1,24 @@
 import { useState, useEffect } from "react";
 import {
-  MessageCircle, Clock,
-  CheckCircle, AlertCircle, Trash2,
-  RefreshCw, MessageSquare, Eye, Mail, Check, X,
-  RotateCcw, CheckCheck, Send, Sparkles
+  MessageCircle,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  RefreshCw,
+  Eye,
+  Mail,
+  Check,
+  RotateCcw,
+  CheckCheck,
+  Send,
+  Sparkles,
+  Search,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -74,6 +84,7 @@ export function parseTicket(rawTicket: any): ParsedTicket {
 export default function Support() {
   const [tickets, setTickets] = useState<ParsedTicket[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedTicket, setSelectedTicket] = useState<ParsedTicket | null>(null);
   const [adminResponseText, setAdminResponseText] = useState("");
   const [isSendingResponse, setIsSendingResponse] = useState(false);
@@ -98,7 +109,6 @@ export default function Support() {
       } else if (ticketData) {
         const parsed = ticketData.map(parseTicket);
         setTickets(parsed);
-        // If current modal is open, keep selectedTicket fresh
         if (selectedTicket) {
           const fresh = parsed.find((t) => t.id === selectedTicket.id);
           if (fresh) {
@@ -138,13 +148,16 @@ export default function Support() {
     };
   }, []);
 
-  const updateStatus = async (id: string, newStatus: "open" | "viewing" | "closed", showToast = true) => {
+  const updateStatus = async (
+    id: string,
+    newStatus: "open" | "viewing" | "closed",
+    showToast = true
+  ) => {
     try {
-      // Find ticket
       const current = tickets.find((t) => t.id === id) || selectedTicket;
       if (!current) return;
 
-      let { error } = await supabase
+      const { error } = await supabase
         .from("tickets")
         .update({
           status: newStatus,
@@ -162,7 +175,12 @@ export default function Support() {
       }
 
       if (showToast) {
-        const label = newStatus === "closed" ? "Closed" : newStatus === "viewing" ? "Viewing" : "Open";
+        const label =
+          newStatus === "closed"
+            ? "Closed"
+            : newStatus === "viewing"
+            ? "Viewing"
+            : "Open";
         toast({
           title: "Status Updated",
           description: `Ticket marked as ${label}.`,
@@ -170,7 +188,9 @@ export default function Support() {
       }
 
       if (selectedTicket && selectedTicket.id === id) {
-        setSelectedTicket((prev) => prev ? { ...prev, status: newStatus } : null);
+        setSelectedTicket((prev) =>
+          prev ? { ...prev, status: newStatus } : null
+        );
       }
 
       fetchData();
@@ -189,9 +209,10 @@ export default function Support() {
 
     try {
       const responseTrimmed = adminResponseText.trim();
-      const targetStatus = selectedTicket.status === "open" ? "viewing" : selectedTicket.status;
+      const targetStatus =
+        selectedTicket.status === "open" ? "viewing" : selectedTicket.status;
 
-      let { error } = await supabase
+      const { error } = await supabase
         .from("tickets")
         .update({
           admin_response: responseTrimmed,
@@ -245,157 +266,192 @@ export default function Support() {
     }
   };
 
-  const openWhatsApp = (ticket: ParsedTicket) => {
-    const adminPhone = "918637261676";
-    const sender = ticket.user_name || ticket.user_email || "Member";
-    const text = encodeURIComponent(
-      `*Sculpt & Strive Support Desk*\n\n` +
-      `*User:* ${sender}\n` +
-      `*Email:* ${ticket.user_email || "N/A"}\n` +
-      `*Message:* ${ticket.user_message}\n` +
-      `*Ticket Status:* ${ticket.status.toUpperCase()}`
-    );
-    window.open(`https://wa.me/${adminPhone}?text=${text}`, "_blank");
-    toast({
-      title: "Opening WhatsApp",
-      description: "Redirecting to Live WhatsApp Support...",
-    });
-  };
-
-  const deleteTicket = async (id: string) => {
-    try {
-      const { error } = await supabase.from("tickets").delete().eq("id", id);
-      if (error) {
-        toast({
-          title: "Failed to delete ticket",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
-      }
-      toast({
-        title: "Ticket Deleted",
-        description: "Support ticket was successfully removed.",
-      });
-      if (selectedTicket?.id === id) {
-        setIsViewOpen(false);
-        setSelectedTicket(null);
-      }
-      fetchData();
-    } catch (err: any) {
-      toast({
-        title: "Delete Error",
-        description: err.message,
-        variant: "destructive",
-      });
-    }
-  };
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "open":
-        return <Badge variant="outline" className="bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/25 text-xs font-semibold px-2.5 py-0.5 uppercase tracking-wide">● Open</Badge>;
+        return (
+          <Badge
+            variant="outline"
+            className="bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20 text-xs font-semibold px-2.5 py-0.5"
+          >
+            ● Open
+          </Badge>
+        );
       case "viewing":
-        return <Badge variant="outline" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 text-xs font-semibold flex items-center gap-1 px-2.5 py-0.5 uppercase tracking-wide"><Eye className="w-3 h-3" /> Viewing</Badge>;
+        return (
+          <Badge
+            variant="outline"
+            className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 text-xs font-semibold flex items-center gap-1 px-2.5 py-0.5"
+          >
+            <Eye className="w-3 h-3" /> Viewing
+          </Badge>
+        );
       case "closed":
-        return <Badge variant="outline" className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 text-xs font-semibold flex items-center gap-1 px-2.5 py-0.5 uppercase tracking-wide"><CheckCheck className="w-3 h-3" /> Closed</Badge>;
+        return (
+          <Badge
+            variant="outline"
+            className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-xs font-semibold flex items-center gap-1 px-2.5 py-0.5"
+          >
+            <CheckCheck className="w-3 h-3" /> Closed
+          </Badge>
+        );
       default:
-        return <Badge variant="secondary" className="bg-muted text-muted-foreground border-border text-xs font-semibold uppercase">{status}</Badge>;
+        return (
+          <Badge variant="secondary" className="text-xs font-semibold uppercase">
+            {status}
+          </Badge>
+        );
     }
   };
 
   const getPriorityIcon = (priority?: string) => {
     switch (priority) {
-      case "high": return <AlertCircle className="w-4 h-4 text-destructive shrink-0" />;
-      case "medium": return <Clock className="w-4 h-4 text-amber-500 shrink-0" />;
-      case "low": return <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />;
-      default: return <MessageCircle className="w-4 h-4 text-primary shrink-0" />;
+      case "high":
+        return <AlertCircle className="w-4 h-4 text-destructive shrink-0" />;
+      case "medium":
+        return <Clock className="w-4 h-4 text-amber-500 shrink-0" />;
+      case "low":
+        return <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />;
+      default:
+        return <MessageCircle className="w-4 h-4 text-primary shrink-0" />;
     }
   };
 
-  // Filter logic
-  const openCount = tickets.filter(t => t.status === "open").length;
-  const viewingCount = tickets.filter(t => t.status === "viewing").length;
-  const closedCount = tickets.filter(t => t.status === "closed").length;
+  // Filter & Search logic
+  const openCount = tickets.filter((t) => t.status === "open").length;
+  const viewingCount = tickets.filter((t) => t.status === "viewing").length;
+  const closedCount = tickets.filter((t) => t.status === "closed").length;
   const activeCount = openCount + viewingCount;
 
   const filteredTickets = tickets.filter((ticket) => {
-    if (activeFilter === "active") return ticket.status !== "closed";
-    if (activeFilter === "open") return ticket.status === "open";
-    if (activeFilter === "viewing") return ticket.status === "viewing";
-    if (activeFilter === "closed") return ticket.status === "closed";
-    return true; // "all"
+    // Status filter
+    if (activeFilter === "active" && ticket.status === "closed") return false;
+    if (activeFilter === "open" && ticket.status !== "open") return false;
+    if (activeFilter === "viewing" && ticket.status !== "viewing") return false;
+    if (activeFilter === "closed" && ticket.status !== "closed") return false;
+
+    // Search query
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const name = (ticket.user_name || "").toLowerCase();
+      const email = (ticket.user_email || "").toLowerCase();
+      const msg = (ticket.user_message || "").toLowerCase();
+      const id = (ticket.id || "").toLowerCase();
+      return (
+        name.includes(q) ||
+        email.includes(q) ||
+        msg.includes(q) ||
+        id.includes(q)
+      );
+    }
+
+    return true;
   });
 
   return (
     <>
       <PageHeader
         title="Admin Support Dashboard"
-        description="Monitor and respond to live user support tickets."
-      />
+        description="Monitor and respond to live member support tickets."
+      >
+        <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end lg:w-auto">
+          <div className="relative order-2 w-full sm:order-1 sm:w-[220px] lg:w-[240px]">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search tickets..."
+              aria-label="Search support tickets"
+              className="h-10 w-full rounded-[10px] border-border bg-card pl-9 text-sm text-foreground placeholder:text-muted-foreground shadow-none focus-visible:border-[#07AC7D] focus-visible:ring-[#07AC7D]/15"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-3 gap-2.5 sm:gap-5 mb-6 sm:mb-8">
-        <Card
-          onClick={() => setActiveFilter("open")}
-          className={`border border-border rounded-2xl shadow-sm border-l-4 border-l-destructive bg-card cursor-pointer transition-all hover:scale-[1.01] ${activeFilter === "open" ? "ring-2 ring-destructive/40" : ""}`}
-        >
-          <CardContent className="p-2.5 sm:p-5 flex justify-between items-center">
-            <div className="min-w-0 flex-1">
-              <p className="text-[9px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider truncate">NEW / OPEN</p>
-              <p className="text-lg sm:text-2xl font-semibold text-foreground tracking-tight leading-none mt-1 sm:mt-1.5">
-                {openCount}
-              </p>
-            </div>
-            <div className="w-7 h-7 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0 bg-destructive/10 text-destructive">
-              <AlertCircle className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
-            </div>
-          </CardContent>
-        </Card>
+          <Button
+            variant="outline"
+            onClick={fetchData}
+            disabled={loading}
+            className="order-3 h-10 w-full gap-2 rounded-[10px] border-border bg-card px-4 text-foreground shadow-none hover:border-[#07AC7D] hover:bg-muted sm:order-2 sm:w-auto"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            <span>Sync Data</span>
+          </Button>
+        </div>
+      </PageHeader>
 
-        <Card
-          onClick={() => setActiveFilter("viewing")}
-          className={`border border-border rounded-2xl shadow-sm border-l-4 border-l-amber-500 bg-card cursor-pointer transition-all hover:scale-[1.01] ${activeFilter === "viewing" ? "ring-2 ring-amber-500/40" : ""}`}
-        >
-          <CardContent className="p-2.5 sm:p-5 flex justify-between items-center">
-            <div className="min-w-0 flex-1">
-              <p className="text-[9px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider truncate">VIEWING</p>
-              <p className="text-lg sm:text-2xl font-semibold text-foreground tracking-tight leading-none mt-1 sm:mt-1.5">
-                {viewingCount}
-              </p>
-            </div>
-            <div className="w-7 h-7 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0 bg-amber-500/10 text-amber-500">
-              <Eye className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card
-          onClick={() => setActiveFilter("closed")}
-          className={`border border-border rounded-2xl shadow-sm border-l-4 border-l-emerald-500 bg-card cursor-pointer transition-all hover:scale-[1.01] ${activeFilter === "closed" ? "ring-2 ring-emerald-500/40" : ""}`}
-        >
-          <CardContent className="p-2.5 sm:p-5 flex justify-between items-center">
-            <div className="min-w-0 flex-1">
-              <p className="text-[9px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wider truncate">CLOSED</p>
-              <p className="text-lg sm:text-2xl font-semibold text-foreground tracking-tight leading-none mt-1 sm:mt-1.5">
-                {closedCount}
-              </p>
-            </div>
-            <div className="w-7 h-7 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0 bg-emerald-500/10 text-emerald-600">
-              <CheckCircle className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
-            </div>
-          </CardContent>
-        </Card>
+      {/* KPI Cards */}
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        {[
+          {
+            label: "Open Tickets",
+            value: openCount,
+            icon: AlertCircle,
+            filter: "open" as FilterTab,
+            iconClass:
+              "bg-red-100 dark:bg-red-950/50 text-red-600 dark:text-red-400",
+          },
+          {
+            label: "In Review (Viewing)",
+            value: viewingCount,
+            icon: Eye,
+            filter: "viewing" as FilterTab,
+            iconClass:
+              "bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400",
+          },
+          {
+            label: "Closed Tickets",
+            value: closedCount,
+            icon: CheckCircle,
+            filter: "closed" as FilterTab,
+            iconClass:
+              "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400",
+          },
+          {
+            label: "Total Tickets",
+            value: tickets.length,
+            icon: MessageCircle,
+            filter: "all" as FilterTab,
+            iconClass:
+              "bg-blue-100 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
+          },
+        ].map(({ label, value, icon: Icon, iconClass, filter }) => (
+          <Card
+            key={label}
+            onClick={() => setActiveFilter(filter)}
+            className={`cursor-pointer rounded-2xl border border-border bg-card shadow-sm transition-all hover:border-[#07AC7D]/50 hover:shadow-md ${
+              activeFilter === filter ? "ring-2 ring-[#07AC7D]" : ""
+            }`}
+          >
+            <CardContent className="flex items-center justify-between p-4 sm:p-5">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">
+                  {label}
+                </p>
+                <p className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight leading-none mt-1.5">
+                  {value}
+                </p>
+              </div>
+              <div
+                className={`ml-2 flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl ${iconClass}`}
+              >
+                <Icon className="h-5 w-5" strokeWidth={2} />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-5">
-        <Card className="border border-border rounded-2xl shadow-sm bg-card">
-          <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-border pb-4 p-4 sm:p-6">
+      {/* Main Support Tickets Table/Card */}
+      <div className="mt-6">
+        <Card className="rounded-2xl border border-border bg-card shadow-sm">
+          <CardHeader className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
             <div className="flex items-center gap-2">
-              <CardTitle className="text-base sm:text-[20px] font-semibold text-foreground">
-                Support Tickets
+              <CardTitle className="text-[18px] font-semibold text-foreground">
+                Support Inquiries
               </CardTitle>
-              <Badge variant="secondary" className="text-xs px-2 py-0.5 rounded-full font-semibold">
+              <Badge
+                variant="secondary"
+                className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
+              >
                 {filteredTickets.length}
               </Badge>
             </div>
@@ -404,72 +460,62 @@ export default function Support() {
             <div className="flex flex-wrap items-center gap-1.5">
               <button
                 onClick={() => setActiveFilter("active")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                className={`rounded-[10px] px-3.5 py-1.5 text-xs font-semibold transition-all ${
                   activeFilter === "active"
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                    ? "bg-[#07AC7D] text-white shadow-sm"
+                    : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
               >
                 Active ({activeCount})
               </button>
               <button
                 onClick={() => setActiveFilter("open")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                className={`rounded-[10px] px-3.5 py-1.5 text-xs font-semibold transition-all ${
                   activeFilter === "open"
-                    ? "bg-destructive text-destructive-foreground shadow-sm"
-                    : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                    ? "bg-red-600 text-white shadow-sm"
+                    : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
               >
                 Open ({openCount})
               </button>
               <button
                 onClick={() => setActiveFilter("viewing")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                className={`rounded-[10px] px-3.5 py-1.5 text-xs font-semibold transition-all ${
                   activeFilter === "viewing"
                     ? "bg-amber-500 text-white shadow-sm"
-                    : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                    : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
               >
                 Viewing ({viewingCount})
               </button>
               <button
                 onClick={() => setActiveFilter("closed")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                className={`rounded-[10px] px-3.5 py-1.5 text-xs font-semibold transition-all ${
                   activeFilter === "closed"
                     ? "bg-emerald-600 text-white shadow-sm"
-                    : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                    : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
               >
                 Closed ({closedCount})
               </button>
               <button
                 onClick={() => setActiveFilter("all")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                className={`rounded-[10px] px-3.5 py-1.5 text-xs font-semibold transition-all ${
                   activeFilter === "all"
                     ? "bg-foreground text-background shadow-sm"
-                    : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                    : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
               >
                 All ({tickets.length})
               </button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={fetchData}
-                disabled={loading}
-                className="text-muted-foreground hover:bg-primary/10 rounded-xl h-8 px-2.5 text-xs ml-1"
-                title="Refresh Tickets"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-              </Button>
             </div>
           </CardHeader>
 
-          <CardContent className="pt-4 sm:pt-6 p-3 sm:p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="space-y-3 sm:space-y-4">
               {filteredTickets.length === 0 ? (
-                <div className="text-center py-12 text-sm font-normal text-muted-foreground bg-muted/10 rounded-2xl border border-dashed border-border">
-                  <CheckCircle className="w-8 h-8 mx-auto mb-2 text-muted-foreground/50" />
+                <div className="rounded-2xl border border-dashed border-border bg-muted/10 py-12 text-center text-sm font-normal text-muted-foreground">
+                  <CheckCircle className="mx-auto mb-2 h-8 w-8 text-muted-foreground/50" />
                   No {activeFilter !== "all" ? activeFilter : ""} tickets found.
                 </div>
               ) : (
@@ -478,108 +524,101 @@ export default function Support() {
                   return (
                     <div
                       key={ticket.id}
-                      className={`p-3.5 sm:p-4 rounded-2xl border transition-all duration-150 space-y-3 ${
+                      className={`space-y-3.5 rounded-2xl border p-4 sm:p-5 transition-all duration-150 ${
                         isClosed
-                          ? "bg-muted/20 border-emerald-500/20 opacity-80"
-                          : "bg-muted/40 border-border hover:shadow-md hover:border-primary/30"
+                          ? "border-emerald-500/20 bg-muted/20 opacity-80"
+                          : "border-border bg-card hover:border-[#07AC7D]/40 hover:shadow-sm"
                       }`}
                     >
-                      <div className="flex justify-between items-start gap-2">
-                        <div className="flex gap-2.5 items-start min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex min-w-0 items-start gap-2.5">
                           {getPriorityIcon(ticket.priority || "high")}
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
-                              <p className={`text-xs sm:text-sm font-bold truncate ${isClosed ? "text-muted-foreground line-through" : "text-foreground"}`}>
-                                {ticket.user_name || ticket.user_email || ticket.user_id || "Member User"}
+                              <p
+                                className={`truncate text-sm font-semibold ${
+                                  isClosed
+                                    ? "text-muted-foreground line-through"
+                                    : "text-foreground"
+                                }`}
+                              >
+                                {ticket.user_name ||
+                                  ticket.user_email ||
+                                  ticket.user_id ||
+                                  "Member User"}
                               </p>
                               {isClosed && (
-                                <span className="text-[10px] text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded font-semibold border border-emerald-200 dark:border-emerald-800">
+                                <span className="rounded-md border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600 dark:border-emerald-800 dark:bg-emerald-950/40">
                                   Closed
                                 </span>
                               )}
                             </div>
                             {ticket.user_email && (
-                              <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{ticket.user_email}</p>
+                              <p className="truncate text-xs text-muted-foreground">
+                                {ticket.user_email}
+                              </p>
                             )}
-                            <p className="text-[10px] sm:text-xs font-normal text-muted-foreground mt-0.5">
-                              {ticket.created_at ? new Date(ticket.created_at).toLocaleString() : "Just now"}
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              {ticket.created_at
+                                ? new Date(ticket.created_at).toLocaleString()
+                                : "Just now"}
                             </p>
                           </div>
                         </div>
-                        <div className="flex gap-2 shrink-0">{getStatusBadge(ticket.status)}</div>
+                        <div className="shrink-0">{getStatusBadge(ticket.status)}</div>
                       </div>
 
                       {/* User Message */}
-                      <div className="p-3 bg-card rounded-xl border border-border text-xs sm:text-sm font-normal text-foreground break-words overflow-hidden leading-relaxed">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-1">User Message:</span>
+                      <div className="overflow-hidden break-words rounded-[10px] border border-border/80 bg-muted/30 p-3.5 text-sm font-normal leading-relaxed text-foreground">
+                        <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          User Message
+                        </span>
                         "{ticket.user_message}"
                       </div>
 
                       {/* Admin Response Snippet if available */}
                       {ticket.admin_response && (
-                        <div className="p-3 bg-primary/5 rounded-xl border border-primary/20 text-xs text-foreground break-words overflow-hidden leading-relaxed">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-primary flex items-center gap-1 mb-1">
-                            <Sparkles className="w-3 h-3" /> Admin Response:
+                        <div className="overflow-hidden break-words rounded-[10px] border border-[#07AC7D]/25 bg-[#07AC7D]/5 p-3.5 text-sm leading-relaxed text-foreground">
+                          <span className="mb-1 flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-[#07AC7D]">
+                            <Sparkles className="h-3.5 w-3.5" /> Admin Response
                           </span>
                           "{ticket.admin_response}"
                         </div>
                       )}
 
-                      {/* Action Buttons with High Contrast */}
-                      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2 pt-1">
-                        <div className="flex gap-2">
-                          {/* View Button */}
-                          <Button
-                            type="button"
-                            size="sm"
-                            className="text-xs font-semibold bg-white dark:bg-slate-900 !text-slate-900 dark:!text-white hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 shadow-sm rounded-xl h-8 px-3.5 flex-1 sm:flex-none"
-                            onClick={() => handleViewTicket(ticket)}
-                          >
-                            <Eye className="w-3.5 h-3.5 mr-1.5 text-slate-700 dark:text-slate-300" /> View & Respond
-                          </Button>
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2 pt-1">
+                        {/* View & Respond Button */}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-9 flex-1 rounded-[10px] border-border bg-card px-4 text-xs font-medium text-foreground hover:border-[#07AC7D] hover:bg-muted hover:text-foreground transition-colors sm:flex-none"
+                          onClick={() => handleViewTicket(ticket)}
+                        >
+                          <Eye className="mr-1.5 h-3.5 w-3.5 text-muted-foreground" />
+                          <span>View & Respond</span>
+                        </Button>
 
-                          {/* Close / Reopen Toggle Button */}
-                          {isClosed ? (
-                            <Button
-                              type="button"
-                              size="sm"
-                              className="text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 !text-white shadow-sm rounded-xl h-8 px-3.5 flex-1 sm:flex-none"
-                              onClick={() => updateStatus(ticket.id, "open")}
-                            >
-                              <RotateCcw className="w-3.5 h-3.5 mr-1.5" /> Reopen
-                            </Button>
-                          ) : (
-                            <Button
-                              type="button"
-                              size="sm"
-                              className="text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 !text-white shadow-sm rounded-xl h-8 px-3.5 flex-1 sm:flex-none"
-                              onClick={() => updateStatus(ticket.id, "closed")}
-                            >
-                              <Check className="w-3.5 h-3.5 mr-1.5 stroke-[2.5]" /> Close
-                            </Button>
-                          )}
-                        </div>
-
-                        <div className="flex gap-2 justify-end">
+                        {/* Close / Reopen Toggle Button */}
+                        {isClosed ? (
                           <Button
                             type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:bg-destructive/10 rounded-xl h-8 w-8"
-                            onClick={() => deleteTicket(ticket.id)}
-                            title="Delete Ticket"
+                            className="h-9 flex-1 rounded-[10px] bg-slate-800 px-4 text-xs font-medium text-white hover:bg-slate-700 transition-colors sm:flex-none"
+                            onClick={() => updateStatus(ticket.id, "open")}
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+                            <span>Reopen</span>
                           </Button>
+                        ) : (
                           <Button
                             type="button"
-                            size="sm"
-                            className="text-xs font-semibold bg-[#07AC7D] hover:bg-[#06966D] !text-white rounded-xl h-8 px-3.5 shadow-sm transition-colors duration-150"
-                            onClick={() => openWhatsApp(ticket)}
+                            className="h-9 flex-1 rounded-[10px] bg-emerald-600 px-4 text-xs font-medium text-white hover:bg-emerald-700 transition-colors sm:flex-none"
+                            onClick={() => updateStatus(ticket.id, "closed")}
                           >
-                            <MessageSquare className="w-3.5 h-3.5 mr-1.5" /> WhatsApp
+                            <Check className="mr-1.5 h-3.5 w-3.5 stroke-[2.5]" />
+                            <span>Close</span>
                           </Button>
-                        </div>
+                        )}
                       </div>
                     </div>
                   );
@@ -592,33 +631,36 @@ export default function Support() {
 
       {/* Ticket Details View & Response Modal */}
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-        <DialogContent className="sm:max-w-lg bg-card border border-border p-6 rounded-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] w-[calc(100%-1rem)] max-w-lg overflow-y-auto rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-xl">
           <DialogHeader>
             <div className="flex items-center justify-between">
-              <DialogTitle className="text-lg font-bold text-foreground">
+              <DialogTitle className="text-[18px] font-semibold text-foreground">
                 Support Ticket Details
               </DialogTitle>
               {selectedTicket && getStatusBadge(selectedTicket.status)}
             </div>
             <DialogDescription className="text-xs text-muted-foreground">
-              Submitted on {selectedTicket?.created_at ? new Date(selectedTicket.created_at).toLocaleString() : "Recently"}
+              Submitted on{" "}
+              {selectedTicket?.created_at
+                ? new Date(selectedTicket.created_at).toLocaleString()
+                : "Recently"}
             </DialogDescription>
           </DialogHeader>
 
           {selectedTicket && (
             <div className="space-y-4 py-2">
               {/* Sender Details */}
-              <div className="p-3.5 rounded-xl bg-muted/40 border border-border space-y-1.5">
+              <div className="space-y-1.5 rounded-[10px] border border-border bg-muted/30 p-3.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-foreground">
+                  <span className="text-sm font-semibold text-foreground">
                     {selectedTicket.user_name || "Member User"}
                   </span>
                   {selectedTicket.user_email && (
                     <a
                       href={`mailto:${selectedTicket.user_email}`}
-                      className="text-xs text-primary hover:underline flex items-center gap-1 font-medium"
+                      className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
                     >
-                      <Mail className="w-3.5 h-3.5" /> {selectedTicket.user_email}
+                      <Mail className="h-3.5 w-3.5" /> {selectedTicket.user_email}
                     </a>
                   )}
                 </div>
@@ -626,93 +668,106 @@ export default function Support() {
 
               {/* USER MESSAGE */}
               <div>
-                <label className="text-xs font-semibold uppercase text-muted-foreground tracking-wider block mb-1.5">
-                  TICKET MESSAGE
-                </label>
-                <div className="p-4 rounded-xl bg-muted/20 border border-border text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Ticket Message
+                </p>
+                <div className="rounded-[10px] border border-border bg-muted/20 p-3.5 text-sm leading-relaxed text-foreground whitespace-pre-wrap">
                   {selectedTicket.user_message}
                 </div>
               </div>
 
               {/* ADMIN RESPONSE SECTION */}
               <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase text-muted-foreground tracking-wider flex items-center justify-between">
-                  <span>ADMIN RESPONSE</span>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Admin Response
+                  </p>
                   {selectedTicket.admin_response && (
-                    <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                    <Badge
+                      variant="outline"
+                      className="border-emerald-500/20 bg-emerald-500/10 text-[10px] font-medium text-emerald-600"
+                    >
                       Answered
                     </Badge>
                   )}
-                </label>
+                </div>
 
                 {selectedTicket.admin_response ? (
-                  <div className="p-3.5 rounded-xl bg-emerald-500/5 border border-emerald-500/20 text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                    <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-1">Current Response:</p>
+                  <div className="rounded-[10px] border border-emerald-500/20 bg-emerald-500/5 p-3.5 text-sm leading-relaxed text-foreground whitespace-pre-wrap">
+                    <p className="mb-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                      Current Response:
+                    </p>
                     {selectedTicket.admin_response}
                   </div>
                 ) : (
-                  <p className="text-xs text-muted-foreground italic px-1">No response added yet.</p>
+                  <p className="px-1 text-xs italic text-muted-foreground">
+                    No response added yet.
+                  </p>
                 )}
 
                 {/* Write or Edit Response */}
                 <div className="space-y-2 pt-1">
                   <textarea
                     rows={3}
-                    placeholder="Write your response to the user..."
+                    placeholder="Write your response to the member..."
                     value={adminResponseText}
                     onChange={(e) => setAdminResponseText(e.target.value)}
-                    className="w-full p-3 text-sm rounded-xl border border-input bg-background focus:ring-2 focus:ring-primary/20 outline-none resize-y"
+                    className="w-full resize-y rounded-[10px] border border-border bg-background p-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-[#07AC7D] focus:outline-none focus:ring-2 focus:ring-[#07AC7D]/15"
                   />
                   <Button
-                    size="sm"
                     onClick={handleSendResponse}
-                    disabled={isSendingResponse || !adminResponseText.trim() || adminResponseText.trim() === selectedTicket.admin_response}
-                    className="w-full gap-1.5 font-bold bg-primary text-primary-foreground h-9 rounded-xl"
+                    disabled={
+                      isSendingResponse ||
+                      !adminResponseText.trim() ||
+                      adminResponseText.trim() === selectedTicket.admin_response
+                    }
+                    className="h-10 w-full gap-2 rounded-[10px] bg-[#07AC7D] text-sm font-medium text-white shadow-none hover:bg-[#06966D]"
                   >
                     {isSendingResponse ? (
-                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <RefreshCw className="h-4 w-4 animate-spin" />
                     ) : (
-                      <Send className="w-4 h-4" />
+                      <Send className="h-4 w-4" />
                     )}
-                    {selectedTicket.admin_response ? "Update Response" : "Send Response"}
+                    <span>
+                      {selectedTicket.admin_response
+                        ? "Update Response"
+                        : "Send Response"}
+                    </span>
                   </Button>
                 </div>
               </div>
 
               {/* UPDATE STATUS */}
               <div>
-                <label className="text-xs font-semibold uppercase text-muted-foreground tracking-wider block mb-2">
-                  UPDATE STATUS
-                </label>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Update Status
+                </p>
                 <div className="flex gap-2">
                   <Button
-                    size="sm"
-                    className={`flex-1 text-xs font-bold h-9 rounded-xl transition-all ${
+                    className={`h-9 flex-1 rounded-[10px] text-xs font-medium transition-all ${
                       selectedTicket.status === "open"
-                        ? "bg-destructive text-destructive-foreground shadow-sm ring-2 ring-destructive/30"
-                        : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                        ? "bg-red-600 text-white shadow-sm"
+                        : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
                     }`}
                     onClick={() => updateStatus(selectedTicket.id, "open")}
                   >
                     Open
                   </Button>
                   <Button
-                    size="sm"
-                    className={`flex-1 text-xs font-bold h-9 rounded-xl transition-all ${
+                    className={`h-9 flex-1 rounded-[10px] text-xs font-medium transition-all ${
                       selectedTicket.status === "viewing"
-                        ? "bg-amber-500 text-white shadow-sm ring-2 ring-amber-500/30"
-                        : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                        ? "bg-amber-500 text-white shadow-sm"
+                        : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
                     }`}
                     onClick={() => updateStatus(selectedTicket.id, "viewing")}
                   >
                     Viewing
                   </Button>
                   <Button
-                    size="sm"
-                    className={`flex-1 text-xs font-bold h-9 rounded-xl transition-all ${
+                    className={`h-9 flex-1 rounded-[10px] text-xs font-medium transition-all ${
                       selectedTicket.status === "closed"
-                        ? "bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-600/30"
-                        : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                        ? "bg-emerald-600 text-white shadow-sm"
+                        : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
                     }`}
                     onClick={() => updateStatus(selectedTicket.id, "closed")}
                   >
@@ -723,36 +778,14 @@ export default function Support() {
             </div>
           )}
 
-          <DialogFooter className="flex flex-row justify-between items-center gap-2 pt-3 border-t border-border mt-2">
-            {selectedTicket && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-destructive hover:bg-destructive/10 rounded-xl text-xs h-9 px-3"
-                onClick={() => deleteTicket(selectedTicket.id)}
-              >
-                <Trash2 className="w-4 h-4 mr-1.5" /> Delete
-              </Button>
-            )}
-            <div className="flex gap-2 ml-auto">
-              {selectedTicket && (
-                <Button
-                  size="sm"
-                  className="bg-[#07AC7D] hover:bg-[#06966D] !text-white rounded-xl text-xs font-bold h-9 px-4"
-                  onClick={() => openWhatsApp(selectedTicket)}
-                >
-                  <MessageSquare className="w-4 h-4 mr-1.5" /> WhatsApp
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-xl text-xs h-9 font-semibold px-4"
-                onClick={() => setIsViewOpen(false)}
-              >
-                Done
-              </Button>
-            </div>
+          <DialogFooter className="mt-2 flex flex-row items-center justify-end gap-2 border-t border-border pt-4">
+            <Button
+              variant="outline"
+              className="h-10 w-full sm:w-auto px-6 rounded-[10px] border-border text-xs font-medium text-foreground hover:bg-muted hover:text-foreground hover:border-[#07AC7D] transition-colors"
+              onClick={() => setIsViewOpen(false)}
+            >
+              Done
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
