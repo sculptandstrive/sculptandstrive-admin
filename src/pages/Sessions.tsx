@@ -575,10 +575,6 @@ export default function Sessions() {
     }
   };
 
-  const isValidUUID = (str: any) =>
-    typeof str === "string" &&
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
-
   const handleAddSession = async () => {
     if (formData.type === "live") {
       if (!formData.link || !formData.title) return toast.error("Title and Link are required");
@@ -618,8 +614,8 @@ export default function Sessions() {
         admin_status: "upcoming"
       }]).select().maybeSingle();
 
-      if (sessErr) {
-        toast.error(sessErr.message);
+      if (sessErr || !newSession?.id) {
+        toast.error(sessErr?.message || "Failed to create session");
         setIsPublishing(false);
         return;
       }
@@ -641,15 +637,17 @@ export default function Sessions() {
         await supabase.from("notifications").insert(notifications);
         await supabase.from("session_assignments").insert(assignments);
       } else if (formData.isMass && formData.type === "live") {
-        const notifications = filteredClients.map((cid) => ({
-          user_id: cid.user_id,
-          title: `New Session: ${formData.title}`,
-          description: `Join the session at ${scheduledDateTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
-          notification_date: scheduledDateTime.toISOString().split("T")[0],
-          related_id: newSession.id
-        }));
+        if (clients.length > 0) {
+          const notifications = clients.map((c) => ({
+            user_id: c.user_id,
+            title: `New Session: ${formData.title}`,
+            description: `Join the session at ${scheduledDateTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
+            notification_date: scheduledDateTime.toISOString().split("T")[0],
+            related_id: newSession.id
+          }));
 
-        await supabase.from("notifications").insert(notifications);
+          await supabase.from("notifications").insert(notifications);
+        }
       }
 
       await supabase.from("activities").insert([{
