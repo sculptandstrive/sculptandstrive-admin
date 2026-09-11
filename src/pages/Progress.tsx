@@ -51,9 +51,13 @@ export default function ProgressPage() {
         setError(null);
 
         let progressRecords: any[] = [];
-        const { data: rawProgress, error: progressError } = await supabase
-          .from("progress_records")
-          .select("*");
+        //const { data: rawProgress, error: progressError } = await supabase
+         // .from("progress_records")
+          //.select("*");
+          const { data: rawProgress, error: progressError } = await supabase
+  .from("current_measurements")
+  .select("*")
+  .order("created_at", { ascending: false });
 
         if (!progressError && rawProgress) {
           const userIds = [...new Set(rawProgress.map((r: any) => r.user_id).filter(Boolean))];
@@ -226,18 +230,21 @@ export default function ProgressPage() {
     ];
   }, [memberGrowthStats]);
 
-  const calculateProgress = (member: any) => {
-    const { start_weight, target_weight, current_weight, progress_percentage } =
-      member;
+  //const calculateProgress = (member: any) => {
+  //  const { start_weight, target_weight, current_weight, progress_percentage } =
+  //    member;
 
-    if (start_weight && target_weight && current_weight) {
-      const totalDist = Math.abs(start_weight - target_weight);
-      const actualDist = Math.abs(start_weight - current_weight);
-      if (totalDist === 0) return 100;
-      return Math.min(Math.round((actualDist / totalDist) * 100), 100);
-    }
-    return progress_percentage || 0;
-  };
+  //  if (start_weight && target_weight && current_weight) {
+  //    const totalDist = Math.abs(start_weight - target_weight);
+      //const actualDist = Math.abs(start_weight - current_weight);
+     // if (totalDist === 0) return 100;
+      //return Math.min(Math.round((actualDist / totalDist) * 100), 100);
+   // }
+    //return progress_percentage || 0;
+  //};
+  const calculateProgress = (member: any) => {
+  return member.weight_kg ? Math.round(member.weight_kg) : 0;
+};
 
   if (isLoading) {
     return (
@@ -483,11 +490,10 @@ export default function ProgressPage() {
                         </span>
                       </div>
                       <Progress value={progressValue} className="h-2 bg-muted [&>div]:bg-primary" />
+                     
                       <p className="text-xs text-muted-foreground italic">
-                        {member.target_weight
-                          ? `${member.start_weight}kg → ${member.current_weight}kg (Target: ${member.target_weight}kg)`
-                          : member.milestone_note || "Milestone goal"}
-                      </p>
+  {`Weight: ${member.weight_kg}kg`}
+</p>
                     </div>
                   );
                 })
