@@ -1434,63 +1434,78 @@ export default function Sessions() {
                       </div>
                     )}
 
-                    <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-blue-50/50 border border-blue-100 rounded-lg">
+                    <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-muted/30 border border-border rounded-xl">
                       <div>
-                        <Label className="text-[10px] font-semibold uppercase tracking-wider text-blue-600">
+                        <Label className="text-xs font-semibold text-foreground">
                           Visibility Mode
                         </Label>
-                        <p className="text-[10px] text-blue-400">
+                        <p className="text-[10px] text-muted-foreground">
                           Who can see this {formData.type === "live" ? "session" : "library video"}?
                         </p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-slate-400">Private</span>
+                      <div className="flex items-center gap-2 bg-card px-2.5 py-1 rounded-lg border border-border">
+                        <span className={`text-xs ${!formData.isMass ? "text-foreground font-semibold" : "text-muted-foreground"}`}>Private</span>
                         <Switch
                           checked={formData.isMass}
                           onCheckedChange={(v) => setFormData({ ...formData, isMass: v })}
                         />
-                        <span className="text-[10px] text-slate-600 font-medium">Public (All)</span>
+                        <span className={`text-xs ${formData.isMass ? "text-foreground font-semibold" : "text-muted-foreground"}`}>Public (All)</span>
                       </div>
                     </div>
 
                     {!formData.isMass && (
-                      <div className="border rounded-xl p-3 sm:p-4 bg-slate-900/90 border-slate-700 max-w-full overflow-hidden">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-3">
-                          <Label className="text-xs font-semibold text-[#0ea5e9]">
-                            Assign to Clients ({formData.selectedClientIds.length})
-                          </Label>
-                          <div className="relative w-full sm:w-auto sm:flex-1">
-                            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
+                      <div className="border rounded-xl p-3 sm:p-4 bg-muted/30 border-border max-w-full overflow-hidden space-y-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                          <div className="flex items-center gap-2">
+                            <Label className="text-xs font-semibold text-foreground">
+                              Assign to Clients
+                            </Label>
+                            <span className="bg-primary/10 text-primary border border-primary/20 font-semibold text-[11px] px-2 py-0.5 rounded-full">
+                              {formData.selectedClientIds.length} selected
+                            </span>
+                          </div>
+                          <div className="relative w-full sm:w-56">
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                             <Input
-                              placeholder="Search name..."
+                              placeholder="Search name or email..."
                               value={searchTerm}
                               onChange={(e) => setSearchTerm(e.target.value)}
-                              className="h-8 text-xs pl-7 pr-2 border-slate-700 bg-slate-800 text-white w-full placeholder:text-slate-500"
+                              className="h-8 text-xs pl-8 pr-2.5 border-border bg-card text-foreground w-full placeholder:text-muted-foreground focus-visible:ring-primary"
                             />
                           </div>
                         </div>
-                        <ScrollArea className="h-[120px] pr-2">
-                          {filteredClients.length === 0 ? (
-                            <p className="text-[10px] text-slate-400 text-center py-4">No matching clients found.</p>
-                          ) : (
-                            filteredClients.map((client) => (
-                              <div
-                                key={client.user_id}
-                                className="flex items-center justify-between py-2 border-b border-slate-800 last:border-0 mr-1"
-                              >
-                                <div className="flex flex-col min-w-0 flex-1 mr-2">
-                                  <span className="text-xs font-medium text-white truncate">{client.full_name}</span>
-                                  <span className="text-[9px] text-slate-500 uppercase font-mono">{client.user_id.slice(0, 8)}...</span>
-                                </div>
-                                <Checkbox
-                                  checked={formData.selectedClientIds.includes(client.user_id)}
-                                  onCheckedChange={() => handleToggleClient(client.user_id)}
-                                  className="shrink-0 border-slate-500 data-[state=checked]:bg-[#0ea5e9] data-[state=checked]:border-[#0ea5e9]"
-                                />
+                        <div className="bg-card border border-border rounded-lg p-1">
+                          <ScrollArea className="h-[130px] pr-2">
+                            {filteredClients.length === 0 ? (
+                              <p className="text-xs text-muted-foreground text-center py-5">No matching clients found.</p>
+                            ) : (
+                              <div className="divide-y divide-border">
+                                {filteredClients.map((client) => {
+                                  const isSelected = formData.selectedClientIds.includes(client.user_id);
+                                  return (
+                                    <div
+                                      key={client.user_id}
+                                      onClick={() => handleToggleClient(client.user_id)}
+                                      className={`flex items-center justify-between p-2 rounded-md cursor-pointer transition-colors ${
+                                        isSelected ? "bg-primary/10" : "hover:bg-muted/50"
+                                      }`}
+                                    >
+                                      <div className="flex flex-col min-w-0 flex-1 mr-2">
+                                        <span className="text-xs font-medium text-foreground truncate">{client.full_name || client.email || "Unnamed Client"}</span>
+                                        <span className="text-[10px] text-muted-foreground font-mono truncate">{client.email || `${client.user_id.slice(0, 8)}...`}</span>
+                                      </div>
+                                      <Checkbox
+                                        checked={isSelected}
+                                        onCheckedChange={() => handleToggleClient(client.user_id)}
+                                        className="shrink-0 border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                      />
+                                    </div>
+                                  );
+                                })}
                               </div>
-                            ))
-                          )}
-                        </ScrollArea>
+                            )}
+                          </ScrollArea>
+                        </div>
                       </div>
                     )}
 
@@ -1519,7 +1534,7 @@ export default function Sessions() {
                             <Button
                               type="button"
                               variant="ghost"
-                              className="h-6 text-[10px] text-[#0ea5e9] px-2 flex items-center gap-1"
+                              className="h-6 text-[10px] text-primary hover:text-primary/80 hover:bg-primary/10 px-2 flex items-center gap-1 font-medium"
                               onClick={() => generateMeetLink()}
                             >
                               <Video className="w-3 h-3" /> Auto-Meet

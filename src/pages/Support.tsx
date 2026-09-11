@@ -174,6 +174,27 @@ export default function Support() {
         return;
       }
 
+      // Send status update notification to the user if user_id exists
+      if (current.user_id && newStatus !== "open") {
+        const todayStr = new Date().toISOString().split("T")[0];
+        const statusLabel =
+          newStatus === "closed" ? "Resolved & Closed" : "Under Review";
+        try {
+          await supabase.from("notifications").insert([
+            {
+              user_id: current.user_id,
+              title: `Support Ticket ${statusLabel}`,
+              description: `Your ticket regarding "${current.user_message.slice(0, 50)}" is now marked as ${statusLabel.toLowerCase()}.`,
+              notification_date: todayStr,
+              related_id: current.id,
+              is_completed: false,
+            },
+          ]);
+        } catch (notifErr) {
+          console.warn("Status notification error:", notifErr);
+        }
+      }
+
       if (showToast) {
         const label =
           newStatus === "closed"
@@ -212,14 +233,36 @@ export default function Support() {
       const targetStatus =
         selectedTicket.status === "open" ? "viewing" : selectedTicket.status;
 
-      const { error } = await supabase
+      const combinedMessage = `${selectedTicket.user_message}${ADMIN_DELIMITER}${responseTrimmed}`;
+
+      // 1. Try updating admin_response column & combined message fallback
+      let updatePayload: any = {
+        admin_response: responseTrimmed,
+        message: combinedMessage,
+        status: targetStatus,
+        updated_at: new Date().toISOString(),
+      };
+
+      let { error } = await supabase
         .from("tickets")
-        .update({
-          admin_response: responseTrimmed,
-          status: targetStatus,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updatePayload)
         .eq("id", selectedTicket.id);
+
+      // Fallback if admin_response column doesn't exist in DB schema
+      if (
+        error &&
+        (error.code === "PGRST204" || error.message?.includes("admin_response"))
+      ) {
+        const fallbackRes = await supabase
+          .from("tickets")
+          .update({
+            message: combinedMessage,
+            status: targetStatus,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", selectedTicket.id);
+        error = fallbackRes.error;
+      }
 
       if (error) {
         toast({
@@ -230,9 +273,31 @@ export default function Support() {
         return;
       }
 
+      // 2. Insert notification for the user into the notifications table
+      if (selectedTicket.user_id) {
+        const todayStr = new Date().toISOString().split("T")[0];
+        try {
+          await supabase.from("notifications").insert([
+            {
+              user_id: selectedTicket.user_id,
+              title: "Support Ticket Response Received",
+              description: `Admin responded: "${responseTrimmed.slice(0, 100)}${
+                responseTrimmed.length > 100 ? "..." : ""
+              }"`,
+              notification_date: todayStr,
+              related_id: selectedTicket.id,
+              is_completed: false,
+            },
+          ]);
+        } catch (notifErr) {
+          console.warn("Notification insert error:", notifErr);
+        }
+      }
+
       toast({
-        title: "Response Saved",
-        description: "Your response is now synchronized with the user.",
+        title: "Response Saved & Sent",
+        description:
+          "Your response has been synchronized with the user and sent to their notifications.",
       });
 
       setSelectedTicket((prev) =>

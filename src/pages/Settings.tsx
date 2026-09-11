@@ -3,7 +3,6 @@ import {
   Palette,
   Sun,
   Moon,
-  Monitor,
   Trash2,
   Loader2,
 } from "lucide-react";
@@ -27,7 +26,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,7 +39,7 @@ export default function Settings() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { toast } = useToast();
-  const { setTheme, setPrimaryColor, setAccentColor, theme, primaryColor, accentColor } = useTheme();
+  const { setTheme, theme } = useTheme();
 
   useEffect(() => {
     const fetchLogo = async () => {
@@ -257,238 +255,135 @@ export default function Settings() {
         description="Configure your platform settings and preferences."
       />
 
-      <Tabs defaultValue="branding" className="space-y-6">
-        <TabsList className="bg-muted/50 p-1 rounded-[10px]">
-          <TabsTrigger
-            value="branding"
-            className="data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-[8px] text-sm font-semibold"
-          >
-            <Palette className="w-4 h-4 mr-2" />
-            Branding
-          </TabsTrigger>
-          <TabsTrigger
-            value="display"
-            className="data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-[8px] text-sm font-semibold"
-          >
-            <Monitor className="w-4 h-4 mr-2" />
-            Display
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Branding Tab */}
-        <TabsContent value="branding" className="space-y-6 animate-fade-in">
-          <Card className="border border-border rounded-2xl shadow-sm bg-card">
-            <CardHeader>
-              <CardTitle className="text-[20px] font-semibold text-foreground">App Branding</CardTitle>
-              <CardDescription className="text-sm font-normal text-muted-foreground">
-                Customize your platform's look and feel
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-start gap-6">
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium text-muted-foreground">Current Logo</Label>
-                  <div className="relative w-24 h-24 rounded-2xl bg-muted flex items-center justify-center border-2 border-dashed border-border overflow-hidden">
-                    {uploading && (
-                      <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10">
-                        <Loader2 className="w-6 h-6 animate-spin text-accent" />
-                      </div>
-                    )}
-                    <img
-                      src={displayLogo}
-                      alt="Logo"
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                  {isCustomLogo && !uploading && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleDeleteLogo}
-                      className="w-full rounded-xl text-sm font-semibold"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Remove
-                    </Button>
+      <div className="space-y-6">
+        {/* App Branding */}
+        <Card className="border border-border rounded-2xl shadow-sm bg-card">
+          <CardHeader>
+            <CardTitle className="text-[20px] font-semibold text-foreground flex items-center gap-2">
+              <Palette className="w-5 h-5 text-primary" />
+              App Branding
+            </CardTitle>
+            <CardDescription className="text-sm font-normal text-muted-foreground">
+              Customize your platform's logo and assets
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-start gap-6">
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-muted-foreground">Current Logo</Label>
+                <div className="relative w-24 h-24 rounded-2xl bg-muted flex items-center justify-center border-2 border-dashed border-border overflow-hidden">
+                  {uploading && (
+                    <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10">
+                      <Loader2 className="w-6 h-6 animate-spin text-accent" />
+                    </div>
                   )}
+                  <img
+                    src={displayLogo}
+                    alt="Logo"
+                    className="w-full h-full object-contain"
+                  />
                 </div>
-                <div className="flex-1 space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="logo-upload" className="text-xs font-medium text-muted-foreground">Upload New Logo</Label>
-                    <Input
-                      ref={fileInputRef}
-                      id="logo-upload"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      disabled={uploading}
-                      className="cursor-pointer rounded-xl"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs font-normal text-muted-foreground">
-                      Recommended: SVG or PNG, minimum 512x512px
-                    </p>
-                    <p className="text-xs font-normal text-muted-foreground">
-                      Maximum file size: 5MB
-                    </p>
-                    {isCustomLogo && (
-                      <p className="text-xs font-medium text-emerald-500">
-                        ✓ Custom logo uploaded
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4 pt-4 border-t border-border">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-sm font-medium text-foreground">Theme Colors</Label>
-                    <p className="text-xs font-normal text-muted-foreground">Select custom primary and accent brand colors</p>
-                  </div>
+                {isCustomLogo && !uploading && (
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    onClick={() => { setPrimaryColor("#07AC7D"); setAccentColor("#F59E0B"); }}
-                    className="text-xs font-medium text-muted-foreground hover:text-foreground"
+                    onClick={handleDeleteLogo}
+                    className="w-full rounded-xl text-sm font-semibold"
                   >
-                    Reset Colors
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Remove
                   </Button>
-                </div>
-
-                {/* Preset Palettes */}
+                )}
+              </div>
+              <div className="flex-1 space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-xs font-medium text-muted-foreground">Preset Theme Palettes</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      { name: "Teal (#0D9488)", primary: "#0D9488", accent: "#06B6D4" },
-                      { name: "Emerald (#07AC7D)", primary: "#07AC7D", accent: "#F59E0B" },
-                      { name: "Ocean Blue", primary: "#2563EB", accent: "#06B6D4" },
-                      { name: "Royal Purple", primary: "#7C3AED", accent: "#EC4899" },
-                      { name: "Sunset Amber", primary: "#D97706", accent: "#EF4444" },
-                      { name: "Dark Slate", primary: "#0F172A", accent: "#10B981" },
-                    ].map((palette) => (
-                      <button
-                        key={palette.name}
-                        onClick={() => {
-                          setPrimaryColor(palette.primary);
-                          setAccentColor(palette.accent);
-                        }}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all ${primaryColor.toLowerCase() === palette.primary.toLowerCase()
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-border hover:border-primary/50"
-                          }`}
-                      >
-                        <span className="w-3 h-3 rounded-full" style={{ backgroundColor: palette.primary }} />
-                        {palette.name}
-                      </button>
-                    ))}
-                  </div>
+                  <Label htmlFor="logo-upload" className="text-xs font-medium text-muted-foreground">Upload New Logo</Label>
+                  <Input
+                    ref={fileInputRef}
+                    id="logo-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    disabled={uploading}
+                    className="cursor-pointer rounded-xl"
+                  />
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="primary-color" className="text-xs font-medium text-muted-foreground">Primary Color</Label>
-                    <div className="flex items-center gap-3">
-                      <input
-                        id="primary-color"
-                        type="color"
-                        value={primaryColor}
-                        onChange={(e) => setPrimaryColor(e.target.value)}
-                        className="w-12 h-10 rounded-xl border border-border cursor-pointer bg-transparent"
-                      />
-                      <Input
-                        value={primaryColor}
-                        onChange={(e) => setPrimaryColor(e.target.value)}
-                        className="font-mono rounded-xl"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="accent-color" className="text-xs font-medium text-muted-foreground">Accent Color</Label>
-                    <div className="flex items-center gap-3">
-                      <input
-                        id="accent-color"
-                        type="color"
-                        value={accentColor}
-                        onChange={(e) => setAccentColor(e.target.value)}
-                        className="w-12 h-10 rounded-xl border border-border cursor-pointer bg-transparent"
-                      />
-                      <Input
-                        value={accentColor}
-                        onChange={(e) => setAccentColor(e.target.value)}
-                        className="font-mono rounded-xl"
-                      />
-                    </div>
-                  </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-normal text-muted-foreground">
+                    Recommended: SVG or PNG, minimum 512x512px
+                  </p>
+                  <p className="text-xs font-normal text-muted-foreground">
+                    Maximum file size: 5MB
+                  </p>
+                  {isCustomLogo && (
+                    <p className="text-xs font-medium text-emerald-500">
+                      ✓ Custom logo uploaded
+                    </p>
+                  )}
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Display Tab */}
-        <TabsContent value="display" className="space-y-6 animate-fade-in">
-          <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
-            <Card className="border border-border rounded-2xl shadow-sm bg-card">
-              <CardHeader>
-                <CardTitle className="text-[20px] font-semibold text-foreground flex items-center gap-2">
-                  {theme === "light" ? (
-                    <Sun className="w-7 h-7 text-accent" />
-                  ) : (
-                    <Moon className="w-7 h-7 text-accent" />
-                  )}
-                  Appearance
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium text-muted-foreground">Theme</Label>
-                  <div className="flex gap-2">
-                    {[
-                      { value: "light", icon: Sun, label: "Light" },
-                      { value: "dark", icon: Moon, label: "Dark" },
-                    ].map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() => setTheme(option.value as typeof theme)}
-                        className={cn(
-                          "flex-1 flex flex-col items-center gap-3 p-4 rounded-xl border transition-all duration-150",
-                          theme === option.value
-                            ? "border-accent bg-accent/10"
-                            : "border-border hover:border-accent/50",
-                        )}
-                      >
-                        <option.icon
-                          className={cn(
-                            "w-7 h-7",
-                            theme === option.value
-                              ? "text-accent"
-                              : "text-muted-foreground",
-                          )}
-                        />
-                        <span
-                          className={cn(
-                            "text-sm font-medium",
-                            theme === option.value
-                              ? "text-accent"
-                              : "text-muted-foreground",
-                          )}
-                        >
-                          {option.label}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+        {/* Appearance */}
+        <Card className="border border-border rounded-2xl shadow-sm bg-card">
+          <CardHeader>
+            <CardTitle className="text-[20px] font-semibold text-foreground flex items-center gap-2">
+              {theme === "light" ? (
+                <Sun className="w-5 h-5 text-accent" />
+              ) : (
+                <Moon className="w-5 h-5 text-accent" />
+              )}
+              Appearance
+            </CardTitle>
+            <CardDescription className="text-sm font-normal text-muted-foreground">
+              Select your interface theme preference
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-xs font-medium text-muted-foreground">Theme</Label>
+              <div className="flex gap-3">
+                {[
+                  { value: "light", icon: Sun, label: "Light" },
+                  { value: "dark", icon: Moon, label: "Dark" },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => setTheme(option.value as typeof theme)}
+                    className={cn(
+                      "flex-1 flex flex-col items-center gap-3 p-4 rounded-xl border transition-all duration-150 cursor-pointer",
+                      theme === option.value
+                        ? "border-accent bg-accent/10"
+                        : "border-border hover:border-accent/50",
+                    )}
+                  >
+                    <option.icon
+                      className={cn(
+                        "w-6 h-6",
+                        theme === option.value
+                          ? "text-accent"
+                          : "text-muted-foreground",
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        "text-sm font-medium",
+                        theme === option.value
+                          ? "text-accent font-semibold"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      {option.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </>
   );
 }

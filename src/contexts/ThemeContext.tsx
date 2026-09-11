@@ -17,8 +17,10 @@ export const ThemeProvider = ({ children }) => {
   useEffect(() => {
     setTheme(localStorage.getItem("app-theme") || "light");
     setFontSize("small");
-    setPrimaryColor(localStorage.getItem("app-primary") || "#07AC7D");
-    setAccentColor(localStorage.getItem("app-accent") || "#F59E0B");
+    setPrimaryColor("#07AC7D");
+    setAccentColor("#F59E0B");
+    localStorage.setItem("app-primary", "#07AC7D");
+    localStorage.setItem("app-accent", "#F59E0B");
     localStorage.removeItem("app-contrast");
   }, []);
 
