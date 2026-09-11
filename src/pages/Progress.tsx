@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { AdminClientProgress } from "@/components/AdminClientProgress"; 
 import {
   TrendingUp,
   Loader2,
@@ -502,6 +503,7 @@ export default function ProgressPage() {
           </CardContent>
         </Card>
       </div>
+      <AdminClientProgress />
     </>
   );
 }
