@@ -155,7 +155,16 @@ export default function NutritionAdmin() {
 
       setRecipeCount(recipeRes.count || 0);
 
-      if (logsRes.data && logsRes.data.length > 0) {
+      const rawPlans = (plansRes.data as any[]) || [];
+      const assignments = (assignmentsRes.data as any[]) || [];
+
+      if (rawPlans.length > 0) {
+        const totalPlanCals = rawPlans.reduce(
+          (sum: number, plan: any) => sum + (Number(plan.calories) || 0),
+          0,
+        );
+        setGlobalAvgCals(Math.round(totalPlanCals / rawPlans.length));
+      } else if (logsRes.data && logsRes.data.length > 0) {
         const totalCals = logsRes.data.reduce(
           (sum: number, log: any) => sum + (Number(log.calories) || 0),
           0,
@@ -175,9 +184,6 @@ export default function NutritionAdmin() {
       } else {
         setGlobalWaterAvg(0);
       }
-
-      const rawPlans = (plansRes.data as any[]) || [];
-      const assignments = (assignmentsRes.data as any[]) || [];
 
       const dynamicPlans: MealPlan[] = rawPlans.map((plan) => ({
         ...plan,
