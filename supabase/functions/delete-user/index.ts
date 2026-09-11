@@ -48,6 +48,8 @@ Deno.serve(async (req) => {
       .eq("role", "admin")
       .maybeSingle();
 
+
+
     if (roleCheckErr) {
       return json({ error: `Role check failed: ${roleCheckErr.message}` }, 500);
     }
@@ -60,7 +62,7 @@ Deno.serve(async (req) => {
       return json({ error: "user_id is required" }, 400);
     }
 
-       const cleanupSteps: Array<() => Promise<{ error: any }>> = [
+    const cleanupSteps: Array<() => Promise<{ error: any }>> = [
       () => admin.from("user_roles").delete().eq("user_id", user_id),
       () => admin.from("coach_clients").delete().eq("client_id", user_id),
       () => admin.from("coach_clients").delete().eq("coach_id", user_id),
@@ -73,13 +75,13 @@ Deno.serve(async (req) => {
 
     for (const step of cleanupSteps) {
       const { error } = await step();
-    
+
       if (error && !error.message?.includes("does not exist")) {
         return json({ error: `Cleanup failed: ${error.message}` }, 500);
       }
     }
 
-    
+
     const { error: deleteError } = await admin.auth.admin.deleteUser(user_id);
     if (deleteError) {
       return json({ error: deleteError.message }, 500);
