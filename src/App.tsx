@@ -14,6 +14,7 @@ import Support from "./pages/Support";
 import Settings from "./pages/Settings";
 import Users from "./pages/Users";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import Groups from "@/pages/admin/Groups";
 import GroupDetails from "@/pages/admin/GroupDetails";
 import GroupProgress from "@/pages/admin/GroupProgress";
@@ -32,6 +33,7 @@ const App = () => (
         <AuthProvider>
             <Routes>
               <Route path="/auth" element={<Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route
                 path="/*"
                 element={

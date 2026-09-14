@@ -192,20 +192,22 @@ export default function NutritionAdmin() {
       setMealPlans(dynamicPlans);
 
       if (profilesRes.data) {
-        const formattedUsers = (profilesRes.data as any[]).map((profile) => {
-          const userAssignment = assignments.find(
-            (a) => a.user_id === profile.user_id,
-          );
-          const activePlan = dynamicPlans.find(
-            (p) => p.id === userAssignment?.plan_id,
-          );
-          return {
-            id: profile.user_id,
-            full_name: profile.full_name || "Unknown User",
-            email: profile.email || "No Email",
-            active_plan_name: activePlan ? activePlan.name : null,
-          };
-        });
+        const formattedUsers = (profilesRes.data as any[])
+          .map((profile) => {
+            const userAssignment = assignments.find(
+              (a) => a.user_id === profile.user_id,
+            );
+            const activePlan = dynamicPlans.find(
+              (p) => p.id === userAssignment?.plan_id,
+            );
+            return {
+              id: profile.user_id,
+              full_name: profile.full_name || "Unknown User",
+              email: profile.email || "No Email",
+              active_plan_name: activePlan ? activePlan.name : null,
+            };
+          })
+          .sort((a, b) => a.full_name.localeCompare(b.full_name));
         setUsers(formattedUsers);
       }
     } catch (error: any) {

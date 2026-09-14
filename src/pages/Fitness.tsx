@@ -1506,7 +1506,39 @@ export default function Fitness() {
                           </DialogHeader>
 
                           <div className="space-y-4 py-2">
-                            <div className="flex justify-end">
+                            <div className="flex justify-between items-center">
+                              {/* Unit Toggle Pill (KG / LBS) */}
+                              <div className="flex items-center bg-muted/60 p-0.5 rounded-lg border border-border">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setAdminWeightUnit("kg");
+                                    localStorage.setItem("admin_weight_unit", "kg");
+                                  }}
+                                  className={`px-2.5 py-1 text-xs font-bold rounded-md transition-all ${
+                                    adminWeightUnit === "kg"
+                                      ? "bg-[#07AC7D] text-white shadow-sm"
+                                      : "text-muted-foreground hover:text-foreground"
+                                  }`}
+                                >
+                                  KG
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setAdminWeightUnit("lbs");
+                                    localStorage.setItem("admin_weight_unit", "lbs");
+                                  }}
+                                  className={`px-2.5 py-1 text-xs font-bold rounded-md transition-all ${
+                                    adminWeightUnit === "lbs"
+                                      ? "bg-[#07AC7D] text-white shadow-sm"
+                                      : "text-muted-foreground hover:text-foreground"
+                                  }`}
+                                >
+                                  LBS
+                                </button>
+                              </div>
+
                               <Dialog
                                 open={isAddPlanExerciseOpen}
                                 onOpenChange={setIsAddPlanExerciseOpen}

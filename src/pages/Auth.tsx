@@ -50,6 +50,59 @@ export default function Auth() {
     return null;
   }
 
+  const [resetLoading, setResetLoading] = useState(false);
+
+  const handleForgotPassword = async () => {
+    const trimmedEmail = loginEmail.trim();
+    if (!trimmedEmail) {
+      toast({
+        title: "Email Required",
+        description: "Please enter your email in the field above to receive a reset link.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      emailSchema.parse(trimmedEmail);
+    } catch (err: any) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      const redirectUrl = `${window.location.origin}/reset-password`;
+      const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
+        redirectTo: redirectUrl,
+      });
+
+      if (error) {
+        toast({
+          title: "Reset Request Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Reset Link Sent",
+          description: `A password reset link has been sent to ${trimmedEmail}. Please check your inbox.`,
+        });
+      }
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err?.message || "Failed to send reset link.",
+        variant: "destructive",
+      });
+    } finally {
+      setResetLoading(false);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,21 +127,17 @@ export default function Auth() {
     if (error) {
       let message = "An error occurred during login";
       if (error.message.includes("Invalid login credentials")) {
-        message = "Invalid email or password. Please try again.";
+        message = "Invalid email or password. Please check your credentials and try again.";
       } else if (error.message.includes("Email not confirmed")) {
         message = "Please confirm your email address before logging in.";
+      } else {
+        message = error.message;
       }
-      else{
-        message = 'You are not Authorized for Admin Dashboard'
-      }
-        toast({
-          title: "Login Failed",
-          description: message,
-          variant: "destructive",
-        });
-      
-      setIsLoading(false);
-      return;
+      toast({
+        title: "Login Failed",
+        description: message,
+        variant: "destructive",
+      });
     } else {
       toast({
         title: "Welcome back!",
@@ -148,7 +197,17 @@ export default function Auth() {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="login-password">Password</Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="login-password">Password</Label>
+                      <button
+                        type="button"
+                        onClick={handleForgotPassword}
+                        disabled={resetLoading}
+                        className="text-xs text-primary hover:underline disabled:opacity-50"
+                      >
+                        {resetLoading ? "Sending Link..." : "Forgot password?"}
+                      </button>
+                    </div>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
