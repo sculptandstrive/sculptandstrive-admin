@@ -9,18 +9,8 @@ import {
   RefreshCw, 
   Loader2, 
   UserPlus, 
-  Play,
-  CheckCircle,
-  Clock,
-  XCircle,
-  Dumbbell,
-  Calendar,
-  Trophy,
-  Flame,
-  Award,
   Trash2
 } from "lucide-react";
-import { format } from "date-fns";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -126,15 +116,11 @@ export default function Users() {
   const [profileData, setProfileData] = useState<{
     healthHistory: any;
     checkins: any[];
-    photos: any[];
     workoutsSummary: {
       totalCount: number;
       completedCount: number;
       totalCalories: number;
     };
-    userWorkouts: any[];
-    videos: any[];
-    videosLoading: boolean;
   } | null>(null);
 
   const fetchClientProfile = async (userId: string) => {
@@ -142,7 +128,7 @@ export default function Users() {
       setProfileLoading(true);
       setProfileData(null);
 
-      const [healthRes, checkinsRes, photosRes, workoutsRes, progressRes] = await Promise.all([
+      const [healthRes, checkinsRes, workoutsRes, progressRes] = await Promise.all([
         supabase
           .from("health_history")
           .select("*")
@@ -154,20 +140,13 @@ export default function Users() {
           .eq("user_id", userId)
           .order("checkin_date", { ascending: false }),
         supabase
-          .from("progress_photos")
-          .select("*")
-          .eq("user_id", userId)
-          .order("taken_at", { ascending: false }),
-        supabase
           .from("workouts")
           .select("id, completed, calories_burned")
           .eq("user_id", userId),
         supabase
           .from("workout_progress")
-          .select("id, workout_id, workout_name, scheduled_date, status, duration_minutes, calories_burned, completed_at")
-          .eq("user_id", userId)
-          .order("scheduled_date", { ascending: false })
-          .limit(30),
+          .select("id, status")
+          .eq("user_id", userId),
       ]);
 
       const workouts = workoutsRes.data || [];
@@ -184,63 +163,14 @@ export default function Users() {
       setProfileData({
         healthHistory: healthRes.data || null,
         checkins: checkinsRes.data || [],
-        photos: photosRes.data || [],
         workoutsSummary: {
           totalCount,
           completedCount,
           totalCalories: calories,
         },
-        userWorkouts: progressLogs,
-        videos: [],
-        videosLoading: true,
       });
-
-      let videosData: any[] = [];
-      try {
-        const videosRes = await supabase
-          .from("tutorials")
-          .select("id, title, description, thumbnail_url, video_url_small, video_url_large, duration, category, level, audience, status, is_published, content_type")
-          .or("content_type.eq.tutorial,content_type.is.null")
-          .eq("status", "published")
-          .order("created_at", { ascending: false });
-        if (!videosRes.error) {
-          videosData = videosData.concat(videosRes.data || []);
-        }
-      } catch (err) {
-        console.error("Error fetching tutorial videos:", err);
-      }
-
-      try {
-        const playlistLinksRes = await supabase
-          .from("tutorial_playlist_videos")
-          .select("video_id, tutorial_playlists!inner(audience, is_published)");
-        if (!playlistLinksRes.error && playlistLinksRes.data) {
-          const allowedIds = new Set(
-            (playlistLinksRes.data as any[])
-              .filter((row) => {
-                const pl = row.tutorial_playlists;
-                return pl?.is_published !== false;
-              })
-              .map((row) => row.video_id)
-          );
-          videosData = videosData.filter((v) => allowedIds.has(v.id));
-        }
-      } catch (err) {
-        // Fall back to the unfiltered list if the join isn't accessible
-      }
-
-      setProfileData((prev) =>
-        prev
-          ? {
-              ...prev,
-              videos: videosData,
-              videosLoading: false,
-            }
-          : prev
-      );
     } catch (err: any) {
       console.error("Error loading client profile data:", err);
-      setProfileData((prev) => (prev ? { ...prev, videosLoading: false } : prev));
     } finally {
       setProfileLoading(false);
     }
@@ -1334,169 +1264,6 @@ export default function Users() {
                 </div>
               </div>
 
-              {/* Workout History Sessions Row */}
-              <div className="space-y-4 pt-4 border-t border-border">
-                <div className="flex items-center justify-between border-b border-border pb-1.5">
-                  <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
-                    <Dumbbell className="w-3.5 h-3.5 text-primary" />
-                    Workout Session Logs
-                  </h4>
-                  <span className="text-[11px] font-medium text-muted-foreground">
-                    {profileData.userWorkouts?.length || 0} recorded
-                  </span>
-                </div>
-
-                {!profileData.userWorkouts || profileData.userWorkouts.length === 0 ? (
-                  <p className="text-xs text-muted-foreground italic py-8 text-center bg-muted/40 rounded-2xl border border-border">
-                    No workout sessions recorded yet.
-                  </p>
-                ) : (
-                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                    {profileData.userWorkouts.map((w: any) => {
-                      const isCompleted = w.status === "completed";
-                      const isInProgress = w.status === "in_progress";
-
-                      return (
-                        <div
-                          key={w.id}
-                          className="flex items-center justify-between p-3 rounded-2xl bg-card border border-border text-xs"
-                        >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            {isCompleted ? (
-                              <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                            ) : isInProgress ? (
-                              <Clock className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                            ) : (
-                              <XCircle className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                            )}
-                            <div className="min-w-0">
-                              <p className="font-semibold text-foreground truncate">
-                                {w.workout_name || "Workout Session"}
-                              </p>
-                              <p className="text-[11px] text-muted-foreground">
-                                {format(new Date(w.scheduled_date), "EEE, MMM d, yyyy")}
-                                {w.completed_at && ` • at ${format(new Date(w.completed_at), "h:mm a")}`}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2.5 flex-shrink-0 ml-4">
-                            {w.duration_minutes > 0 && (
-                              <span className="text-muted-foreground text-[11px]">
-                                {w.duration_minutes}m
-                              </span>
-                            )}
-                            {w.calories_burned > 0 && (
-                              <span className="text-muted-foreground text-[11px]">
-                                {w.calories_burned} kcal
-                              </span>
-                            )}
-                            <Badge
-                              variant="outline"
-                              className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-lg ${
-                                isCompleted
-                                  ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-                                  : isInProgress
-                                  ? "bg-blue-500/10 text-blue-600 border-blue-500/20"
-                                  : "bg-muted text-muted-foreground"
-                              }`}
-                            >
-                              {w.status}
-                            </Badge>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              {/* Progress Photos Row */}
-              <div className="space-y-4 pt-4 border-t border-border">
-                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-widest border-b border-border pb-1.5">Progress Photos</h4>
-                {profileData.photos.length === 0 ? (
-                  <p className="text-xs text-muted-foreground italic py-8 text-center bg-muted/40 rounded-2xl border border-border">No progress photos uploaded yet.</p>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    {profileData.photos.map((p) => (
-                      <div key={p.id} className="relative rounded-2xl overflow-hidden border border-border bg-card flex flex-col group">
-                        <div className="aspect-[3/4] w-full overflow-hidden bg-muted flex items-center justify-center">
-                          <img
-                            src={p.image_path}
-                            alt={`Progress photo ${p.taken_at}`}
-                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                          />
-                        </div>
-                        <div className="p-2 bg-muted/60 text-center text-xs font-medium text-muted-foreground border-t border-border">
-                          {new Date(p.taken_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Tutorial Videos Row */}
-              <div className="space-y-4 pt-4 border-t border-border">
-                <div className="flex items-center justify-between border-b border-border pb-1.5">
-                  <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-widest">Tutorial Videos</h4>
-                  <span className="text-[11px] font-medium text-muted-foreground">{profileData.videos?.length || 0} available</span>
-                </div>
-                {profileData.videosLoading ? (
-                  <div className="flex items-center justify-center py-8 gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                    <span className="text-xs text-muted-foreground">Loading videos...</span>
-                  </div>
-                ) : !profileData.videos || profileData.videos.length === 0 ? (
-                  <p className="text-xs text-muted-foreground italic py-8 text-center bg-muted/40 rounded-2xl border border-border">No tutorial videos available.</p>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {profileData.videos.map((v: any) => (
-                      <div key={v.id} className="rounded-2xl overflow-hidden border border-border bg-card flex flex-col group">
-                        <a
-                          href={v.video_url_large || v.video_url_small || "#"}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block aspect-video w-full overflow-hidden bg-muted relative"
-                        >
-                          {v.thumbnail_url ? (
-                            <img
-                              src={v.thumbnail_url}
-                              alt={v.title || "Tutorial video"}
-                              className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No thumbnail</div>
-                          )}
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Play className="w-8 h-8 text-white" />
-                          </div>
-                          {v.duration && (
-                            <span className="absolute bottom-1.5 right-1.5 bg-black/70 text-white text-[10px] font-medium px-1.5 py-0.5 rounded">
-                              {v.duration}
-                            </span>
-                          )}
-                        </a>
-                        <div className="p-2.5 space-y-1">
-                          <p className="text-xs font-semibold text-foreground line-clamp-2">{v.title || "Untitled video"}</p>
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            {v.category && (
-                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-border text-muted-foreground font-medium">
-                                {v.category}
-                              </Badge>
-                            )}
-                            {v.level && (
-                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-border text-muted-foreground font-medium">
-                                {v.level}
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
             </div>
           )}
         </DialogContent>
