@@ -19,89 +19,83 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-  
-    // const checkUserRole = async (session: Session | null) => {
-    //   if (!session?.user) {
-    //     setSession(null);
-    //     setUser(null);
-    //     setLoading(false);
-    //     return;
-    //   }
-
-    //   const { data: profileData, error } = await supabase
-    //     .from("user_roles")
-    //     .select("role")
-    //     .eq("user_id", session.user.id)
-    //     .single();
-
-    //   if (error || !profileData || profileData.role !== "admin") {
-    //     await supabase.auth.signOut();
-    //     setSession(null);
-    //     setUser(null);
-    //     setLoading(false);
-    //     return;
-    //   }
-
-    //   setSession(session);
-    //   setUser(session.user);
-    //   setLoading(false);
-    // };
-
-     const {
-       data: { subscription },
-     } = supabase.auth.onAuthStateChange((event, session) => {
-        if (event === 'TOKEN_REFRESH_FAILED' || event === 'SIGNED_OUT') {
-          try {
-            for (let i = 0; i < localStorage.length; i++) {
-              const key = localStorage.key(i);
-              if (key && key.includes('-auth-token')) {
-                localStorage.removeItem(key);
-              }
-            }
-          } catch {
-            // Ignore storage clearing error
+    const clearAuthTokens = () => {
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.includes('-auth-token')) {
+            localStorage.removeItem(key);
           }
-          setSession(null);
-          setUser(null);
-          setLoading(false);
-          return;
         }
+      } catch {
+        // Ignore storage clearing error
+      }
+    };
 
-        setSession(session);
-        setUser(session?.user ?? null);
+    const checkUserRole = async (session: Session | null) => {
+      if (!session?.user) {
+        setSession(null);
+        setUser(null);
         setLoading(false);
-      }); 
+        return;
+      }
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
+      const { data: profileData, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+
+      if (error || !profileData || profileData.role !== "admin") {
         try {
-          for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.includes('-auth-token')) {
-              localStorage.removeItem(key);
-            }
-          }
+          await supabase.auth.signOut();
         } catch {
-          // Ignore storage clearing error
+          // session may already be invalid; ignore
         }
         setSession(null);
         setUser(null);
         setLoading(false);
         return;
       }
+
       setSession(session);
-      setUser(session?.user ?? null);
+      setUser(session.user);
       setLoading(false);
+    };
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        clearAuthTokens();
+        setSession(null);
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      checkUserRole(session);
+    });
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        clearAuthTokens();
+        setSession(null);
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+      checkUserRole(session);
     }).catch(() => {
       setSession(null);
       setUser(null);
       setLoading(false);
     });
-    
+
     return () => subscription.unsubscribe();
   }, []);
-  
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
@@ -119,40 +113,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
       },
     });
-    
+
     return { error: error as Error | null };
   };
 
   const signIn = async (email: string, password: string) => {
-    const { data: AuthData, error: AuthError } =
-      await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    if (AuthError) {
-      return { error: AuthError };
-    }
-
-    const { data: profileData, error: RoleError } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", AuthData.user.id)
-      .maybeSingle();
-
-    if (RoleError) {
-      await supabase.auth.signOut();
-      return { error: RoleError };
-    }
-
-    if (!profileData || profileData.role !== "admin") {
-      await supabase.auth.signOut();
-      return {
-        error: { message: "You are not authorized for this role" } as Error,
-      };
-    }
-
-    return { error: AuthError as Error | null };
+    return { error: error as Error | null };
   };
 
   return (
