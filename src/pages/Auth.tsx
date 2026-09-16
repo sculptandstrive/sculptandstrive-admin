@@ -31,11 +31,12 @@ export default function Auth() {
   const [signupPassword, setSignupPassword] = useState("");
   const [signupName, setSignupName] = useState("");
   
-  const { signIn, signUp, user } = useAuth();
+   const { signIn, signUp, user } = useAuth();
   
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const [resetLoading, setResetLoading] = useState(false);   // ✅ moved up, before any early return
 
   const from = location.state?.from?.pathname || "/";
 
@@ -49,9 +50,6 @@ export default function Auth() {
   if (user) {
     return null;
   }
-
-  const [resetLoading, setResetLoading] = useState(false);
-
   const handleForgotPassword = async () => {
     const trimmedEmail = loginEmail.trim();
     if (!trimmedEmail) {
