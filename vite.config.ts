@@ -12,6 +12,9 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
+   build: {
+    sourcemap: true, 
+  },
   optimizeDeps: {
     include: [
       "react",
