@@ -598,12 +598,16 @@ export default function Users() {
     }
     setUpdating(true);
     try {
-      const newExpiry = new Date();
+      let newExpiry: string | null = null;
       if (roleChangeDialog.newRole === 'user') {
-        newExpiry.setDate(newExpiry.getDate() + 29);
+        const d = new Date();
+        d.setDate(d.getDate() + 29);
+        newExpiry = d.toISOString();
       }
       else if (roleChangeDialog.newRole === 'trial_user') {
-        newExpiry.setDate(newExpiry.getDate() + 3);
+        const d = new Date();
+        d.setDate(d.getDate() + 7);
+        newExpiry = d.toISOString();
       }
       const { data: existingRole } = await supabase
         .from("user_roles")
