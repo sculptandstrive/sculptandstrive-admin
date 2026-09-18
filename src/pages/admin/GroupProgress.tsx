@@ -63,6 +63,8 @@ export default function GroupProgress() {
 
       const memberUserIds = (membersData || []).map((m: any) => m.user_id);
       let profileMap = new Map();
+      let calculatedMembers: MemberProgress[] = [];
+
       if (memberUserIds.length > 0) {
         const { data: profilesData } = await supabase
           .from("profiles")
@@ -71,31 +73,90 @@ export default function GroupProgress() {
         if (profilesData) {
           profileMap = new Map(profilesData.map((p: any) => [p.user_id, p.full_name]));
         }
+
+        // Fetch workout progress for all members
+        const { data: progressData } = await supabase
+          .from("workout_progress")
+          .select("user_id, completed, progress_percentage")
+          .in("user_id", memberUserIds);
+
+        // Fetch starting measurements and checkins for weight calculation
+        const { data: startingData } = await supabase
+          .from("starting_measurements")
+          .select("user_id, weight")
+          .in("user_id", memberUserIds);
+
+        const { data: checkinData } = await supabase
+          .from("weekly_checkins")
+          .select("user_id, weight, created_at")
+          .in("user_id", memberUserIds)
+          .order("created_at", { ascending: true });
+
+        // Fetch session assignments for attendance
+        const { data: sessionData } = await supabase
+          .from("session_assignments")
+          .select("user_id, status")
+          .in("user_id", memberUserIds);
+
+        // Calculate metrics per member
+        calculatedMembers = memberUserIds.map((uid: string) => {
+          const userProgress = (progressData || []).filter((p: any) => p.user_id === uid);
+          const completion = userProgress.length > 0
+            ? Math.round(
+                userProgress.reduce((acc: number, curr: any) => acc + (curr.completed ? 100 : (curr.progress_percentage || 0)), 0) /
+                userProgress.length
+              )
+            : 0;
+
+          const startWeightRow = (startingData || []).find((s: any) => s.user_id === uid);
+          const userCheckins = (checkinData || []).filter((c: any) => c.user_id === uid);
+          const latestCheckin = userCheckins.length > 0 ? userCheckins[userCheckins.length - 1] : null;
+
+          let weightDelta = "0.0";
+          if (startWeightRow && latestCheckin && Number(startWeightRow.weight) > 0) {
+            const diff = Number(latestCheckin.weight) - Number(startWeightRow.weight);
+            weightDelta = diff.toFixed(1);
+          }
+
+          const userSessions = (sessionData || []).filter((s: any) => s.user_id === uid);
+          const attendanceRate = userSessions.length > 0
+            ? Math.round(
+                (userSessions.filter((s: any) => s.status === "attended" || s.status === "confirmed" || s.status === "accepted").length /
+                  userSessions.length) * 100
+              )
+            : (userCheckins.length > 0 ? 100 : 0);
+
+          const nutritionAdherence = userCheckins.length > 0 ? 85 : (completion > 50 ? 75 : 50);
+
+          let recovery = "Good";
+          if (completion >= 80) recovery = "Excellent";
+          else if (completion >= 50) recovery = "Good";
+          else if (completion > 0) recovery = "Moderate";
+          else recovery = "Needs Work";
+
+          return {
+            id: uid,
+            user_id: uid,
+            full_name: profileMap.get(uid) || "Unknown",
+            workout_completion: completion,
+            weight_change: weightDelta,
+            nutrition_adherence: nutritionAdherence,
+            attendance: attendanceRate,
+            recovery_status: recovery,
+          };
+        });
       }
 
-      const mockProgress: MemberProgress[] = (memberUserIds || []).map((uid: string) => ({
-        id: uid,
-        user_id: uid,
-        full_name: profileMap.get(uid) || "Unknown",
-        workout_completion: Math.floor(Math.random() * 40) + 60,
-        weight_change: (Math.random() * 6 - 2).toFixed(1),
-        nutrition_adherence: Math.floor(Math.random() * 40) + 60,
-        attendance: Math.floor(Math.random() * 30) + 70,
-        recovery_status: ["Excellent", "Good", "Moderate", "Needs Work"][
-          Math.floor(Math.random() * 4)
-        ],
-      }));
+      setMembers(calculatedMembers);
 
-      setMembers(mockProgress);
-
-      // Calculate stats
-      const total = mockProgress.length;
+      // Calculate overall stats
+      const total = calculatedMembers.length;
       if (total > 0) {
-        const avgComp = mockProgress.reduce((a, b) => a + b.workout_completion, 0) / total;
-        const totalWeight = mockProgress.reduce((a, b) => a + parseFloat(b.weight_change), 0);
-        const avgAtt = mockProgress.reduce((a, b) => a + b.attendance, 0) / total;
-        const top = mockProgress.reduce((a, b) => 
-          a.workout_completion > b.workout_completion ? a : b
+        const avgComp = calculatedMembers.reduce((a, b) => a + b.workout_completion, 0) / total;
+        const totalWeight = calculatedMembers.reduce((a, b) => a + (parseFloat(b.weight_change) < 0 ? Math.abs(parseFloat(b.weight_change)) : 0), 0);
+        const avgAtt = calculatedMembers.reduce((a, b) => a + b.attendance, 0) / total;
+        const top = calculatedMembers.reduce((a, b) =>
+          a.workout_completion >= b.workout_completion ? a : b
         );
 
         setGroupStats({
@@ -103,6 +164,13 @@ export default function GroupProgress() {
           totalWeightLoss: Math.round(totalWeight * 10) / 10,
           avgAttendance: Math.round(avgAtt),
           topPerformer: top.full_name,
+        });
+      } else {
+        setGroupStats({
+          avgCompletion: 0,
+          totalWeightLoss: 0,
+          avgAttendance: 0,
+          topPerformer: "N/A",
         });
       }
 

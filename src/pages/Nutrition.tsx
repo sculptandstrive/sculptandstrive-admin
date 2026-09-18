@@ -330,7 +330,7 @@ export default function NutritionAdmin() {
     }
 
     try {
-      const { error } = await (supabase as any).from("meal_plans").insert([
+      const { data: createdPlan, error } = await (supabase as any).from("meal_plans").insert([
         {
           name: newPlan.name.trim(),
           meals: newPlan.meals,
@@ -340,10 +340,69 @@ export default function NutritionAdmin() {
           carbs: carbsVal,
           water: waterVal,
         },
-      ]);
+      ]).select().maybeSingle();
       if (error) throw error;
 
+      if (createdPlan?.id) {
+        if (assignType === "individual" && selectedUserForPlan) {
+          await (supabase as any)
+            .from("user_meal_plans")
+            .upsert(
+              { user_id: selectedUserForPlan, plan_id: createdPlan.id },
+              { onConflict: "user_id" },
+            );
+
+          try {
+            await supabase.from("notifications").insert({
+              user_id: selectedUserForPlan,
+              recipient_type: "user",
+              sender_type: "admin",
+              is_completed: false,
+              title: "New Nutrition Plan Appointed",
+              description: `You have been assigned ${createdPlan.name}. Check your Nutrition page to see your daily targets.`,
+              notification_date: new Date().toISOString().split("T")[0],
+              created_at: new Date().toISOString(),
+            });
+          } catch (notifErr) {
+            console.warn("Notification error:", notifErr);
+          }
+        } else if (assignType === "group" && selectedGroupForPlan) {
+          const { data: members } = await supabase
+            .from("group_members")
+            .select("user_id")
+            .eq("group_id", selectedGroupForPlan);
+
+          if (members && members.length > 0) {
+            const assignments = members.map((m: any) => ({
+              user_id: m.user_id,
+              plan_id: createdPlan.id,
+            }));
+            await (supabase as any)
+              .from("user_meal_plans")
+              .upsert(assignments, { onConflict: "user_id" });
+
+            const notifs = members.map((m: any) => ({
+              user_id: m.user_id,
+              recipient_type: "user",
+              sender_type: "admin",
+              is_completed: false,
+              title: "New Nutrition Plan Appointed",
+              description: `Your group has been assigned ${createdPlan.name}. Check your Nutrition page to see your daily targets.`,
+              notification_date: new Date().toISOString().split("T")[0],
+              created_at: new Date().toISOString(),
+            }));
+            try {
+              await supabase.from("notifications").insert(notifs);
+            } catch (notifErr) {
+              console.warn("Group notification error:", notifErr);
+            }
+          }
+        }
+      }
+
       toast({ title: "Plan Created", description: "New plan is now live." });
+      setSelectedUserForPlan("");
+      setSelectedGroupForPlan("");
       setIsDialogOpen(false);
       fetchAdminDashboardData();
     } catch (error: any) {
@@ -361,6 +420,12 @@ export default function NutritionAdmin() {
     );
     if (!confirmDelete) return;
     try {
+      // Clean up user assignments first to prevent foreign key errors
+      await (supabase as any)
+        .from("user_meal_plans")
+        .delete()
+        .eq("plan_id", planId);
+
       const { error } = await (supabase as any)
         .from("meal_plans")
         .delete()
@@ -374,7 +439,7 @@ export default function NutritionAdmin() {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "Cannot delete plan. Ensure no users are assigned.",
+        description: error.message,
         variant: "destructive",
       });
     }
@@ -389,6 +454,23 @@ export default function NutritionAdmin() {
           { onConflict: "user_id" },
         );
       if (error) throw error;
+
+      const assignedPlanName = mealPlans.find(p => p.id === planId)?.name || "a new meal plan";
+      try {
+        await supabase.from("notifications").insert({
+          user_id: userId,
+          recipient_type: "user",
+          sender_type: "admin",
+          is_completed: false,
+          title: "New Nutrition Plan Appointed",
+          description: `You have been assigned ${assignedPlanName}. Check your Nutrition page to see your daily targets.`,
+          notification_date: new Date().toISOString().split("T")[0],
+          created_at: new Date().toISOString(),
+        });
+      } catch (notifErr) {
+        console.warn("Failed to notify user about assigned meal plan:", notifErr);
+      }
+
       toast({ title: "Plan Assigned", description: "User moved to new plan." });
       fetchAdminDashboardData();
     } catch (error: any) {

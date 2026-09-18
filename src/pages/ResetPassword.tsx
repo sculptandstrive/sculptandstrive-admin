@@ -23,6 +23,8 @@ const ResetPassword = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    let active = true;
+
     const handleAuthRedirect = async () => {
       try {
         setCheckingToken(true);
@@ -38,11 +40,13 @@ const ResetPassword = () => {
           searchParams.get("error_code") || hashParams.get("error_code");
 
         if (errorDesc || errorCode) {
-          setErrorMessage(
-            errorDesc?.replace(/\+/g, " ") ||
-              "The password reset link is invalid or has expired. Please request a new link."
-          );
-          setCheckingToken(false);
+          if (active) {
+            setErrorMessage(
+              errorDesc?.replace(/\+/g, " ") ||
+                "The password reset link is invalid or has expired. Please request a new link."
+            );
+            setCheckingToken(false);
+          }
           return;
         }
 
@@ -52,38 +56,68 @@ const ResetPassword = () => {
           const { error: exchangeError } =
             await supabase.auth.exchangeCodeForSession(code);
           if (exchangeError) {
-            setErrorMessage(
-              exchangeError.message ||
-                "Failed to verify password reset code. Please request a new link."
-            );
-            setCheckingToken(false);
+            if (active) {
+              setErrorMessage(
+                exchangeError.message ||
+                  "Failed to verify password reset code. Please request a new link."
+              );
+              setCheckingToken(false);
+            }
             return;
           }
         }
 
-        // 3. Verify session
+        // 3. Check for implicit hash tokens (access_token & refresh_token)
+        const access_token = hashParams.get("access_token");
+        const refresh_token = hashParams.get("refresh_token");
+        if (access_token && refresh_token) {
+          const { error: setSessionErr } = await supabase.auth.setSession({
+            access_token,
+            refresh_token,
+          });
+          if (setSessionErr) {
+            console.warn("[ResetPassword] setSession from hash error:", setSessionErr);
+          } else {
+            if (active) {
+              setHasValidSession(true);
+              setErrorMessage(null);
+              setCheckingToken(false);
+            }
+            return;
+          }
+        }
+
+        // 4. Verify session
         const {
           data: { session },
         } = await supabase.auth.getSession();
 
         if (session) {
-          setHasValidSession(true);
+          if (active) {
+            setHasValidSession(true);
+            setCheckingToken(false);
+          }
         } else {
           const {
             data: { subscription },
           } = supabase.auth.onAuthStateChange((event, session) => {
             if (event === "PASSWORD_RECOVERY" || session) {
-              setHasValidSession(true);
-              setErrorMessage(null);
+              if (active) {
+                setHasValidSession(true);
+                setErrorMessage(null);
+                setCheckingToken(false);
+              }
             }
           });
 
           setTimeout(async () => {
+            if (!active) return;
             const {
               data: { session: currentSession },
             } = await supabase.auth.getSession();
             if (currentSession) {
               setHasValidSession(true);
+              setErrorMessage(null);
             } else if (!hasValidSession) {
               if (!hash.includes("access_token") && !code) {
                 setErrorMessage(
@@ -99,15 +133,20 @@ const ResetPassword = () => {
           };
         }
       } catch (err: any) {
-        setErrorMessage(
-          err?.message || "Failed to validate reset link. Please try again."
-        );
-      } finally {
-        setCheckingToken(false);
+        if (active) {
+          setErrorMessage(
+            err?.message || "Failed to validate reset link. Please try again."
+          );
+          setCheckingToken(false);
+        }
       }
     };
 
     handleAuthRedirect();
+
+    return () => {
+      active = false;
+    };
   }, [searchParams]);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {

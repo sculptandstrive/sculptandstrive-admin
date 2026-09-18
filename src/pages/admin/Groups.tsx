@@ -176,6 +176,12 @@ export default function Groups() {
     if (!window.confirm("Delete this group? Members will be removed.")) return;
 
     try {
+      // Delete group members first to avoid FK constraint errors
+      await supabase
+        .from("group_members")
+        .delete()
+        .eq("group_id", groupId);
+
       const { error } = await supabase
         .from("workout_groups")
         .delete()

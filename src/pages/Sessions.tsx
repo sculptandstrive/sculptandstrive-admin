@@ -615,9 +615,13 @@ export default function Sessions() {
 
         const notifications = formData.selectedClientIds.map((cid) => ({
           user_id: cid,
+          recipient_type: "user",
+          sender_type: "admin",
+          is_completed: false,
           title: `You have a new Session: ${formData.title}`,
           description: `Join the session at ${scheduledDateTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
           notification_date: scheduledDateTime.toISOString().split("T")[0],
+          created_at: new Date().toISOString(),
           related_id: newSession.id,
         }));
 
@@ -627,9 +631,13 @@ export default function Sessions() {
         if (clients.length > 0) {
           const notifications = clients.map((c) => ({
             user_id: c.user_id,
+            recipient_type: "user",
+            sender_type: "admin",
+            is_completed: false,
             title: `New Session: ${formData.title}`,
             description: `Join the session at ${scheduledDateTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
             notification_date: scheduledDateTime.toISOString().split("T")[0],
+            created_at: new Date().toISOString(),
             related_id: newSession.id
           }));
 

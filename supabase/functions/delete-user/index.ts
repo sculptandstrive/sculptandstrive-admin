@@ -76,7 +76,9 @@ Deno.serve(async (req) => {
       () => admin.from("sessions").delete().eq("coach_id", user_id),
       () => admin.from("sessions").delete().eq("user_id", user_id),
 
-      // 3. Workouts, logs & Exercises
+      // 3. Workouts, assignments, logs & Exercises
+      () => admin.from("client_workout_assignments").delete().eq("user_id", user_id),
+      () => admin.from("client_workout_assignments").delete().eq("client_id", user_id),
       () => admin.from("exercise_logs").delete().eq("user_id", user_id),
       () => admin.from("workout_progress").delete().eq("user_id", user_id),
       () => admin.from("workouts").delete().eq("user_id", user_id),
@@ -91,14 +93,21 @@ Deno.serve(async (req) => {
       () => admin.from("progress_records").delete().eq("user_id", user_id),
       () => admin.from("progress_photos").delete().eq("user_id", user_id),
 
-      // 5. Nutrition, Hydration & Meal plans
+      // 5. Nutrition, Hydration, Calculations & Meal plans
       () => admin.from("nutrition_logs").delete().eq("user_id", user_id),
       () => admin.from("water_intake").delete().eq("user_id", user_id),
       () => admin.from("user_meal_plans").delete().eq("user_id", user_id),
+      () => admin.from("nutrition_requirements").delete().eq("user_id", user_id),
+      () => admin.from("macro_result").delete().eq("user_id", user_id),
+      () => admin.from("hf_data").delete().eq("user_id", user_id),
+      () => admin.from("bmr_data").delete().eq("user_id", user_id),
 
       // 6. Tickets, Notifications, Activities, Payments & Roles
+      () => admin.from("ticket_replies").delete().eq("user_id", user_id),
+      () => admin.from("ticket_messages").delete().eq("user_id", user_id),
       () => admin.from("tickets").delete().eq("user_id", user_id),
       () => admin.from("notifications").delete().eq("user_id", user_id),
+      () => admin.from("notifications").delete().eq("sender_id", user_id),
       () => admin.from("notification_preferences").delete().eq("user_id", user_id),
       () => admin.from("activities").delete().eq("id", user_id),
       () => admin.from("activities").delete().eq("user_id", user_id),
@@ -108,6 +117,7 @@ Deno.serve(async (req) => {
       // 7. Profile details & Profiles
       () => admin.from("profile_details").delete().eq("user_id", user_id),
       () => admin.from("profiles").delete().eq("id", user_id),
+      () => admin.from("profiles").delete().eq("user_id", user_id),
     ];
 
     for (const step of cleanupSteps) {

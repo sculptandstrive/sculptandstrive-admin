@@ -127,17 +127,72 @@ export default function GroupDetails() {
         members: formattedMembers,
       });
 
-      // Calculate stats
+      // Calculate real stats from database
       const totalMembers = formattedMembers.length;
-      const avgCompletion = Math.floor(Math.random() * 30) + 70; // Placeholder
-      const avgWeightLoss = (Math.random() * 5 + 1).toFixed(1);
-      const completedCheckins = Math.floor(Math.random() * totalMembers);
+      let calculatedAvgCompletion = 0;
+      let calculatedAvgWeightLoss = 0;
+      let calculatedCompletedCheckins = 0;
+
+      if (memberIds.length > 0) {
+        // Workout progress
+        const { data: progressRows } = await supabase
+          .from("workout_progress")
+          .select("user_id, completed, progress_percentage")
+          .in("user_id", memberIds);
+
+        if (progressRows && progressRows.length > 0) {
+          const totalProgress = progressRows.reduce(
+            (acc: number, curr: any) => acc + (curr.completed ? 100 : (curr.progress_percentage || 0)),
+            0
+          );
+          calculatedAvgCompletion = Math.round(totalProgress / progressRows.length);
+        }
+
+        // Weekly check-ins
+        const { data: checkinRows } = await supabase
+          .from("weekly_checkins")
+          .select("user_id, weight, created_at")
+          .in("user_id", memberIds)
+          .order("created_at", { ascending: true });
+
+        const { data: startingRows } = await supabase
+          .from("starting_measurements")
+          .select("user_id, weight")
+          .in("user_id", memberIds);
+
+        if (checkinRows && checkinRows.length > 0) {
+          const uniqueCheckedUsers = new Set(checkinRows.map((c: any) => c.user_id));
+          calculatedCompletedCheckins = uniqueCheckedUsers.size;
+        }
+
+        if (checkinRows && checkinRows.length > 0 && startingRows && startingRows.length > 0) {
+          const startMap = new Map(startingRows.map((s: any) => [s.user_id, Number(s.weight) || 0]));
+          const latestWeightMap = new Map();
+          for (const c of checkinRows) {
+            latestWeightMap.set(c.user_id, Number(c.weight) || 0);
+          }
+
+          let lossSum = 0;
+          let countWithLoss = 0;
+          for (const [uid, startW] of startMap.entries()) {
+            if (latestWeightMap.has(uid) && startW > 0) {
+              const currentW = latestWeightMap.get(uid);
+              lossSum += (startW - currentW);
+              countWithLoss++;
+            }
+          }
+
+          if (countWithLoss > 0) {
+            calculatedAvgWeightLoss = parseFloat((lossSum / countWithLoss).toFixed(1));
+          }
+        }
+      }
       
       setStats({
         totalMembers,
-        avgCompletion,
-        avgWeightLoss: parseFloat(avgWeightLoss),
-        completedCheckins,
+        avgCompletion: calculatedAvgCompletion,
+        avgWeightLoss: calculatedAvgWeightLoss,
+        completedCheckins: calculatedCompletedCheckins,
         totalCheckins: totalMembers,
       });
 
@@ -156,6 +211,20 @@ export default function GroupDetails() {
     if (!selectedUser) return;
 
     try {
+      // Check if user is already a member of this group
+      const { data: existing } = await supabase
+        .from("group_members")
+        .select("id")
+        .eq("group_id", id)
+        .eq("user_id", selectedUser)
+        .maybeSingle();
+
+      if (existing) {
+        toast({ title: "User is already in this group" });
+        setIsAssignOpen(false);
+        return;
+      }
+
       const { error } = await supabase
         .from("group_members")
         .insert({ group_id: id, user_id: selectedUser });
@@ -220,14 +289,25 @@ return (
       title={group.name}
       description={`Coach: ${group.coach_name}`}
     >
-      <Button
-        variant="outline"
-        onClick={() => window.history.back()}
-        className="border-border text-foreground hover:bg-muted shadow-sm rounded-xl"
-      >
-        <ArrowLeft className="w-4 h-4 mr-2" />
-        Back
-      </Button>
+      <div className="flex items-center gap-2">
+        <NavLink to={`/admin/groups/${id}/progress`}>
+          <Button
+            variant="outline"
+            className="gap-2 border-border text-foreground hover:bg-muted shadow-sm rounded-xl"
+          >
+            <TrendingUp className="w-4 h-4 text-primary" />
+            View Progress
+          </Button>
+        </NavLink>
+        <Button
+          variant="outline"
+          onClick={() => window.history.back()}
+          className="border-border text-foreground hover:bg-muted shadow-sm rounded-xl"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back
+        </Button>
+      </div>
     </PageHeader>
 
     {/* Stats Grid */}
