@@ -61,52 +61,61 @@ export function AdminClientProgress() {
   const fetchClients = async () => {
     setLoading(true);
 
-    const { data: measurementsData } = await supabase
-      .from("current_measurements")
-      .select("user_id, weight_kg, created_at")
-      .order("created_at", { ascending: false });
+    try {
+      const [profilesRes, measurementsRes, checkinsRes] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id, user_id, full_name, email, created_at")
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("current_measurements")
+          .select("user_id, weight_kg, created_at")
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("weekly_checkins")
+          .select("user_id, weight_kg, checkin_date, created_at")
+          .order("created_at", { ascending: false }),
+      ]);
 
-    if (!measurementsData) {
+      const latestByUser = new Map<string, { weight: number; date: string }>();
+
+      (measurementsRes.data || []).forEach((m: any) => {
+        if (!latestByUser.has(m.user_id) && m.weight_kg != null) {
+          latestByUser.set(m.user_id, { weight: Number(m.weight_kg), date: m.created_at });
+        }
+      });
+
+      (checkinsRes.data || []).forEach((c: any) => {
+        const existing = latestByUser.get(c.user_id);
+        const checkinDate = c.created_at || c.checkin_date;
+        if (c.weight_kg != null) {
+          if (!existing || (checkinDate && new Date(checkinDate) > new Date(existing.date))) {
+            latestByUser.set(c.user_id, { weight: Number(c.weight_kg), date: checkinDate });
+          }
+        }
+      });
+
+      const profiles = profilesRes.data || [];
+      const clientList: ClientSummary[] = profiles.map((p) => {
+        const uid = p.user_id || p.id;
+        const latest = latestByUser.get(uid) || latestByUser.get(p.id) || latestByUser.get(p.user_id);
+        return {
+          user_id: uid,
+          profile_id: p.id,
+          full_name: p.full_name || "Unknown Member",
+          email: p.email || "",
+          created_at: p.created_at || null,
+          latest_weight: latest?.weight ?? null,
+          last_updated: latest?.date ?? null,
+        };
+      });
+
+      setClients(clientList);
+    } catch (err) {
+      console.error("fetchClients error:", err);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const latestByUser = new Map<string, { weight: number; date: string }>();
-    measurementsData.forEach((m: any) => {
-      if (!latestByUser.has(m.user_id)) {
-        latestByUser.set(m.user_id, { weight: m.weight_kg, date: m.created_at });
-      }
-    });
-
-    const userIds = [...latestByUser.keys()];
-    if (userIds.length === 0) {
-      setClients([]);
-      setLoading(false);
-      return;
-    }
-
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, user_id, full_name, email, created_at")
-      .in("user_id", userIds);
-
-    const profileMap = new Map(profiles?.map((p: any) => [p.user_id, p]) || []);
-
-    const clientList: ClientSummary[] = userIds.map((id) => {
-      const p = profileMap.get(id);
-      return {
-        user_id: id,
-        profile_id: p?.id,
-        full_name: p?.full_name || "Unknown Member",
-        email: p?.email || "",
-        created_at: p?.created_at || null,
-        latest_weight: latestByUser.get(id)?.weight ?? null,
-        last_updated: latestByUser.get(id)?.date ?? null,
-      };
-    });
-
-    setClients(clientList);
-    setLoading(false);
   };
 
   const openClientDetail = async (client: ClientSummary) => {

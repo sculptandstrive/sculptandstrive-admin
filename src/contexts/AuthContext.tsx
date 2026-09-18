@@ -21,12 +21,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const clearAuthTokens = () => {
       try {
+        const keysToRemove: string[] = [];
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
-          if (key && key.includes('-auth-token')) {
-            localStorage.removeItem(key);
+          if (key && (key.includes('-auth-token') || key.startsWith('sb-'))) {
+            keysToRemove.push(key);
           }
         }
+        keysToRemove.forEach((k) => localStorage.removeItem(k));
       } catch {
         // Ignore storage clearing error
       }
@@ -52,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch {
           // session may already be invalid; ignore
         }
+        clearAuthTokens();
         setSession(null);
         setUser(null);
         setLoading(false);
@@ -66,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT') {
+      if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESH_FAILED') {
         clearAuthTokens();
         setSession(null);
         setUser(null);
@@ -88,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       checkUserRole(session);
     }).catch(() => {
+      clearAuthTokens();
       setSession(null);
       setUser(null);
       setLoading(false);
@@ -97,7 +101,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // ignore
+    } finally {
+      clearAuthTokens();
+      setSession(null);
+      setUser(null);
+    }
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {

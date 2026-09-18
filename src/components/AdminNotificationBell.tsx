@@ -20,29 +20,55 @@ export function AdminNotificationBell() {
   const [open, setOpen] = useState(false);
 
   const fetchNotifications = async () => {
-    const { data, error } = await supabase
-      .from("notifications")
-      .select("id, title, description, created_at")
-      .eq("recipient_type", "admin")
-      .eq("is_completed", false)
-      .order("created_at", { ascending: false })
-      .limit(20);
+    try {
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("id, title, description, created_at, is_completed, recipient_type")
+        .eq("recipient_type", "admin")
+        .or("is_completed.eq.false,is_completed.is.null")
+        .order("created_at", { ascending: false })
+        .limit(30);
 
-    if (!error) setNotifications(data || []);
+      if (!error && data) {
+        setNotifications(data as AdminNotification[]);
+      }
+    } catch (err) {
+      console.warn("fetchNotifications error:", err);
+    }
   };
 
   const dismissNotification = async (id: string) => {
     // Optimistically remove from UI immediately
     setNotifications((prev) => prev.filter((n) => n.id !== id));
 
-    const { error } = await supabase
-      .from("notifications")
-      .update({ is_completed: true })
-      .eq("id", id);
+    try {
+      const { error } = await supabase
+        .from("notifications")
+        .update({ is_completed: true })
+        .eq("id", id);
 
-    if (error) {
-      console.log("Failed to dismiss:", error);
-      fetchNotifications(); // revert on failure
+      if (error) {
+        console.warn("Failed to dismiss notification:", error);
+        fetchNotifications(); // revert on failure
+      }
+    } catch (e) {
+      fetchNotifications();
+    }
+  };
+
+  const markAllAsRead = async () => {
+    const unreadIds = notifications.map((n) => n.id);
+    if (unreadIds.length === 0) return;
+    setNotifications([]);
+
+    try {
+      await supabase
+        .from("notifications")
+        .update({ is_completed: true })
+        .in("id", unreadIds);
+    } catch (e) {
+      console.warn("Failed to mark all as read:", e);
+      fetchNotifications();
     }
   };
 
@@ -50,12 +76,34 @@ export function AdminNotificationBell() {
     fetchNotifications();
 
     const channel = supabase
-      .channel("admin-notifications")
+      .channel("admin-notifications-realtime-feed")
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "notifications", filter: "recipient_type=eq.admin" },
-        (payload) => {
-          setNotifications((prev) => [payload.new as AdminNotification, ...prev]);
+        { event: "*", schema: "public", table: "notifications" },
+        (payload: any) => {
+          if (payload.eventType === "INSERT") {
+            const newNotif = payload.new as any;
+            if (newNotif?.recipient_type === "admin" && !newNotif.is_completed) {
+              setNotifications((prev) => {
+                if (prev.some((n) => n.id === newNotif.id)) return prev;
+                return [newNotif as AdminNotification, ...prev];
+              });
+            }
+          } else if (payload.eventType === "UPDATE") {
+            const updated = payload.new as any;
+            if (updated?.is_completed) {
+              setNotifications((prev) => prev.filter((n) => n.id !== updated.id));
+            } else if (updated?.recipient_type === "admin") {
+              setNotifications((prev) =>
+                prev.map((n) => (n.id === updated.id ? (updated as AdminNotification) : n))
+              );
+            }
+          } else if (payload.eventType === "DELETE") {
+            const deleted = payload.old as any;
+            if (deleted?.id) {
+              setNotifications((prev) => prev.filter((n) => n.id !== deleted.id));
+            }
+          }
         }
       )
       .subscribe();
@@ -82,11 +130,21 @@ export function AdminNotificationBell() {
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-0 bg-popover text-popover-foreground border border-border shadow-xl rounded-xl overflow-hidden">
         <div className="p-3.5 border-b border-border font-semibold text-sm text-foreground flex items-center justify-between">
-          <span>Notifications</span>
+          <div className="flex items-center gap-2">
+            <span>Notifications</span>
+            {notifications.length > 0 && (
+              <span className="text-[11px] font-normal text-primary bg-primary/10 px-1.5 py-0.5 rounded-md">
+                {notifications.length} new
+              </span>
+            )}
+          </div>
           {notifications.length > 0 && (
-            <span className="text-xs font-normal text-muted-foreground">
-              {notifications.length} new
-            </span>
+            <button
+              onClick={markAllAsRead}
+              className="text-xs text-muted-foreground hover:text-foreground font-normal transition-colors"
+            >
+              Clear all
+            </button>
           )}
         </div>
         <div className="max-h-80 overflow-y-auto divide-y divide-border/60">

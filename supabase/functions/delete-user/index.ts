@@ -62,26 +62,80 @@ Deno.serve(async (req) => {
       return json({ error: "user_id is required" }, 400);
     }
 
+    // Comprehensive list of cleanup operations for all relational tables
     const cleanupSteps: Array<() => Promise<{ error: any }>> = [
-      () => admin.from("user_roles").delete().eq("user_id", user_id),
+      // 1. Group memberships & Coaching assignments
+      () => admin.from("group_members").delete().eq("user_id", user_id),
       () => admin.from("coach_clients").delete().eq("client_id", user_id),
       () => admin.from("coach_clients").delete().eq("coach_id", user_id),
+      () => admin.from("workout_groups").update({ coach_id: null }).eq("coach_id", user_id),
+
+      // 2. Session assignments & Sessions
       () => admin.from("session_assignments").delete().eq("client_id", user_id),
-      () => admin.from("exercises").delete().eq("user_id", user_id),
+      () => admin.from("session_assignments").delete().eq("coach_id", user_id),
+      () => admin.from("sessions").delete().eq("coach_id", user_id),
+      () => admin.from("sessions").delete().eq("user_id", user_id),
+
+      // 3. Workouts, logs & Exercises
+      () => admin.from("exercise_logs").delete().eq("user_id", user_id),
+      () => admin.from("workout_progress").delete().eq("user_id", user_id),
       () => admin.from("workouts").delete().eq("user_id", user_id),
+      () => admin.from("exercises").delete().eq("user_id", user_id),
       () => admin.from("workout_plans").update({ created_by: null }).eq("created_by", user_id),
+
+      // 4. Checkins, Measurements & Health History
+      () => admin.from("weekly_checkins").delete().eq("user_id", user_id),
+      () => admin.from("health_history").delete().eq("user_id", user_id),
+      () => admin.from("starting_measurements").delete().eq("user_id", user_id),
+      () => admin.from("current_measurements").delete().eq("user_id", user_id),
+      () => admin.from("progress_records").delete().eq("user_id", user_id),
+      () => admin.from("progress_photos").delete().eq("user_id", user_id),
+
+      // 5. Nutrition, Hydration & Meal plans
+      () => admin.from("nutrition_logs").delete().eq("user_id", user_id),
+      () => admin.from("water_intake").delete().eq("user_id", user_id),
+      () => admin.from("user_meal_plans").delete().eq("user_id", user_id),
+
+      // 6. Tickets, Notifications, Activities, Payments & Roles
+      () => admin.from("tickets").delete().eq("user_id", user_id),
+      () => admin.from("notifications").delete().eq("user_id", user_id),
+      () => admin.from("notification_preferences").delete().eq("user_id", user_id),
+      () => admin.from("activities").delete().eq("id", user_id),
+      () => admin.from("activities").delete().eq("user_id", user_id),
       () => admin.from("payments").delete().eq("user_id", user_id),
+      () => admin.from("user_roles").delete().eq("user_id", user_id),
+
+      // 7. Profile details & Profiles
+      () => admin.from("profile_details").delete().eq("user_id", user_id),
+      () => admin.from("profiles").delete().eq("id", user_id),
     ];
 
     for (const step of cleanupSteps) {
-      const { error } = await step();
-
-      if (error && !error.message?.includes("does not exist")) {
-        return json({ error: `Cleanup failed: ${error.message}` }, 500);
+      try {
+        const { error } = await step();
+        if (error) {
+          const msg = error.message?.toLowerCase() || "";
+          // Ignore tables/columns that may not exist in specific environments
+          if (
+            !msg.includes("does not exist") &&
+            !msg.includes("not found") &&
+            !msg.includes("schema")
+          ) {
+            console.warn("Cleanup step notice:", error.message);
+          }
+        }
+      } catch (e: any) {
+        console.warn("Cleanup exception ignored:", e?.message);
       }
     }
 
+    // Clean up user storage assets safely if present
+    try {
+      await admin.storage.from("progress_photos").remove([`${user_id}`]);
+      await admin.storage.from("user-images").remove([`${user_id}`]);
+    } catch {}
 
+    // Delete the Auth account
     const { error: deleteError } = await admin.auth.admin.deleteUser(user_id);
     if (deleteError) {
       return json({ error: deleteError.message }, 500);

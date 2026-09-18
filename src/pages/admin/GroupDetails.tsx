@@ -97,11 +97,15 @@ export default function GroupDetails() {
 
       // Fetch available users (not in group)
       const memberIds = members?.map((m: any) => m.user_id) || [];
-      const { data: allUsers } = await supabase
+      let query = supabase
         .from("profiles")
-        .select("user_id, full_name, email")
-        .eq("is_admin", false)
-        .not("user_id", "in", `(${memberIds.join(",")})`);
+        .select("user_id, full_name, email");
+
+      if (memberIds.length > 0) {
+        query = query.not("user_id", "in", `(${memberIds.join(",")})`);
+      }
+
+      const { data: allUsers } = await query;
 
       setAvailableUsers(allUsers || []);
 

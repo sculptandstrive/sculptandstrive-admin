@@ -221,7 +221,7 @@ export default function Fitness() {
           .from("exercises")
           .select("*")
           .order("created_at", { ascending: false }),
-        (supabase as any).from("profiles").select("user_id, full_name, email").eq('is_admin', false),
+        (supabase as any).from("profiles").select("user_id, full_name, email"),
         (supabase as any)
           .from("client_workout_assignments")
           .select("client_id, plan_id"),

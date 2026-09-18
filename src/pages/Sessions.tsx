@@ -170,18 +170,6 @@ export default function Sessions() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const { data: roleData, error: roleErr } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .eq("role", "user");
-
-      if (roleErr) {
-        console.error("Role fetch error:", roleErr);
-        return;
-      }
-
-      const userIds = roleData.map((r) => r.user_id);
-
       const [sessRes, clientRes] = await Promise.all([
         supabase
           .from("sessions")
@@ -190,7 +178,6 @@ export default function Sessions() {
         supabase
           .from("profiles")
           .select("user_id, full_name, email")
-          .in("user_id", userIds)
           .order("created_at", { ascending: false }),
       ]);
 

@@ -185,7 +185,7 @@ export default function Users() {
       setLoading(true);
       const [profilesRes, rolesRes] = await Promise.all([
         supabase.from("profiles").select("*").order("created_at", { ascending: false }),
-        supabase.from("user_roles").select("user_id, role")
+        supabase.from("user_roles").select("user_id, role, expiry_time, created_at")
       ]);
 
       let coachClientsData: any[] = [];
@@ -198,16 +198,31 @@ export default function Users() {
         // Table coach_clients may not exist in schema
       }
 
+      let profileDetailsData: any[] = [];
+      try {
+        const detailsRes = await supabase.from("profile_details").select("user_id, first_name, last_name, phone");
+        if (!detailsRes.error && detailsRes.data) {
+          profileDetailsData = detailsRes.data;
+        }
+      } catch (err) {
+        // Table profile_details may not exist in schema
+      }
+
       if (profilesRes.error) throw profilesRes.error;
       if (rolesRes.error) throw rolesRes.error;
 
       const profileMap = new Map<string, string>();
       (profilesRes.data || []).forEach(p => {
-        if (p.user_id) profileMap.set(p.user_id, p.full_name || "Unknown");
-        if (p.id) profileMap.set(p.id, p.full_name || "Unknown");
+        if (p.user_id) profileMap.set(p.user_id, p.full_name || p.email || "Unknown");
+        if (p.id) profileMap.set(p.id, p.full_name || p.email || "Unknown");
       });
       const rolesMap = new Map((rolesRes.data || []).map(r => [r.user_id, r.role]));
       
+      const detailsMap = new Map<string, any>();
+      profileDetailsData.forEach(pd => {
+        if (pd.user_id) detailsMap.set(pd.user_id, pd);
+      });
+
       const clientCoachesMap = new Map<string, Array<{ id: string; name: string | null }>>();
       for (const cc of coachClientsData) {
         const coachName = profileMap.get(cc.coach_id) || null;
@@ -218,7 +233,16 @@ export default function Users() {
         }
       }
 
-      const formattedUsers: UserWithRole[] = (profilesRes.data || []).map((profile) => {
+      const existingUserIds = new Set<string>();
+      const formattedUsers: UserWithRole[] = [];
+
+      // 1. Process all existing profiles
+      (profilesRes.data || []).forEach((profile) => {
+        const primaryId = profile.id || profile.user_id;
+        const authUserId = profile.user_id || profile.id;
+        if (authUserId) existingUserIds.add(authUserId);
+        if (primaryId) existingUserIds.add(primaryId);
+
         const coachList = clientCoachesMap.get(profile.id) || clientCoachesMap.get(profile.user_id) || [];
         const primaryCoach = coachList[0] || null;
         const secondaryCoach = coachList[1] || null;
@@ -228,20 +252,64 @@ export default function Users() {
           role: (idx === 0 ? 'Primary' : 'Secondary') as 'Primary' | 'Secondary',
         }));
 
-        return {
-          id: profile.id,
-          user_id: profile.user_id,
-          email: profile.email,
-          full_name: profile.full_name,
+        const detail = detailsMap.get(authUserId) || detailsMap.get(primaryId);
+        const derivedName = profile.full_name || 
+          (detail ? `${detail.first_name || ''} ${detail.last_name || ''}`.trim() : null) || 
+          (profile.email ? profile.email.split('@')[0] : null) || 
+          "New Member";
+
+        const derivedEmail = profile.email || detail?.email || null;
+        const assignedRole = ((rolesMap.get(profile.user_id) || rolesMap.get(profile.id) || profile.role) as AppRole) || "trial_user";
+
+        formattedUsers.push({
+          id: primaryId || authUserId,
+          user_id: authUserId || primaryId,
+          email: derivedEmail,
+          full_name: derivedName,
           avatar_url: profile.avatar_url,
-          created_at: profile.created_at,
-          role: (rolesMap.get(profile.user_id) as AppRole) || "trial_user",
+          created_at: profile.created_at || new Date().toISOString(),
+          role: assignedRole,
           coach_id: primaryCoach?.id || null,
           coach_name: primaryCoach?.name || null,
           secondary_coach_id: secondaryCoach?.id || null,
           secondary_coach_name: secondaryCoach?.name || null,
           coaches,
-        };
+        });
+      });
+
+      // 2. Include any user_roles entries that don't have a profile row yet
+      (rolesRes.data || []).forEach((roleItem) => {
+        const uid = roleItem.user_id;
+        if (!uid || existingUserIds.has(uid)) return;
+        existingUserIds.add(uid);
+
+        const detail = detailsMap.get(uid);
+        const derivedName = (detail ? `${detail.first_name || ''} ${detail.last_name || ''}`.trim() : null) || "New Member";
+        const derivedEmail = detail?.email || (typeof uid === 'string' && uid.includes('@') ? uid : null);
+
+        const coachList = clientCoachesMap.get(uid) || [];
+        const primaryCoach = coachList[0] || null;
+        const secondaryCoach = coachList[1] || null;
+        const coaches = coachList.map((c, idx) => ({
+          id: c.id,
+          name: c.name,
+          role: (idx === 0 ? 'Primary' : 'Secondary') as 'Primary' | 'Secondary',
+        }));
+
+        formattedUsers.push({
+          id: uid,
+          user_id: uid,
+          email: derivedEmail,
+          full_name: derivedName,
+          avatar_url: null,
+          created_at: roleItem.created_at || new Date().toISOString(),
+          role: (roleItem.role as AppRole) || "trial_user",
+          coach_id: primaryCoach?.id || null,
+          coach_name: primaryCoach?.name || null,
+          secondary_coach_id: secondaryCoach?.id || null,
+          secondary_coach_name: secondaryCoach?.name || null,
+          coaches,
+        });
       });
 
       setUsers(formattedUsers);
@@ -467,13 +535,45 @@ export default function Users() {
     fetchUsers();
     fetchGroups();
     fetchCoachesList();
+
+    const channel = supabase
+      .channel("admin_users_sync_feed")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "profiles" },
+        () => {
+          fetchUsers();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "user_roles" },
+        () => {
+          fetchUsers();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "coach_clients" },
+        () => {
+          fetchUsers();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [isAdmin, fetchUsers, fetchGroups]);
 
   const filteredUsers = useMemo(() => {
-    const term = searchQuery.toLowerCase();
+    const term = searchQuery.toLowerCase().trim();
+    if (!term) return users;
     return users.filter(u =>
-      u.full_name?.toLowerCase().includes(term) ||
-      u.email?.toLowerCase().includes(term)
+      (u.full_name && u.full_name.toLowerCase().includes(term)) ||
+      (u.email && u.email.toLowerCase().includes(term)) ||
+      (u.user_id && u.user_id.toLowerCase().includes(term)) ||
+      (u.role && u.role.toLowerCase().includes(term))
     );
   }, [users, searchQuery]);
 
@@ -505,20 +605,34 @@ export default function Users() {
       else if (roleChangeDialog.newRole === 'trial_user') {
         newExpiry.setDate(newExpiry.getDate() + 3);
       }
-      //const { error } = await supabase.from("user_roles").upsert({
-        //user_id: roleChangeDialog.user.user_id,
-        //role: roleChangeDialog.newRole,
-        //expiry_time: newExpiry
-      //}, { onConflict: "user_id" });
-
-      const { error } = await supabase
+      const { data: existingRole } = await supabase
         .from("user_roles")
-        .update({
-          role: roleChangeDialog.newRole,
-          expiry_time: newExpiry
-        })
-        .eq("user_id", roleChangeDialog.user.user_id);
-      if (error) throw error;
+        .select("id")
+        .eq("user_id", roleChangeDialog.user.user_id)
+        .maybeSingle();
+
+      let roleErr;
+      if (existingRole) {
+        const { error } = await supabase
+          .from("user_roles")
+          .update({
+            role: roleChangeDialog.newRole,
+            expiry_time: newExpiry,
+          })
+          .eq("user_id", roleChangeDialog.user.user_id);
+        roleErr = error;
+      } else {
+        const { error } = await supabase
+          .from("user_roles")
+          .insert({
+            user_id: roleChangeDialog.user.user_id,
+            role: roleChangeDialog.newRole,
+            expiry_time: newExpiry,
+          });
+        roleErr = error;
+      }
+
+      if (roleErr) throw roleErr;
       setUsers(prev => prev.map(u => u.user_id === roleChangeDialog.user?.user_id ? { ...u, role: roleChangeDialog.newRole! } : u));
       toast({ title: "Success", description: "Role updated." });
     } catch (error: any) {
@@ -605,8 +719,10 @@ export default function Users() {
                     {(user.full_name?.[0] || user.email?.[0] || "U").toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-foreground truncate">{user.full_name || "Unnamed User"}</p>
-                    <p className="text-xs text-muted-foreground truncate">{user.email || "not set"}</p>
+                    <p className="text-sm font-semibold text-foreground truncate">{user.full_name || "New Member"}</p>
+                    <p className="text-xs text-muted-foreground truncate" title={user.email || user.user_id || ""}>
+                      {user.email || (user.user_id ? (user.user_id.includes('@') ? user.user_id : `ID: ${user.user_id.slice(0, 12)}...`) : "not set")}
+                    </p>
                   </div>
                   <Badge variant="outline" className={`${(roleConfig[user.role] || roleConfig.user).color} text-[10px] px-1.5 py-0 border-none uppercase font-semibold shrink-0`}>
                     {user.role === 'trial_user' ? 'Trial' : user.role}
@@ -718,13 +834,13 @@ export default function Users() {
                           {(user.full_name?.[0] || user.email?.[0] || "U").toUpperCase()}
                         </div>
                         <span className="text-sm font-semibold text-foreground truncate block max-w-[130px]" title={user.full_name || ""}>
-                          {user.full_name || "Unnamed User"}
+                          {user.full_name || "New Member"}
                         </span>
                       </div>
                     </TableCell>
                     <TableCell className="py-3.5 text-sm text-muted-foreground">
-                      <span className="truncate block max-w-[200px]" title={user.email || ""}>
-                        {user.email || "not set"}
+                      <span className="truncate block max-w-[200px]" title={user.email || user.user_id || ""}>
+                        {user.email || (user.user_id ? (user.user_id.includes('@') ? user.user_id : `ID: ${user.user_id.slice(0, 12)}...`) : "not set")}
                       </span>
                     </TableCell>
                     <TableCell className="py-3.5 text-center">
