@@ -43,12 +43,19 @@ interface DayCount {
   sessions: number;
 }
 
+//interface UpcomingSession {
+  //id: string;
+ // name: string;
+  //type: string;
+  //time: string;
+  //category: string;
+//}
 interface UpcomingSession {
   id: string;
-  name: string;
+  title: string;
+  instructor: string;
   type: string;
-  time: string;
-  category: string;
+  scheduled_at: string;
 }
 
 const ACTIVITY_FALLBACK_COLORS = ["bg-emerald-500", "bg-violet-500", "bg-orange-500", "bg-blue-500"];
@@ -177,7 +184,8 @@ export default function Dashboard() {
           .limit(3);
 
         if (error) throw error;
-        setUpcomingSessions((data as UpcomingSession[]) || []);
+        //setUpcomingSessions((data as UpcomingSession[]) || []);
+        setUpcomingSessions(data || []);
       } catch (err) {
         console.error("Upcoming sessions error:", err);
         setUpcomingSessions([]);
