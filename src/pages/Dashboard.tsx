@@ -11,7 +11,7 @@ import {
   Trash2,
   RefreshCw,
   Dumbbell,
-  UserPlus,
+  LifeBuoy,
   ChevronRight
 } from "lucide-react";
 import {
@@ -451,11 +451,13 @@ export default function Dashboard() {
                   iconColor: "text-emerald-600 dark:text-emerald-400",
                 },
                 {
-                  label: "Add New Member",
-                  path: "/users",
-                  icon: UserPlus,
-                  iconBg: "bg-violet-100 dark:bg-violet-950/50",
-                  iconColor: "text-violet-600 dark:text-violet-400",
+               
+  label: "Support Tickets",
+  path: "/support",
+  icon: LifeBuoy,
+  iconBg: "bg-violet-100 dark:bg-violet-950/50",
+  iconColor: "text-violet-600 dark:text-violet-400",
+
                 },
               ].map((action) => (
                 <button
