@@ -1,5 +1,6 @@
 import React from "react";
 import { cn } from "@/lib/utils";
+import { AdminNotificationBell } from "@/components/AdminNotificationBell";
 
 interface PageHeaderProps {
   title: string;
@@ -7,9 +8,17 @@ interface PageHeaderProps {
   badge?: string;
   children?: React.ReactNode;
   className?: string;
+  hideNotificationBell?: boolean;
 }
 
-export function PageHeader({ title, description, badge, children, className }: PageHeaderProps) {
+export function PageHeader({
+  title,
+  description,
+  badge,
+  children,
+  className,
+  hideNotificationBell = false,
+}: PageHeaderProps) {
   return (
     <div className={cn("mb-6 sm:mb-8", className)}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -28,11 +37,10 @@ export function PageHeader({ title, description, badge, children, className }: P
             </p>
           )}
         </div>
-        {children && (
-          <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap">
-            {children}
-          </div>
-        )}
+        <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap">
+          {children}
+          {!hideNotificationBell && <AdminNotificationBell />}
+        </div>
       </div>
     </div>
   );

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { AppSidebar } from "./AppSidebar";
 import { cn } from "@/lib/utils";
-import { AdminNotificationBell } from "@/components/AdminNotificationBell";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -22,9 +21,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           sidebarCollapsed ? "ml-[96px]" : "ml-[276px]"
         )}
       >
-        <div className="flex justify-end px-4 sm:px-6 lg:px-8 pt-4">
-          <AdminNotificationBell />
-        </div>
         <div className="p-4 sm:p-6 lg:p-8 w-full">{children}</div>
       </main>
     </div>
