@@ -1,9 +1,21 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json", ...corsHeaders },
+  });
+}
 
 function buildEmailHtml(title: string, description: string) {
   return `
@@ -28,66 +40,77 @@ function buildEmailHtml(title: string, description: string) {
   `;
 }
 
-serve(async (req) => {
-  console.log("Function invoked");
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  if (req.method !== "POST") {
+    return json({ error: "Method not allowed" }, 405);
+  }
 
   try {
-    const payload = await req.json();
-    console.log("Payload received:", JSON.stringify(payload));
+    const payload = await req.json().catch(() => ({}));
+    const notification = payload.record || payload;
 
-    const notification = payload.record;
+    const isAdminNotification = notification?.recipient_type === "admin";
+    const targetUserId = notification?.user_id;
 
-    if (!notification?.user_id) {
-      console.log("No user_id found, skipping");
-      return new Response(JSON.stringify({ skipped: "no user_id" }), { status: 200 });
+    if (!isAdminNotification && !targetUserId) {
+      return json({ skipped: "no recipient specified" }, 200);
+    }
+
+    if (!RESEND_API_KEY) {
+      console.warn("RESEND_API_KEY is not set in environment. Skipping email dispatch.");
+      return json({ skipped: "RESEND_API_KEY not configured" }, 200);
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
     let email: string;
 
-    if (notification.recipient_type === "admin") {
+    if (isAdminNotification) {
       email = Deno.env.get("ADMIN_EMAIL") || "notifications@sculptandstrive.com";
     } else {
       const { data: userData, error: userError } = await supabase.auth.admin.getUserById(
-        notification.user_id
+        targetUserId
       );
 
       if (userError || !userData?.user?.email) {
-        console.log("User lookup failed:", JSON.stringify(userError));
-        return new Response(JSON.stringify({ error: "user email not found" }), { status: 200 });
+        return json({ error: "User email not found" }, 200);
       }
 
       email = userData.user.email;
     }
 
-    console.log("Sending email to:", email);
-
-    const htmlBody = buildEmailHtml(
-      notification.title || "New Notification",
-      notification.description || ""
-    );
+    const title = notification.title || "New Notification";
+    const description = notification.description || "";
+    const htmlBody = buildEmailHtml(title, description);
 
     const emailRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
-        "Authorization": "Bearer " + RESEND_API_KEY,
+        "Authorization": `Bearer ${RESEND_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         from: "Sculpt And Strive <notifications@sculptandstrive.com>",
         to: email,
-        subject: notification.title || "New Notification",
+        subject: title,
         html: htmlBody,
       }),
     });
 
-    const emailResult = await emailRes.json();
-    console.log("Resend response:", emailRes.status, JSON.stringify(emailResult));
+    const emailResult = await emailRes.json().catch(() => ({}));
 
-    return new Response(JSON.stringify({ success: true, emailResult }), { status: 200 });
+    if (!emailRes.ok) {
+      console.error("Resend API error:", emailRes.status, emailResult);
+      return json({ error: "Failed to send email", details: emailResult }, emailRes.status);
+    }
+
+    return json({ success: true, emailResult }, 200);
   } catch (err) {
-    console.log("ERROR:", err.message);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.error("send-notification-email error:", message);
+    return json({ error: message }, 500);
   }
 });

@@ -57,9 +57,12 @@ Deno.serve(async (req) => {
       return json({ error: "Forbidden: admin only" }, 403);
     }
 
-    const { user_id } = await req.json();
+    const { user_id } = await req.json().catch(() => ({}));
     if (!user_id) {
       return json({ error: "user_id is required" }, 400);
+    }
+    if (user_id === caller.id) {
+      return json({ error: "Cannot delete your own admin account" }, 400);
     }
 
     // Comprehensive list of cleanup operations for all relational tables
