@@ -297,7 +297,7 @@ export default function ProgressPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Member Growth Chart */}
         <Card className="bg-white border border-white/90 shadow-[6px_6px_20px_rgba(145,170,165,0.2),-4px_-4px_14px_rgba(255,255,255,0.95)] rounded-[28px] overflow-hidden">
-          <CardHeader className="p-4 sm:p-5 pb-2">
+          <CardHeader>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-[#E2ECE9] text-[#08B594] border border-white/60 shadow-[inset_1.5px_1.5px_3px_rgba(165,185,180,0.45),inset_-1.5px_-1.5px_3px_rgba(255,255,255,0.85)] flex items-center justify-center shrink-0">
                 <Users className="h-5 w-5" />
@@ -312,7 +312,7 @@ export default function ProgressPage() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="p-4 sm:p-5 pt-0">
+          <CardContent>
             {memberGrowthData.length === 0 ? (
               <div className="flex h-64 items-center justify-center rounded-2xl border border-[#E2ECE9] bg-[#F4F9F8] shadow-[inset_2px_2px_5px_rgba(165,185,180,0.15)]">
                 <div className="text-center">
@@ -406,7 +406,7 @@ export default function ProgressPage() {
 
         {/* Growth Rate Trends Chart */}
         <Card className="bg-white border border-white/90 shadow-[6px_6px_20px_rgba(145,170,165,0.2),-4px_-4px_14px_rgba(255,255,255,0.95)] rounded-[28px] overflow-hidden">
-          <CardHeader className="p-4 sm:p-5 pb-2">
+          <CardHeader>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-[#E6F7F3] text-[#0D9488] border border-white/60 shadow-[inset_1.5px_1.5px_3px_rgba(165,185,180,0.45),inset_-1.5px_-1.5px_3px_rgba(255,255,255,0.85)] flex items-center justify-center shrink-0">
                 <LineChart className="h-5 w-5" />
@@ -421,7 +421,7 @@ export default function ProgressPage() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="p-4 sm:p-5 pt-0">
+          <CardContent>
             {memberGrowthData.length === 0 ? (
               <div className="flex h-64 items-center justify-center rounded-2xl border border-[#E2ECE9] bg-[#F4F9F8] shadow-[inset_2px_2px_5px_rgba(165,185,180,0.15)]">
                 <div className="text-center">

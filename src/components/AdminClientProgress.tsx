@@ -295,7 +295,7 @@ export function AdminClientProgress() {
   return (
     <>
       <Card className="bg-white border border-white/90 shadow-[6px_6px_18px_rgba(145,170,165,0.22),-4px_-4px_14px_rgba(255,255,255,0.95)] rounded-[26px] mt-6">
-        <CardHeader className="p-4 sm:p-5 pb-2">
+        <CardHeader>
           <CardTitle className="text-[18px] font-semibold text-foreground flex items-center gap-2">
             <Camera className="h-4 w-4 text-primary" />
             Client Progress
@@ -304,7 +304,7 @@ export function AdminClientProgress() {
             Click a client to view full measurements, health questionnaire, and progress photos
           </p>
         </CardHeader>
-        <CardContent className="p-4 sm:p-5 pt-0">
+        <CardContent>
           {clients.length === 0 ? (
             <p className="text-center py-8 text-muted-foreground italic">
               No clients with progress data yet.

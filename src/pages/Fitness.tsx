@@ -1043,7 +1043,7 @@ export default function Fitness() {
               </DialogContent>
             </Dialog>
           </CardHeader>
-          <CardContent className="space-y-2 p-4 sm:p-5 pt-0">
+          <CardContent className="space-y-2">
             {categories.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground text-sm">
                 No categories yet.
@@ -1172,7 +1172,7 @@ export default function Fitness() {
 
         {/* ── Exercises List ── */}
         <Card className="lg:col-span-2 bg-white border border-white/90 shadow-[6px_6px_20px_rgba(145,170,165,0.2),-4px_-4px_14px_rgba(255,255,255,0.95)] rounded-[28px] overflow-hidden">
-          <CardHeader className="p-4 sm:p-5 pb-2">
+          <CardHeader>
             <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 justify-between items-start sm:items-center w-full">
               <CardTitle className="text-base sm:text-[20px] font-semibold text-foreground leading-snug">
                 {activeFilter} Exercises List
@@ -1190,7 +1190,7 @@ export default function Fitness() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-2.5 p-4 sm:p-5 pt-0">
+          <CardContent className="space-y-2.5">
             {exercisesWithCategory.length > 0 ? (
               exercisesWithCategory.map((ex: any) => (
                 <div
@@ -1225,13 +1225,12 @@ export default function Fitness() {
                         {ex.difficulty && (
                           <Badge
                             variant="outline"
-                            className={`text-[10px] px-2 py-0.5 font-bold uppercase tracking-wider rounded-full shadow-[1px_1px_2px_rgba(165,185,180,0.06)] ${
-                              ex.difficulty === "Beginner"
+                            className={`text-[10px] px-2 py-0.5 font-bold uppercase tracking-wider rounded-full shadow-[1px_1px_2px_rgba(165,185,180,0.06)] ${ex.difficulty === "Beginner"
                                 ? "bg-[#E6F7F3] border-[#BEE7DC] text-[#07AC7D]"
                                 : ex.difficulty === "Intermediate"
-                                ? "bg-[#FFF7ED] border-[#FFEDD5] text-[#EA580C]"
-                                : "bg-[#FEF2F2] border-[#FECACA] text-[#DC2626]"
-                            }`}
+                                  ? "bg-[#FFF7ED] border-[#FFEDD5] text-[#EA580C]"
+                                  : "bg-[#FEF2F2] border-[#FECACA] text-[#DC2626]"
+                              }`}
                           >
                             {ex.difficulty}
                           </Badge>
@@ -1414,7 +1413,7 @@ export default function Fitness() {
 
         {/* ── Workout Plans ── */}
         <Card className="lg:col-span-full bg-white border border-white/90 shadow-[6px_6px_18px_rgba(145,170,165,0.22),-4px_-4px_14px_rgba(255,255,255,0.95)] rounded-[26px] overflow-hidden">
-          <CardHeader className="flex w-full flex-col md:flex-row md:justify-between md:items-center p-4 sm:p-5 pb-2">
+          <CardHeader className="flex w-full flex-col md:flex-row md:justify-between md:items-center">
             <CardTitle className="text-[20px] font-semibold text-foreground leading-snug">
               Workout Plans
             </CardTitle>
@@ -1519,11 +1518,10 @@ export default function Fitness() {
                                     setAdminWeightUnit("kg");
                                     localStorage.setItem("admin_weight_unit", "kg");
                                   }}
-                                  className={`px-2.5 py-1 text-xs font-bold rounded-md transition-all ${
-                                    adminWeightUnit === "kg"
+                                  className={`px-2.5 py-1 text-xs font-bold rounded-md transition-all ${adminWeightUnit === "kg"
                                       ? "bg-[#07AC7D] text-white shadow-sm"
                                       : "text-muted-foreground hover:text-foreground"
-                                  }`}
+                                    }`}
                                 >
                                   KG
                                 </button>
@@ -1533,11 +1531,10 @@ export default function Fitness() {
                                     setAdminWeightUnit("lbs");
                                     localStorage.setItem("admin_weight_unit", "lbs");
                                   }}
-                                  className={`px-2.5 py-1 text-xs font-bold rounded-md transition-all ${
-                                    adminWeightUnit === "lbs"
+                                  className={`px-2.5 py-1 text-xs font-bold rounded-md transition-all ${adminWeightUnit === "lbs"
                                       ? "bg-[#07AC7D] text-white shadow-sm"
                                       : "text-muted-foreground hover:text-foreground"
-                                  }`}
+                                    }`}
                                 >
                                   LBS
                                 </button>
@@ -2044,7 +2041,7 @@ export default function Fitness() {
 
         {/* ── User Exercises (logged) ── */}
         <Card className="lg:col-span-full bg-white border border-white/90 shadow-[6px_6px_18px_rgba(145,170,165,0.22),-4px_-4px_14px_rgba(255,255,255,0.95)] rounded-[26px] overflow-hidden">
-          <CardHeader className="p-4 sm:p-5 pb-2">
+          <CardHeader>
             <div className="flex flex-col md:flex-row gap-2 justify-between items-center">
               <CardTitle className="text-[20px] font-semibold text-foreground leading-snug">
                 {activeFilter} Exercises
@@ -2054,7 +2051,7 @@ export default function Fitness() {
               </span>
             </div>
           </CardHeader>
-          <CardContent className="space-y-2.5 p-4 sm:p-5 pt-0">
+          <CardContent className="space-y-2.5">
             {filteredExercises.length > 0 ? (
               filteredExercises.map((ex) => (
                 <div

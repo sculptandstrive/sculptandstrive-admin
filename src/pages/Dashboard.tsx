@@ -277,7 +277,7 @@ export default function Dashboard() {
         <div className="lg:col-span-8 space-y-6">
           {/* Platform Overview Chart */}
           <Card className="rounded-[26px] bg-white border border-white/90 shadow-[6px_6px_20px_rgba(145,170,165,0.18),-4px_-4px_14px_rgba(255,255,255,0.98)]">
-            <CardHeader className="flex flex-row items-center justify-between p-4 sm:p-5 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-xl font-black text-[#0F172A]">Platform Activity Overview</CardTitle>
                 <CardDescription className="text-xs font-semibold text-[#7186A0]">Daily session scheduling frequency and engagement</CardDescription>
@@ -331,7 +331,7 @@ export default function Dashboard() {
 
           {/* Recent Activity Card */}
           <Card className="rounded-[26px] bg-white border border-white/90 shadow-[6px_6px_20px_rgba(145,170,165,0.18),-4px_-4px_14px_rgba(255,255,255,0.98)]">
-            <CardHeader className="flex flex-row items-center justify-between p-4 sm:p-5 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-xl font-black text-[#0F172A]">Recent Admin Events</CardTitle>
                 <CardDescription className="text-xs font-semibold text-[#7186A0]">Live audit log of platform updates and user assignments</CardDescription>
@@ -346,7 +346,7 @@ export default function Dashboard() {
                 </button>
               )}
             </CardHeader>
-            <CardContent className="p-4 sm:p-5 pt-0">
+            <CardContent>
               <div className="space-y-3">
                 {loading ? (
                   <div className="flex justify-center py-8">
@@ -395,11 +395,11 @@ export default function Dashboard() {
         <div className="lg:col-span-4 space-y-6">
           {/* Quick Actions */}
           <Card className="rounded-[26px] bg-white border border-white/90 shadow-[6px_6px_20px_rgba(145,170,165,0.18),-4px_-4px_14px_rgba(255,255,255,0.98)]">
-            <CardHeader className="p-4 sm:p-5 pb-2">
+            <CardHeader>
               <CardTitle className="text-xl font-black text-[#0F172A]">Quick Actions</CardTitle>
               <CardDescription className="text-xs font-semibold text-[#7186A0]">Instant administrative shortcuts</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2.5 p-4 sm:p-5 pt-0">
+            <CardContent className="space-y-2.5">
               {[
                 {
                   label: "Schedule Session",
@@ -447,7 +447,7 @@ export default function Dashboard() {
 
           {/* Platform Usage Breakdown */}
           <Card className="rounded-[26px] bg-white border border-white/90 shadow-[6px_6px_20px_rgba(145,170,165,0.18),-4px_-4px_14px_rgba(255,255,255,0.98)]">
-            <CardHeader className="p-4 sm:p-5 pb-2">
+            <CardHeader>
               <CardTitle className="text-xl font-black text-[#0F172A]">Platform Distribution</CardTitle>
               <CardDescription className="text-xs font-semibold text-[#7186A0]">Live database ratio</CardDescription>
             </CardHeader>
@@ -507,7 +507,7 @@ export default function Dashboard() {
 
           {/* Upcoming Sessions Panel */}
           <Card className="rounded-[26px] bg-white border border-white/90 shadow-[6px_6px_20px_rgba(145,170,165,0.18),-4px_-4px_14px_rgba(255,255,255,0.98)]">
-            <CardHeader className="flex flex-row items-center justify-between p-4 sm:p-5 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-xl font-black text-[#0F172A]">Upcoming Sessions</CardTitle>
                 <CardDescription className="text-xs font-semibold text-[#7186A0]">Next queued platform classes</CardDescription>
@@ -519,7 +519,7 @@ export default function Dashboard() {
                 View All
               </button>
             </CardHeader>
-            <CardContent className="p-4 sm:p-5 pt-0">
+            <CardContent>
               {upcomingLoading ? (
                 <div className="flex justify-center py-8">
                   <Loader2 className="w-5 h-5 animate-spin text-[#08B594]" />
