@@ -53,7 +53,14 @@ CardDescription.displayName = "CardDescription";
 
 const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("px-4 sm:px-5 pb-4 sm:pb-5 pt-0 sm:pt-0", className)} {...props} />
+    <div
+      ref={ref}
+      className={cn(
+        "p-4 sm:p-5 [&:not(:first-child)]:pt-0 sm:[&:not(:first-child)]:pt-0",
+        className
+      )}
+      {...props}
+    />
   )
 );
 CardContent.displayName = "CardContent";

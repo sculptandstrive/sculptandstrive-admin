@@ -268,29 +268,27 @@ export default function ProgressPage() {
       {/* Aggregate Cards */}
       <div className="mb-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
         {stats.map((stat) => (
-          <Card
+          <div
             key={stat.title}
-            className="bg-white border border-white/90 shadow-[5px_5px_14px_rgba(168,190,185,0.25),-4px_-4px_12px_rgba(255,255,255,0.95)] rounded-[26px]"
+            className="bg-white border border-white/90 shadow-[6px_6px_18px_rgba(145,170,165,0.2),-4px_-4px_14px_rgba(255,255,255,0.95)] rounded-[24px] p-5 sm:p-6"
           >
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
-                  <p className="text-2xl font-semibold text-foreground tracking-tight leading-none mt-1.5">
-                    {stat.value.toLocaleString()}
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#7186A0]">{stat.title}</p>
+                <p className="text-2xl sm:text-3xl font-black text-[#0F172A] tracking-tight leading-none mt-2">
+                  {stat.value.toLocaleString()}
+                </p>
+                {stat.change && (
+                  <p className="text-xs font-bold text-[#08B594] mt-2.5 flex items-center gap-1">
+                    <span>↑ {stat.change}</span>
                   </p>
-                  {stat.change && (
-                    <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mt-2">
-                      {stat.change}
-                    </p>
-                  )}
-                </div>
-                <div className="bg-primary/10 rounded-xl p-2.5 shrink-0">
-                  <stat.icon className="h-5 w-5 text-primary" />
-                </div>
+                )}
               </div>
-            </CardContent>
-          </Card>
+              <div className="w-12 h-12 rounded-2xl bg-[#E2ECE9] text-[#08B594] border border-white/60 shadow-[inset_1.5px_1.5px_3px_rgba(165,185,180,0.45),inset_-1.5px_-1.5px_3px_rgba(255,255,255,0.85)] flex items-center justify-center shrink-0">
+                <stat.icon className="h-6 w-6 text-[#08B594]" />
+              </div>
+            </div>
+          </div>
         ))}
       </div>
 
