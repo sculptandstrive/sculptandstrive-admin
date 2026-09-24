@@ -6,6 +6,7 @@ import {
   Loader2,
   Users,
   LineChart,
+  Target,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -269,7 +270,7 @@ export default function ProgressPage() {
         {stats.map((stat) => (
           <Card
             key={stat.title}
-            className="border border-border rounded-2xl shadow-sm bg-card"
+            className="bg-white border border-white/90 shadow-[5px_5px_14px_rgba(168,190,185,0.25),-4px_-4px_12px_rgba(255,255,255,0.95)] rounded-[26px]"
           >
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
@@ -293,125 +294,32 @@ export default function ProgressPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Member Growth Chart */}
-        <Card className="border border-border rounded-2xl shadow-sm bg-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-[18px] font-semibold text-foreground">
-              <Users className="h-4 w-4 text-primary" />
-              Member Growth
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Total members with 'user' role over time
-            </p>
-          </CardHeader>
-          <CardContent>
-            {memberGrowthData.length === 0 ? (
-              <div className="flex h-64 items-center justify-center rounded-xl border border-dashed border-border bg-muted/40">
-                <div className="text-center">
-                  <Users className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-                  <p className="text-muted-foreground italic">
-                    No member data found in user_roles table.
-                  </p>
-                  <p className="text-xs text-muted-foreground/70 mt-2">
-                    Members will appear as they sign up.
-                  </p>
-                </div>
+        <Card className="bg-white border border-white/90 shadow-[6px_6px_20px_rgba(145,170,165,0.2),-4px_-4px_14px_rgba(255,255,255,0.95)] rounded-[28px] overflow-hidden">
+          <CardHeader className="p-4 sm:p-5 pb-2">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-[#E2ECE9] text-[#08B594] border border-white/60 shadow-[inset_1.5px_1.5px_3px_rgba(165,185,180,0.45),inset_-1.5px_-1.5px_3px_rgba(255,255,255,0.85)] flex items-center justify-center shrink-0">
+                <Users className="h-5 w-5" />
               </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={memberGrowthData}>
-                      <defs>
-                        <linearGradient
-                          id="memberGradient"
-                          x1="0"
-                          y1="0"
-                          x2="0"
-                          y2="1"
-                        >
-                          <stop
-                            offset="5%"
-                            stopColor="#10B981"
-                            stopOpacity={0.25}
-                          />
-                          <stop
-                            offset="95%"
-                            stopColor="#10B981"
-                            stopOpacity={0}
-                          />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid
-                        strokeDasharray="3 3"
-                        stroke="hsl(var(--border))"
-                        vertical={false}
-                      />
-                      <XAxis
-                        dataKey="date"
-                        stroke="hsl(var(--muted-foreground))"
-                        tick={{
-                          fill: "hsl(var(--muted-foreground))",
-                          fontSize: 12,
-                        }}
-                      />
-                      <YAxis
-                        stroke="hsl(var(--muted-foreground))"
-                        tick={{
-                          fill: "hsl(var(--muted-foreground))",
-                          fontSize: 12,
-                        }}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "hsl(var(--card))",
-                          border: "1px solid hsl(var(--border))",
-                          borderRadius: "12px",
-                          color: "hsl(var(--foreground))",
-                          boxShadow: "0 4px 18px rgba(0,0,0,0.2)",
-                        }}
-                        labelStyle={{ color: "hsl(var(--foreground))" }}
-                        formatter={(value: any, name: string) => {
-                          if (name === "count") return [value, "Total Members"];
-                          if (name === "newMembers")
-                            return [value, "New Members"];
-                          return [value, name];
-                        }}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="count"
-                        stroke="#10B981"
-                        strokeWidth={3}
-                        fill="url(#memberGradient)"
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
+              <div>
+                <CardTitle className="text-[18px] font-bold text-[#0F172A]">
+                  Member Growth
+                </CardTitle>
+                <p className="text-xs font-medium text-[#7186A0]">
+                  Total members with 'user' role over time
+                </p>
               </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="border border-border rounded-2xl shadow-sm bg-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-[18px] font-semibold text-foreground">
-              <LineChart className="h-5 w-5 text-primary" />
-              Growth Rate Trends
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              New member signups per period
-            </p>
+            </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-5 pt-0">
             {memberGrowthData.length === 0 ? (
-              <div className="flex h-64 items-center justify-center rounded-xl border border-dashed border-border bg-muted/40">
+              <div className="flex h-64 items-center justify-center rounded-2xl border border-[#E2ECE9] bg-[#F4F9F8] shadow-[inset_2px_2px_5px_rgba(165,185,180,0.15)]">
                 <div className="text-center">
-                  <p className="text-muted-foreground italic">
+                  <p className="text-[#7186A0] font-semibold text-sm">
                     No growth data available yet.
                   </p>
-                  <p className="text-xs text-muted-foreground/70 mt-2">
+                  <p className="text-xs text-[#7186A0]/70 mt-1">
                     Charts will render as members join.
                   </p>
                 </div>
@@ -419,43 +327,158 @@ export default function ProgressPage() {
             ) : (
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <RechartsLineChart data={memberGrowthData}>
+                  <AreaChart data={memberGrowthData} margin={{ top: 6, right: 10, left: -15, bottom: 0 }}>
+                    <defs>
+                      <linearGradient
+                        id="memberGradient"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#08B594"
+                          stopOpacity={0.25}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#08B594"
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
+                    </defs>
                     <CartesianGrid
                       strokeDasharray="3 3"
-                      stroke="hsl(var(--border))"
+                      stroke="#E2ECE9"
                       vertical={false}
                     />
                     <XAxis
                       dataKey="date"
-                      stroke="hsl(var(--muted-foreground))"
+                      stroke="#8899A6"
                       tick={{
-                        fill: "hsl(var(--muted-foreground))",
-                        fontSize: 12,
+                        fill: "#7186A0",
+                        fontSize: 11,
+                        fontWeight: 600,
                       }}
+                      axisLine={false}
+                      tickLine={false}
                     />
                     <YAxis
-                      stroke="hsl(var(--muted-foreground))"
+                      stroke="#8899A6"
                       tick={{
-                        fill: "hsl(var(--muted-foreground))",
-                        fontSize: 12,
+                        fill: "#7186A0",
+                        fontSize: 11,
+                        fontWeight: 600,
                       }}
+                      axisLine={false}
+                      tickLine={false}
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "12px",
-                        color: "hsl(var(--foreground))",
-                        boxShadow: "0 4px 18px rgba(0,0,0,0.2)",
+                        backgroundColor: "#FFFFFF",
+                        border: "1px solid rgba(255,255,255,0.9)",
+                        borderRadius: "16px",
+                        color: "#0F172A",
+                        boxShadow: "6px 6px 18px rgba(145,170,165,0.22), -3px -3px 10px rgba(255,255,255,0.95)",
+                      }}
+                      labelStyle={{ color: "#0F172A", fontWeight: 700 }}
+                      formatter={(value: any, name: string) => {
+                        if (name === "count") return [value, "Total Members"];
+                        if (name === "newMembers")
+                          return [value, "New Members"];
+                        return [value, name];
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="count"
+                      stroke="#08B594"
+                      strokeWidth={3}
+                      fill="url(#memberGradient)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Growth Rate Trends Chart */}
+        <Card className="bg-white border border-white/90 shadow-[6px_6px_20px_rgba(145,170,165,0.2),-4px_-4px_14px_rgba(255,255,255,0.95)] rounded-[28px] overflow-hidden">
+          <CardHeader className="p-4 sm:p-5 pb-2">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-[#E6F7F3] text-[#0D9488] border border-white/60 shadow-[inset_1.5px_1.5px_3px_rgba(165,185,180,0.45),inset_-1.5px_-1.5px_3px_rgba(255,255,255,0.85)] flex items-center justify-center shrink-0">
+                <LineChart className="h-5 w-5" />
+              </div>
+              <div>
+                <CardTitle className="text-[18px] font-bold text-[#0F172A]">
+                  Growth Rate Trends
+                </CardTitle>
+                <p className="text-xs font-medium text-[#7186A0]">
+                  New member signups per period
+                </p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-5 pt-0">
+            {memberGrowthData.length === 0 ? (
+              <div className="flex h-64 items-center justify-center rounded-2xl border border-[#E2ECE9] bg-[#F4F9F8] shadow-[inset_2px_2px_5px_rgba(165,185,180,0.15)]">
+                <div className="text-center">
+                  <p className="text-[#7186A0] font-semibold text-sm">
+                    No growth data available yet.
+                  </p>
+                  <p className="text-xs text-[#7186A0]/70 mt-1">
+                    Charts will render as members join.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RechartsLineChart data={memberGrowthData} margin={{ top: 6, right: 10, left: -15, bottom: 0 }}>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="#E2ECE9"
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="date"
+                      stroke="#8899A6"
+                      tick={{
+                        fill: "#7186A0",
+                        fontSize: 11,
+                        fontWeight: 600,
+                      }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      stroke="#8899A6"
+                      tick={{
+                        fill: "#7186A0",
+                        fontSize: 11,
+                        fontWeight: 600,
+                      }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#FFFFFF",
+                        border: "1px solid rgba(255,255,255,0.9)",
+                        borderRadius: "16px",
+                        color: "#0F172A",
+                        boxShadow: "6px 6px 18px rgba(145,170,165,0.22), -3px -3px 10px rgba(255,255,255,0.95)",
                       }}
                       formatter={(value: any) => [value, "New Members"]}
                     />
                     <Line
                       type="monotone"
                       dataKey="newMembers"
-                      stroke="#10B981"
+                      stroke="#08B594"
                       strokeWidth={3}
-                      dot={{ fill: "#10B981", strokeWidth: 2 }}
+                      dot={{ fill: "#08B594", r: 4, strokeWidth: 2, stroke: "#FFFFFF" }}
                     />
                   </RechartsLineChart>
                 </ResponsiveContainer>
@@ -467,34 +490,65 @@ export default function ProgressPage() {
 
       {/* Additional Stats Row */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mt-6">
-        <Card className="border border-border rounded-2xl shadow-sm bg-card">
-          <CardHeader>
-            <CardTitle className="text-[18px] font-semibold text-foreground">Member Goal Progress</CardTitle>
+        <Card className="bg-white border border-white/90 shadow-[6px_6px_20px_rgba(145,170,165,0.2),-4px_-4px_14px_rgba(255,255,255,0.95)] rounded-[28px] overflow-hidden">
+          <CardHeader className="p-4 sm:p-5 pb-3 border-b border-[#E2ECE9]/60">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#E6F7F3] to-[#D1F2EA] text-[#07AC7D] border border-[#BEE7DC] shadow-[2px_2px_5px_rgba(165,185,180,0.18),-1.5px_-1.5px_4px_rgba(255,255,255,0.9)] flex items-center justify-center shrink-0">
+                  <Target className="w-4 h-4 text-[#07AC7D]" />
+                </div>
+                <div>
+                  <CardTitle className="text-[17px] font-bold text-[#0F172A]">Member Goal Progress</CardTitle>
+                  <p className="text-[11px] font-semibold text-[#7186A0]">Top client target tracking</p>
+                </div>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
+          <CardContent className="p-4 sm:p-5 pt-2">
+            <div className="space-y-3">
               {allMembers.length === 0 ? (
-                <p className="text-center py-10 text-muted-foreground italic">
+                <div className="text-center py-8 rounded-2xl bg-[#F8FBFA] border border-[#E2ECE9] text-[#7186A0] text-xs font-semibold">
                   No records found in progress_records table.
-                </p>
+                </div>
               ) : (
                 allMembers.slice(0, 5).map((member) => {
                   const progressValue = calculateProgress(member);
+                  const rawName = member.profiles?.full_name || member.user_name || "Member";
+                  const memberName = typeof rawName === "string" ? rawName : "Member";
+                  const initial = (memberName.charAt(0) || "M").toUpperCase();
                   return (
-                    <div key={member.id} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <p className="font-medium text-foreground">
-                          {member.profiles?.full_name || member.user_name || "Member"}
-                        </p>
-                        <span className="text-sm font-medium text-primary">
-                          {progressValue}%
-                        </span>
+                    <div
+                      key={member.id}
+                      className="p-3 sm:p-3.5 rounded-2xl bg-[#F8FBFA] border border-[#E2ECE9]/80 shadow-[2px_2px_6px_rgba(165,185,180,0.12),-1.5px_-1.5px_5px_rgba(255,255,255,0.9)] hover:shadow-[3px_3px_8px_rgba(165,185,180,0.18)] transition-all space-y-2"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#E6F7F3] to-[#D1F2EA] border border-[#BEE7DC] text-[#07AC7D] font-black text-xs flex items-center justify-center shrink-0 shadow-[1.5px_1.5px_3px_rgba(165,185,180,0.15)]">
+                            {initial}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-bold text-sm text-[#0F172A] truncate">
+                              {memberName}
+                            </p>
+                            <span className="text-[10.5px] font-semibold text-[#7186A0] bg-white px-2 py-0.5 rounded-md border border-[#DCE8E5] shadow-[1px_1px_2px_rgba(165,185,180,0.1)] inline-block mt-0.5">
+                              Weight: {member.weight_kg || "--"} kg
+                            </span>
+                          </div>
+                        </div>
+                        <div className="shrink-0">
+                          <span className="text-xs font-bold text-[#07AC7D] bg-[#E6F7F3] border border-[#BEE7DC] px-2.5 py-1 rounded-full shadow-[1px_1px_2px_rgba(165,185,180,0.08)]">
+                            {progressValue}%
+                          </span>
+                        </div>
                       </div>
-                      <Progress value={progressValue} className="h-2 bg-muted [&>div]:bg-primary" />
-                     
-                      <p className="text-xs text-muted-foreground italic">
-  {`Weight: ${member.weight_kg}kg`}
-</p>
+
+                      {/* 3D Recessed Progress Track */}
+                      <div className="h-2.5 w-full rounded-full bg-[#E2ECE9] shadow-[inset_1.5px_1.5px_3px_rgba(165,185,180,0.4),inset_-1.5px_-1.5px_3px_rgba(255,255,255,0.85)] p-0.5 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-[#0CC194] to-[#07AC7D] shadow-[0_0_6px_rgba(8,181,148,0.4)] transition-all duration-500"
+                          style={{ width: `${Math.min(100, Math.max(0, progressValue))}%` }}
+                        />
+                      </div>
                     </div>
                   );
                 })

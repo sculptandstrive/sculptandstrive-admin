@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
   darkMode: ["class"],
@@ -16,15 +17,6 @@ export default {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         display: ['Inter', 'system-ui', 'sans-serif'],
-      },
-      fontSize: {
-        'xs': ['0.875rem', { lineHeight: '1.25rem' }],   // 14px base
-        'sm': ['1rem', { lineHeight: '1.5rem' }],        // 16px base
-        'base': ['1.125rem', { lineHeight: '1.75rem' }], // 18px base
-        'lg': ['1.25rem', { lineHeight: '1.85rem' }],    // 20px base
-        'xl': ['1.375rem', { lineHeight: '2rem' }],      // 22px base
-        '2xl': ['1.625rem', { lineHeight: '2.25rem' }],  // 26px base
-        '3xl': ['2rem', { lineHeight: '2.5rem' }],       // 32px base
       },
       colors: {
         border: "hsl(var(--border))",
@@ -46,18 +38,6 @@ export default {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
-        success: {
-          DEFAULT: "hsl(var(--success))",
-          foreground: "hsl(var(--success-foreground))",
-        },
-        warning: {
-          DEFAULT: "hsl(var(--warning))",
-          foreground: "hsl(var(--warning-foreground))",
-        },
-        info: {
-          DEFAULT: "hsl(var(--info))",
-          foreground: "hsl(var(--info-foreground))",
-        },
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
@@ -74,12 +54,18 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        'bg-page': 'hsl(var(--background))',
-        'bg-card-secondary': 'hsl(var(--secondary))',
-        'text-primary': 'hsl(var(--foreground))',
-        'text-secondary': 'hsl(var(--muted-foreground))',
-        'text-muted': 'hsl(var(--muted-foreground))',
-        'text-disabled': 'hsl(var(--muted-foreground))',
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
+        info: {
+          DEFAULT: "hsl(var(--info))",
+          foreground: "hsl(var(--info-foreground))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -89,7 +75,6 @@ export default {
           "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
-          "text-muted": "hsl(var(--sidebar-text-muted))",
         },
       },
       borderRadius: {
@@ -146,5 +131,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate],
 } satisfies Config;

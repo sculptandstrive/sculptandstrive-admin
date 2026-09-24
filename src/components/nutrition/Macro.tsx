@@ -1,119 +1,166 @@
-import React, { useState } from 'react'
-import { CalculatorForm, type FormData } from './CalculatorForm';
-import { MacroResults, type MacroResult } from "./MacroResults";
+import { useState, useMemo } from "react";
+import CalculatorLayout, { StaggerItem } from "@/components/CalculatorLayout";
+import InstrumentInput from "@/components/InstrumentInput";
+import SegmentedControl from "@/components/SegmentedControl";
+import ReadoutCard from "@/components/ReadoutCard";
 
-function calculateMacros(data: FormData): MacroResult {
-  const { age, gender, heightFt, heightIn, weight, activity, goal, unit } =
-    data;
+const MacroCalculator = () => {
+  const [units, setUnits] = useState("metric");
+  const [gender, setGender] = useState("male");
+  const [age, setAge] = useState("25");
+  const [weight, setWeight] = useState("70");
+  const [height, setHeight] = useState("175");
+  const [weightLbs, setWeightLbs] = useState("154");
+  const [heightFt, setHeightFt] = useState("5");
+  const [heightIn, setHeightIn] = useState("9");
+  const [activity, setActivity] = useState("1.55");
+  const [goal, setGoal] = useState("maintain");
 
-  let heightCm: number;
-  let weightKg: number;
-
-  if (unit === "us") {
-    heightCm = (heightFt * 12 + heightIn) * 2.54;
-    weightKg = weight * 0.453592;
-  } else {
-    heightCm = heightFt; // reusing heightFt as cm
-    weightKg = weight;
-  }
-
-  // Mifflin-St Jeor
-  let bmr: number;
-  if (gender === "male") {
-    bmr = 10 * weightKg + 6.25 * heightCm - 5 * age + 5;
-  } else {
-    bmr = 10 * weightKg + 6.25 * heightCm - 5 * age - 161;
-  }
-
-  const activityMultipliers: Record<string, number> = {
-    bmr: 1,
-    sedentary: 1.2,
-    light: 1.375,
-    moderate: 1.55,
-    active: 1.725,
-    veryActive: 1.9,
-    extraActive: 2.0,
+  const handleUnitsChange = (newUnits: string) => {
+    if (newUnits === units) return;
+    setUnits(newUnits);
+    if (newUnits === "imperial") {
+      const wKg = parseFloat(weight) || 70;
+      const hCm = parseFloat(height) || 175;
+      const totalInches = hCm / 2.54;
+      const ft = Math.floor(totalInches / 12);
+      const inches = Math.round(totalInches % 12);
+      setWeightLbs((wKg * 2.20462).toFixed(1));
+      setHeightFt(String(Math.max(1, ft)));
+      setHeightIn(String(inches));
+    } else {
+      const wLbs = parseFloat(weightLbs) || 154;
+      const ft = parseFloat(heightFt) || 5;
+      const inches = parseFloat(heightIn) || 9;
+      const hCm = Math.round((ft * 12 + inches) * 2.54);
+      setWeight((wLbs / 2.20462).toFixed(1));
+      setHeight(String(hCm));
+    }
   };
 
-  const goalOffsets: Record<string, number> = {
-    maintain: 0,
-    mildLoss: -250,
-    loss: -500,
-    extremeLoss: -1000,
-    mildGain: 250,
-    gain: 500,
-    extremeGain: 1000,
-  };
+  const wKg = units === "metric" ? parseFloat(weight) || 70 : (parseFloat(weightLbs) || 154) * 0.453592;
+  const wLbs = units === "metric" ? (parseFloat(weight) || 70) * 2.20462 : parseFloat(weightLbs) || 154;
 
-  const tdee = bmr * (activityMultipliers[activity] || 1.2);
-  const calories = Math.round(tdee + (goalOffsets[goal] || 0));
+  const tdee = useMemo(() => {
+    const a = parseFloat(age);
+    let w: number, h: number;
+    if (units === "metric") {
+      w = parseFloat(weight);
+      h = parseFloat(height);
+    } else {
+      w = parseFloat(weightLbs) * 0.453592;
+      h = (parseFloat(heightFt) * 12 + parseFloat(heightIn)) * 2.54;
+    }
+    if (!a || !w || !h) return null;
+    const bmr = gender === "male"
+      ? 10 * w + 6.25 * h - 5 * a + 5
+      : 10 * w + 6.25 * h - 5 * a - 161;
+    return bmr * parseFloat(activity);
+  }, [units, gender, age, weight, height, weightLbs, heightFt, heightIn, activity]);
 
-  return {
-    calories,
-    protein: {
-      grams: Math.round((calories * 0.243) / 4),
-      min: Math.round((calories * 0.118) / 4),
-      max: Math.round((calories * 0.342) / 4),
-    },
-    carbs: {
-      grams: Math.round((calories * 0.534) / 4),
-      min: Math.round((calories * 0.427) / 4),
-      max: Math.round((calories * 0.726) / 4),
-    },
-    fat: {
-      grams: Math.round((calories * 0.253) / 9),
-      min: Math.round((calories * 0.204) / 9),
-      max: Math.round((calories * 0.356) / 9),
-    },
-    sugar: Math.round((calories * 0.1) / 4),
-    saturatedFat: Math.round((calories * 0.1) / 9),
-    kj: Math.round(calories * 4.184),
-  };
-}
+  const macros = useMemo(() => {
+    if (!tdee) return null;
+    const calories = goal === "lose" ? tdee - 500 : goal === "gain" ? tdee + 500 : tdee;
+    // Standard split: 30% protein, 35% carbs, 35% fat
+    const protein = Math.round((calories * 0.30) / 4);
+    const carbs = Math.round((calories * 0.35) / 4);
+    const fat = Math.round((calories * 0.35) / 9);
+    return { calories: Math.round(calories), protein, carbs, fat };
+  }, [tdee, goal]);
 
-const Macro = () => {
-    const [result, setResult] = useState<MacroResult | null>(null);
-    const [formData, setFormData] = useState<FormData | null>(null);
-    const handleCalculate = (data: FormData) => {
-      setFormData(data);
-      setResult(calculateMacros(data));
-    };
   return (
-   <div className=" max-w-4xl py-8 md:py-12">
-        {/* Header */}
-        <div className="mb-8 ">
-          <h1 className="text-2xl font-extrabold tracking-tight md:text-3xl">
-            Macro Calculator
-          </h1>
-          {/* <p className="mt-2 text-muted-foreground">
-            Calculate your daily macronutrient needs based on your body metrics,
-            activity level, and goals.
-          </p> */}
-        </div>
+    <CalculatorLayout
+      title="Macro Calculator"
+      subtitle="Calculate your daily macronutrient targets based on your goals."
+    >
+      <StaggerItem>
+        <SegmentedControl
+          size="md"
+          options={[
+            { label: "Metric (kg / cm)", value: "metric" },
+            { label: "Imperial (lbs / ft)", value: "imperial" },
+          ]}
+          value={units}
+          onChange={handleUnitsChange}
+        />
+      </StaggerItem>
 
-        {/* Calculator Layout */}
-        <div className="grid gap-8 lg:grid-cols-5">
-          <div className="lg:col-span-2">
-            <CalculatorForm
-              onCalculate={handleCalculate}
-              savedData={formData}
+      <StaggerItem>
+        <SegmentedControl
+          size="md"
+          options={[
+            { label: "Male", value: "male" },
+            { label: "Female", value: "female" },
+          ]}
+          value={gender}
+          onChange={setGender}
+        />
+      </StaggerItem>
+
+      <StaggerItem>
+        <div className="bg-white rounded-2xl border border-white/90 p-4 sm:p-5 shadow-[5px_5px_14px_rgba(168,190,185,0.28),-5px_-5px_14px_rgba(255,255,255,0.95)] space-y-3 sm:space-y-3.5">
+          <InstrumentInput label="Age" value={age} onChange={setAge} unit="years" />
+          {units === "metric" ? (
+            <>
+              <InstrumentInput label="Weight" value={weight} onChange={setWeight} unit="kg" />
+              <InstrumentInput label="Height" value={height} onChange={setHeight} unit="cm" />
+            </>
+          ) : (
+            <>
+              <InstrumentInput label="Weight" value={weightLbs} onChange={setWeightLbs} unit="lbs" />
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                <InstrumentInput label="Height (ft)" value={heightFt} onChange={setHeightFt} unit="ft" />
+                <InstrumentInput label="Height (in)" value={heightIn} onChange={setHeightIn} unit="in" />
+              </div>
+            </>
+          )}
+        </div>
+      </StaggerItem>
+
+      <StaggerItem>
+        <SegmentedControl
+          size="md"
+          options={[
+            { label: "Lose (-0.45kg / -1lb/wk)", value: "lose" },
+            { label: "Maintain", value: "maintain" },
+            { label: "Gain (+0.45kg / +1lb/wk)", value: "gain" },
+          ]}
+          value={goal}
+          onChange={setGoal}
+        />
+      </StaggerItem>
+
+      {macros && (
+        <StaggerItem>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-3.5">
+            <ReadoutCard
+              label="Daily Calories"
+              value={macros.calories.toLocaleString()}
+              unit="kcal"
+            />
+            <ReadoutCard
+              label="Protein"
+              value={String(macros.protein)}
+              unit={`g (${(macros.protein / wKg).toFixed(1)}g/kg | ${(macros.protein / wLbs).toFixed(1)}g/lb)`}
+              colorClass="text-[#08B594]"
+            />
+            <ReadoutCard
+              label="Carbohydrates"
+              value={String(macros.carbs)}
+              unit="g"
+              colorClass="text-[#08B594]"
+            />
+            <ReadoutCard
+              label="Fat"
+              value={String(macros.fat)}
+              unit="g"
+              colorClass="text-[#08B594]"
             />
           </div>
-          <div className="lg:col-span-3">
-            {result ? (
-              <MacroResults result={result}/>
-            ) : (
-              <div className="flex h-full items-center justify-center rounded-xl border border-dashed border-border bg-card p-12">
-                <p className="text-muted-foreground text-center">
-                  Fill in your details and click <strong>Calculate</strong> to
-                  see your macro breakdown.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-    </div>
-  )
-}
+        </StaggerItem>
+      )}
+    </CalculatorLayout>
+  );
+};
 
-export default Macro
+export default MacroCalculator;

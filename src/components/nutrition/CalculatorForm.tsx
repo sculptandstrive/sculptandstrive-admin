@@ -113,17 +113,17 @@ export function CalculatorForm({ onCalculate, savedData }: Props) {
   ];
 
   const inputClass = (hasError?: boolean) =>
-    `w-full rounded-lg border bg-background px-3 py-2.5 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary ${
-      hasError ? "border-destructive" : "border-input"
+    `w-full rounded-xl border-0 bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] px-3.5 py-2.5 text-sm font-semibold text-[#0F172A] outline-none transition-all focus:ring-2 focus:ring-[#08B594]/30 ${
+      hasError ? "ring-2 ring-destructive/40" : ""
     }`;
 
   return (
     <form
       onSubmit={handleSubmit(onCalculate)}
-      className="rounded-xl border border-border bg-card p-6 shadow-sm space-y-5"
+      className="rounded-[26px] border border-white/90 bg-white p-6 shadow-[5px_5px_14px_rgba(168,190,185,0.25),-4px_-4px_12px_rgba(255,255,255,0.95)] space-y-5"
     >
       {/* Unit Toggle */}
-      <div className="flex rounded-full bg-muted p-1 gap-1">
+      <div className="flex rounded-full bg-[#E1EDE9] p-1 shadow-[inset_2px_2px_4px_rgba(165,185,180,0.5),inset_-2px_-2px_4px_rgba(255,255,255,0.9)] gap-1">
         {(["us", "metric"] as const).map((u) => (
           <button
             key={u}
@@ -131,8 +131,8 @@ export function CalculatorForm({ onCalculate, savedData }: Props) {
             onClick={() => handleUnitSwitch(u)}
             className={`flex-1 rounded-full py-2 text-sm font-medium transition-all ${
               unit === u
-                ? "bg-accent shadow-sm text-primary-foreground"
-                : "text-muted-foreground"
+                ? "bg-gradient-to-r from-[#08B594] via-[#07AB8C] to-[#069D80] shadow-[0_2px_6px_rgba(8,169,130,0.35)] text-white font-bold"
+                : "text-[#7186A0] hover:text-[#08B594] font-medium"
             }`}
           >
             {u === "us" ? "US Units" : "Metric"}
@@ -163,7 +163,7 @@ export function CalculatorForm({ onCalculate, savedData }: Props) {
       {/* Gender */}
       <div>
         <label className="text-sm font-medium text-foreground">Gender</label>
-        <div className="mt-1.5 flex rounded-full bg-muted p-1 gap-1">
+        <div className="mt-1.5 flex rounded-full bg-[#E1EDE9] p-1 shadow-[inset_2px_2px_4px_rgba(165,185,180,0.5),inset_-2px_-2px_4px_rgba(255,255,255,0.9)] gap-1">
           {(["male", "female"] as const).map((g) => (
             <button
               key={g}
@@ -171,8 +171,8 @@ export function CalculatorForm({ onCalculate, savedData }: Props) {
               onClick={() => setValue("gender", g)}
               className={`flex-1 rounded-full py-2 text-sm font-medium transition-all capitalize ${
                 gender === g
-                  ? "bg-accent shadow-sm text-primary-foreground"
-                  : "text-muted-foreground"
+                  ? "bg-gradient-to-r from-[#08B594] via-[#07AB8C] to-[#069D80] shadow-[0_2px_6px_rgba(8,169,130,0.35)] text-white font-bold"
+                  : "text-[#7186A0] hover:text-[#08B594] font-medium"
               }`}
             >
               {g}

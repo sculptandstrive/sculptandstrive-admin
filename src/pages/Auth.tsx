@@ -1,46 +1,32 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Mail, Lock, Eye, EyeOff, Dumbbell, ArrowRight, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Dumbbell, Mail, Lock, User } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { z } from "zod";
-import { lovable } from "@/integrations/lovable";
-import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 
 const emailSchema = z.string().email("Please enter a valid email address");
 const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
-const nameSchema = z.string().min(2, "Name must be at least 2 characters");
 
 export default function Auth() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("login");
-  
-  // Login form state
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
-  
-  // Signup form state
-  const [signupEmail, setSignupEmail] = useState("");
-  const [signupPassword, setSignupPassword] = useState("");
-  const [signupName, setSignupName] = useState("");
-  
-   const { signIn, signUp, user } = useAuth();
-  
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+
+  const { signIn, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const [resetLoading, setResetLoading] = useState(false);   // ✅ moved up, before any early return
 
   const from = location.state?.from?.pathname || "/";
 
-  // Redirect if already logged in safely after render
   useEffect(() => {
     if (user) {
       navigate(from, { replace: true });
@@ -50,6 +36,7 @@ export default function Auth() {
   if (user) {
     return null;
   }
+
   const handleForgotPassword = async () => {
     const trimmedEmail = loginEmail.trim();
     if (!trimmedEmail) {
@@ -63,7 +50,7 @@ export default function Auth() {
 
     try {
       emailSchema.parse(trimmedEmail);
-    } catch (err: any) {
+    } catch {
       toast({
         title: "Invalid Email",
         description: "Please enter a valid email address.",
@@ -104,7 +91,7 @@ export default function Auth() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       emailSchema.parse(loginEmail);
       passwordSchema.parse(loginPassword);
@@ -120,7 +107,7 @@ export default function Auth() {
     }
 
     setIsLoading(true);
-    
+
     const { error } = await signIn(loginEmail, loginPassword);
     if (error) {
       let message = "An error occurred during login";
@@ -139,256 +126,153 @@ export default function Auth() {
     } else {
       toast({
         title: "Welcome back!",
-        description: "You have successfully logged in.",
+        description: "You have successfully logged in to the Admin Portal.",
       });
       navigate(from, { replace: true });
     }
-    
+
     setIsLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/30 to-background p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <img src={logo} alt="Sculpt & Strive" className="w-12 h-12" />
-            <h1 className="font-display text-3xl font-bold text-foreground">
-              Sculpt & Strive
-            </h1>
+    <div className="min-h-screen bg-gradient-to-b from-[#EEF7F5] via-[#F3F9F7] to-[#F7FAFA] flex flex-col justify-center items-center p-4 sm:p-6 select-none relative overflow-hidden">
+      {/* Background Ambient Glow Circles */}
+      <div className="absolute -top-40 -left-40 w-96 h-96 bg-[#7BE3C6]/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-[#0CA681]/15 rounded-full blur-3xl pointer-events-none" />
+
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="w-full max-w-[430px] z-10"
+      >
+        {/* Top Logo and Title Header */}
+        <div className="flex flex-col items-center mb-6 text-center">
+          <div className="w-16 h-16 rounded-[22px] bg-white p-2.5 flex items-center justify-center shadow-[6px_6px_16px_rgba(130,155,151,0.2),-4px_-4px_12px_rgba(255,255,255,0.95)] border border-white/90 mb-3.5">
+            <img src={logo} alt="Sculpt & Strive Logo" className="w-full h-full object-contain" />
           </div>
-          <p className="text-muted-foreground">
-            Admin Dashboard
+          <h1 className="text-xl sm:text-2xl font-extrabold text-[#10203B] tracking-tight">
+            Sculpt And Strive
+          </h1>
+          <p className="text-xs sm:text-[13px] text-[#6F849A] font-medium mt-0.5">
+            Administrative Access Portal
           </p>
         </div>
 
-        <Card className="shadow-card border-border/50">
-          <CardHeader className="text-center pb-4">
-            <CardTitle className="font-display text-xl">Welcome</CardTitle>
-            <CardDescription>
-              Sign in to access your dashboard or create a new account
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-1 mb-6">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                {/* <TabsTrigger value="signup">Sign Up</TabsTrigger> */}
-              </TabsList>
+        {/* 3D Neumorphic Card */}
+        <div className="bg-white rounded-[24px] sm:rounded-[28px] p-6 sm:p-7 border border-white/95 shadow-[8px_8px_24px_rgba(130,155,151,0.16),-6px_-6px_20px_rgba(255,255,255,0.95)]">
+          {/* Card Header Row */}
+          <div className="flex items-center justify-between gap-3 mb-5">
+            <div>
+              <h2 className="text-[22px] sm:text-[24px] font-extrabold text-[#0F1C32] tracking-tight leading-tight">
+                Admin Sign In
+              </h2>
+              <p className="text-xs sm:text-[13px] text-[#71849B] font-medium mt-0.5">
+                Sign in with authorized credentials
+              </p>
+            </div>
 
-              <TabsContent value="login">
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="login-email"
-                        type="email"
-                        placeholder="you@example.com"
-                        value={loginEmail}
-                        onChange={(e) => setLoginEmail(e.target.value)}
-                        className="pl-10"
-                        required
-                      />
-                    </div>
+            {/* Admin Badge */}
+            <div className="bg-[#DDF5EE] border border-[#BCE8D8] rounded-[14px] px-2.5 py-1.5 flex items-center gap-1.5 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.8)] shrink-0">
+              <div className="w-5 h-5 rounded-[6px] bg-[#CEEFE6] flex items-center justify-center text-[#07AC7D]">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#07AC7D]" />
+              </div>
+              <span className="text-[11px] font-bold text-[#07AC7D] leading-tight whitespace-nowrap">
+                Admin<br />Control
+              </span>
+            </div>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            {/* Email Field with Non-overlapping Inset Well */}
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-[13px] font-semibold text-[#536B83]">
+                Email Address
+              </Label>
+              <div className="relative rounded-[14px] bg-[#F5FAF9] border border-white/90 shadow-[inset_2px_2px_5px_rgba(130,155,151,0.12),inset_-2px_-2px_5px_rgba(255,255,255,0.9)] flex items-center px-3 h-11 focus-within:ring-2 focus-within:ring-[#0CA681]/40 transition-all">
+                <div className="w-7 h-7 rounded-[8px] bg-[#EAF2F0] flex items-center justify-center text-[#526B85] shrink-0 mr-2.5 shadow-[1px_1px_2px_rgba(130,155,151,0.1)]">
+                  <Mail className="w-4 h-4 text-[#526B85]" />
+                </div>
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="admin@sculptandstrive.com"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  className="bg-transparent border-none text-sm font-medium text-[#0F1C32] placeholder:text-[#94A3B8] focus:outline-none w-full"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Password Field with Non-overlapping Inset Well & Eye Toggle */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-[13px] font-semibold text-[#536B83]">
+                  Password
+                </Label>
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={resetLoading}
+                  className="text-xs font-semibold text-[#07AC7D] hover:underline disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  {resetLoading ? "Sending Link..." : "Forgot Password?"}
+                </button>
+              </div>
+              <div className="relative rounded-[14px] bg-[#F5FAF9] border border-white/90 shadow-[inset_2px_2px_5px_rgba(130,155,151,0.12),inset_-2px_-2px_5px_rgba(255,255,255,0.9)] flex items-center px-3 h-11 focus-within:ring-2 focus-within:ring-[#0CA681]/40 transition-all">
+                <div className="w-7 h-7 rounded-[8px] bg-[#EAF2F0] flex items-center justify-center text-[#526B85] shrink-0 mr-2.5 shadow-[1px_1px_2px_rgba(130,155,151,0.1)]">
+                  <Lock className="w-4 h-4 text-[#526B85]" />
+                </div>
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  className="bg-transparent border-none text-sm font-medium text-[#0F1C32] placeholder:text-[#94A3B8] focus:outline-none w-full pr-8"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#0F1C32] transition-colors cursor-pointer"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Primary Action Button */}
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full h-11 sm:h-12 rounded-[14px] bg-[#0CA681] hover:bg-[#099271] text-white font-bold text-sm sm:text-[15px] shadow-[4px_4px_12px_rgba(12,166,129,0.25),-2px_-2px_6px_rgba(255,255,255,0.8)] active:shadow-[inset_2px_2px_4px_rgba(0,80,60,0.25)] flex items-center justify-center relative px-4 transition-all duration-200 mt-2 cursor-pointer"
+            >
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Signing in...
+                </span>
+              ) : (
+                <>
+                  <span>Sign In to Admin</span>
+                  <div className="w-7 h-7 rounded-full bg-[#12B890] flex items-center justify-center text-white absolute right-2.5 shadow-[1px_1px_3px_rgba(0,0,0,0.12)]">
+                    <ArrowRight className="w-4 h-4" />
                   </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="login-password">Password</Label>
-                      <button
-                        type="button"
-                        onClick={handleForgotPassword}
-                        disabled={resetLoading}
-                        className="text-xs text-primary hover:underline disabled:opacity-50"
-                      >
-                        {resetLoading ? "Sending Link..." : "Forgot password?"}
-                      </button>
-                    </div>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="login-password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={loginPassword}
-                        onChange={(e) => setLoginPassword(e.target.value)}
-                        className="pl-10"
-                        required
-                      />
-                    </div>
-                  </div>
+                </>
+              )}
+            </Button>
+          </form>
+        </div>
 
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-sm text-sm h-10 transition-all rounded-xl"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                        Signing in...
-                      </div>
-                    ) : (
-                      "Sign In"
-                    )}
-                  </Button>
-
-                  {/* <div className="relative my-4">
-                    <div className="absolute inset-0 flex items-center">
-                      <Separator className="w-full" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
-                    </div>
-                  </div> */}
-
-                  {/* <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleGoogleSignIn}
-                    disabled={isLoading}
-                  >
-                    <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
-                      <path
-                        fill="currentColor"
-                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                      />
-                      <path
-                        fill="currentColor"
-                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                      />
-                      <path
-                        fill="currentColor"
-                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                      />
-                      <path
-                        fill="currentColor"
-                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                      />
-                    </svg>
-                    Continue with Google
-                  </Button> */}
-                </form>
-              </TabsContent>
-
-              {/* <TabsContent value="signup">
-                <form onSubmit={handleSignup} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-name">Full Name</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="signup-name"
-                        type="text"
-                        placeholder="John Doe"
-                        value={signupName}
-                        onChange={(e) => setSignupName(e.target.value)}
-                        className="pl-10"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="signup-email"
-                        type="email"
-                        placeholder="you@example.com"
-                        value={signupEmail}
-                        onChange={(e) => setSignupEmail(e.target.value)}
-                        className="pl-10"
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="signup-password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={signupPassword}
-                        onChange={(e) => setSignupPassword(e.target.value)}
-                        className="pl-10"
-                        required
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Must be at least 6 characters
-                    </p>
-                  </div>
-
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-[#71D0F7] hover:bg-[#4DB8F5] text-white"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                        Creating account...
-                      </div>
-                    ) : (
-                      "Create Account"
-                    )}
-                  </Button>
-
-                  <div className="relative my-4">
-                    <div className="absolute inset-0 flex items-center">
-                      <Separator className="w-full" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
-                    </div>
-                  </div>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    onClick={handleGoogleSignIn}
-                    disabled={isLoading}
-                  >
-                    <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
-                      <path
-                        fill="currentColor"
-                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                      />
-                      <path
-                        fill="currentColor"
-                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                      />
-                      <path
-                        fill="currentColor"
-                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                      />
-                      <path
-                        fill="currentColor"
-                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                      />
-                    </svg>
-                    Continue with Google
-                  </Button>
-                </form>
-              </TabsContent> */}
-            </Tabs>
-          </CardContent>
-        </Card>
-
-        <p className="text-center text-sm text-muted-foreground mt-6">
-          <Dumbbell className="inline-block w-4 h-4 mr-1" />
-          Transform your fitness journey
+        {/* Footer Note */}
+        <p className="text-center text-xs font-semibold text-[#6F849A] mt-5 flex items-center justify-center gap-1.5">
+          <Dumbbell className="w-3.5 h-3.5 text-[#08A982]" />
+          Sculpt And Strive • Official Platform Command
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 }

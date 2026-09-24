@@ -198,116 +198,131 @@ export default function GroupProgress() {
 
   const getRecoveryColor = (status: string) => {
     switch (status) {
-      case "Excellent": return "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
-      case "Good": return "text-green-400 bg-green-500/10 border-green-500/20";
-      case "Moderate": return "text-amber-400 bg-amber-500/10 border-amber-500/20";
-      default: return "text-destructive bg-destructive/10 border-destructive/20";
+      case "Excellent": return "text-[#07AC7D] bg-[#E6F7F3] border-[#BEE7DC]";
+      case "Good": return "text-[#16A34A] bg-[#F0FDF4] border-[#BBF7D0]";
+      case "Moderate": return "text-[#EA580C] bg-[#FFF7ED] border-[#FFEDD5]";
+      default: return "text-[#DC2626] bg-[#FEF2F2] border-[#FECACA]";
     }
   };
-return (
-  <div className="space-y-6">
-    <PageHeader
-      title="Group Progress"
-      description={`${groupName} · ${members.length} members`}
-    >
-      <Button
-        variant="outline"
-        onClick={() => window.history.back()}
-        className="border-border text-foreground hover:bg-muted shadow-sm rounded-xl"
-      >
-        <ArrowLeft className="w-4 h-4 mr-2" />
-        Back
-      </Button>
-    </PageHeader>
 
-    {/* Stats Summary */}
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <Card className="bg-card border border-border shadow-sm rounded-2xl">
-        <CardContent className="p-5">
-          <p className="text-sm font-medium text-muted-foreground">Avg Completion</p>
-          <p className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400 tracking-tight leading-none mt-1.5">{groupStats.avgCompletion}%</p>
-          <Progress value={groupStats.avgCompletion} className="h-1.5 bg-muted mt-2.5" />
-        </CardContent>
-      </Card>
-      <Card className="bg-card border border-border shadow-sm rounded-2xl">
-        <CardContent className="p-5">
-          <p className="text-sm font-medium text-muted-foreground">Total Weight Loss</p>
-          <p className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400 tracking-tight leading-none mt-1.5">{groupStats.totalWeightLoss} kg</p>
-        </CardContent>
-      </Card>
-      <Card className="bg-card border border-border shadow-sm rounded-2xl">
-        <CardContent className="p-5">
-          <p className="text-sm font-medium text-muted-foreground">Avg Attendance</p>
-          <p className="text-2xl font-semibold text-foreground tracking-tight leading-none mt-1.5">{groupStats.avgAttendance}%</p>
-        </CardContent>
-      </Card>
-      <Card className="bg-card border border-border shadow-sm rounded-2xl">
-        <CardContent className="p-5">
-          <p className="text-sm font-medium text-muted-foreground">Top Performer</p>
-          <p className="text-xl font-semibold text-emerald-600 dark:text-emerald-400 mt-1.5 truncate leading-none">{groupStats.topPerformer}</p>
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Group Progress"
+        description={`${groupName} · ${members.length} members`}
+      >
+        <Button
+          variant="outline"
+          onClick={() => window.history.back()}
+          className="border-[#DCE8E5] text-[#0F172A] hover:bg-[#F8FBFA] shadow-sm rounded-xl font-semibold"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2 text-[#7186A0]" />
+          Back
+        </Button>
+      </PageHeader>
+
+      {/* Stats Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="bg-white border border-white/90 shadow-[5px_5px_16px_rgba(145,170,165,0.18),-3px_-3px_12px_rgba(255,255,255,0.95)] rounded-[24px] overflow-hidden">
+          <CardContent className="p-5">
+            <p className="text-xs font-semibold text-[#7186A0] uppercase tracking-wider">Avg Completion</p>
+            <p className="text-2xl font-bold text-[#07AC7D] tracking-tight leading-none mt-2">{groupStats.avgCompletion}%</p>
+            {/* Recessed Progress Track */}
+            <div className="h-2 w-full rounded-full bg-[#E2ECE9] shadow-[inset_1px_1px_2.5px_rgba(165,185,180,0.4),inset_-1px_-1px_2.5px_rgba(255,255,255,0.8)] mt-3 p-0.5 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-[#0CC194] to-[#07AC7D] transition-all duration-500"
+                style={{ width: `${Math.min(100, Math.max(0, groupStats.avgCompletion))}%` }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border border-white/90 shadow-[5px_5px_16px_rgba(145,170,165,0.18),-3px_-3px_12px_rgba(255,255,255,0.95)] rounded-[24px] overflow-hidden">
+          <CardContent className="p-5">
+            <p className="text-xs font-semibold text-[#7186A0] uppercase tracking-wider">Total Weight Loss</p>
+            <p className="text-2xl font-bold text-[#07AC7D] tracking-tight leading-none mt-2">{groupStats.totalWeightLoss} kg</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border border-white/90 shadow-[5px_5px_16px_rgba(145,170,165,0.18),-3px_-3px_12px_rgba(255,255,255,0.95)] rounded-[24px] overflow-hidden">
+          <CardContent className="p-5">
+            <p className="text-xs font-semibold text-[#7186A0] uppercase tracking-wider">Avg Attendance</p>
+            <p className="text-2xl font-bold text-[#0F172A] tracking-tight leading-none mt-2">{groupStats.avgAttendance}%</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border border-white/90 shadow-[5px_5px_16px_rgba(145,170,165,0.18),-3px_-3px_12px_rgba(255,255,255,0.95)] rounded-[24px] overflow-hidden">
+          <CardContent className="p-5">
+            <p className="text-xs font-semibold text-[#7186A0] uppercase tracking-wider">Top Performer</p>
+            <p className="text-xl font-bold text-[#07AC7D] mt-2 truncate leading-none">{groupStats.topPerformer}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Members Progress Table */}
+      <Card className="bg-white border border-white/90 shadow-[6px_6px_20px_rgba(145,170,165,0.2),-4px_-4px_14px_rgba(255,255,255,0.95)] rounded-[28px] overflow-hidden">
+        <CardHeader className="px-5 py-4 border-b border-[#E2ECE9]/70 bg-[#F8FBFA]/80 flex flex-row items-center justify-between">
+          <CardTitle className="text-base sm:text-[19px] font-bold text-[#0F172A] flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-[#E6F7F3] border border-[#BEE7DC] text-[#07AC7D] flex items-center justify-center shadow-sm shrink-0">
+              <TrendingUp className="w-3.5 h-3.5 text-[#07AC7D]" />
+            </div>
+            Member Progress Comparison
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[#E2ECE9] bg-[#F8FBFA] text-left text-xs font-bold text-[#7186A0] uppercase tracking-wider">
+                  <th className="py-3 px-4">Member</th>
+                  <th className="text-center py-3 px-3.5">Workout</th>
+                  <th className="text-center py-3 px-3.5">Weight</th>
+                  <th className="text-center py-3 px-3.5">Nutrition</th>
+                  <th className="text-center py-3 px-3.5">Attendance</th>
+                  <th className="text-center py-3 px-3.5">Recovery</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#E2ECE9]/70">
+                {members.map((member) => (
+                  <tr key={member.id} className="hover:bg-[#F8FBFA]/70 transition-colors">
+                    <td className="py-3.5 px-4">
+                      <span className="font-bold text-sm text-[#0F172A]">{member.full_name}</span>
+                    </td>
+                    <td className="text-center py-3.5 px-3.5">
+                      <span className="text-[#0F172A] font-bold text-sm">{member.workout_completion}%</span>
+                      <div className="w-full max-w-[60px] mx-auto mt-1 h-1.5 rounded-full bg-[#E2ECE9] shadow-[inset_1px_1px_2px_rgba(165,185,180,0.35)] overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-[#07AC7D]"
+                          style={{ width: `${Math.min(100, Math.max(0, member.workout_completion))}%` }}
+                        />
+                      </div>
+                    </td>
+                    <td className="text-center py-3.5 px-3.5">
+                      <span className={`font-bold text-sm ${parseFloat(member.weight_change) < 0 ? "text-[#07AC7D]" : parseFloat(member.weight_change) === 0 ? "text-[#7186A0]" : "text-[#EF4444]"}`}>
+                        {parseFloat(member.weight_change) > 0 ? "+" : ""}{member.weight_change} kg
+                      </span>
+                    </td>
+                    <td className="text-center py-3.5 px-3.5">
+                      <span className="text-[#0F172A] font-bold text-sm">{member.nutrition_adherence}%</span>
+                    </td>
+                    <td className="text-center py-3.5 px-3.5">
+                      <span className="text-[#0F172A] font-bold text-sm">{member.attendance}%</span>
+                    </td>
+                    <td className="text-center py-3.5 px-3.5">
+                      <Badge variant="outline" className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-[1px_1px_2px_rgba(165,185,180,0.06)] ${getRecoveryColor(member.recovery_status)}`}>
+                        {member.recovery_status}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {members.length === 0 && (
+            <p className="text-center py-8 text-[#7186A0] text-sm font-semibold">No members in this group yet.</p>
+          )}
         </CardContent>
       </Card>
     </div>
-
-    {/* Members Progress Table */}
-    <Card className="bg-card border border-border shadow-sm rounded-2xl">
-      <CardHeader>
-        <CardTitle className="text-[20px] font-semibold text-foreground flex items-center gap-2">
-          <TrendingUp className="w-4 h-4 text-primary" />
-          Member Progress Comparison
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/40">
-                <th className="text-left py-3 px-3 text-xs text-muted-foreground font-semibold uppercase tracking-wider">Member</th>
-                <th className="text-center py-3 px-3 text-xs text-muted-foreground font-semibold uppercase tracking-wider">Workout</th>
-                <th className="text-center py-3 px-3 text-xs text-muted-foreground font-semibold uppercase tracking-wider">Weight</th>
-                <th className="text-center py-3 px-3 text-xs text-muted-foreground font-semibold uppercase tracking-wider">Nutrition</th>
-                <th className="text-center py-3 px-3 text-xs text-muted-foreground font-semibold uppercase tracking-wider">Attendance</th>
-                <th className="text-center py-3 px-3 text-xs text-muted-foreground font-semibold uppercase tracking-wider">Recovery</th>
-              </tr>
-            </thead>
-            <tbody>
-              {members.map((member) => (
-                <tr key={member.id} className="border-b border-border hover:bg-muted/50 transition-all">
-                  <td className="py-3 px-3">
-                    <span className="font-medium text-foreground">{member.full_name}</span>
-                  </td>
-                  <td className="text-center py-3 px-3">
-                    <span className="text-foreground font-bold">{member.workout_completion}%</span>
-                    <div className="w-full max-w-[60px] mx-auto mt-1">
-                      <Progress value={member.workout_completion} className="h-1 bg-muted" />
-                    </div>
-                  </td>
-                  <td className="text-center py-3 px-3">
-                    <span className={`font-bold ${parseFloat(member.weight_change) < 0 ? "text-emerald-500" : "text-destructive"}`}>
-                      {parseFloat(member.weight_change) < 0 ? "" : "+"}{member.weight_change} kg
-                    </span>
-                  </td>
-                  <td className="text-center py-3 px-3">
-                    <span className="text-foreground font-bold">{member.nutrition_adherence}%</span>
-                  </td>
-                  <td className="text-center py-3 px-3">
-                    <span className="text-foreground font-bold">{member.attendance}%</span>
-                  </td>
-                  <td className="text-center py-3 px-3">
-                    <Badge variant="outline" className={`text-[10px] ${getRecoveryColor(member.recovery_status)}`}>
-                      {member.recovery_status}
-                    </Badge>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {members.length === 0 && (
-          <p className="text-center py-8 text-muted-foreground text-sm">No members in this group yet.</p>
-        )}
-      </CardContent>
-    </Card>
-  </div>
-);
+  );
 }

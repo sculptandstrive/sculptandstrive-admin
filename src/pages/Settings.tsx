@@ -1,12 +1,9 @@
 import { useEffect, useState, useRef } from "react";
 import {
   Palette,
-  Sun,
-  Moon,
   Trash2,
   Loader2,
 } from "lucide-react";
-import { DashboardLayout } from "@/components/DashboardLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,7 +27,6 @@ import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useTheme } from "@/contexts/ThemeContext";
 
 export default function Settings() {
 
@@ -39,7 +35,6 @@ export default function Settings() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { toast } = useToast();
-  const { setTheme, theme } = useTheme();
 
   useEffect(() => {
     const fetchLogo = async () => {
@@ -257,7 +252,7 @@ export default function Settings() {
 
       <div className="space-y-6">
         {/* App Branding */}
-        <Card className="border border-border rounded-2xl shadow-sm bg-card">
+        <Card className="bg-white border border-white/90 shadow-[5px_5px_14px_rgba(168,190,185,0.25),-4px_-4px_12px_rgba(255,255,255,0.95)] rounded-[26px]">
           <CardHeader>
             <CardTitle className="text-[20px] font-semibold text-foreground flex items-center gap-2">
               <Palette className="w-5 h-5 text-primary" />
@@ -321,64 +316,6 @@ export default function Settings() {
                     </p>
                   )}
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Appearance */}
-        <Card className="border border-border rounded-2xl shadow-sm bg-card">
-          <CardHeader>
-            <CardTitle className="text-[20px] font-semibold text-foreground flex items-center gap-2">
-              {theme === "light" ? (
-                <Sun className="w-5 h-5 text-accent" />
-              ) : (
-                <Moon className="w-5 h-5 text-accent" />
-              )}
-              Appearance
-            </CardTitle>
-            <CardDescription className="text-sm font-normal text-muted-foreground">
-              Select your interface theme preference
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label className="text-xs font-medium text-muted-foreground">Theme</Label>
-              <div className="flex gap-3">
-                {[
-                  { value: "light", icon: Sun, label: "Light" },
-                  { value: "dark", icon: Moon, label: "Dark" },
-                ].map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => setTheme(option.value as typeof theme)}
-                    className={cn(
-                      "flex-1 flex flex-col items-center gap-3 p-4 rounded-xl border transition-all duration-150 cursor-pointer",
-                      theme === option.value
-                        ? "border-accent bg-accent/10"
-                        : "border-border hover:border-accent/50",
-                    )}
-                  >
-                    <option.icon
-                      className={cn(
-                        "w-6 h-6",
-                        theme === option.value
-                          ? "text-accent"
-                          : "text-muted-foreground",
-                      )}
-                    />
-                    <span
-                      className={cn(
-                        "text-sm font-medium",
-                        theme === option.value
-                          ? "text-accent font-semibold"
-                          : "text-muted-foreground",
-                      )}
-                    >
-                      {option.label}
-                    </span>
-                  </button>
-                ))}
               </div>
             </div>
           </CardContent>

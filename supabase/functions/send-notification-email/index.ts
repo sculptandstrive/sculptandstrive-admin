@@ -1,4 +1,4 @@
-﻿import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
@@ -47,7 +47,7 @@ serve(async (req) => {
     let email: string;
 
     if (notification.recipient_type === "admin") {
-      email = "lailakhuntia450@gmail.com";
+      email = Deno.env.get("ADMIN_EMAIL") || "notifications@sculptandstrive.com";
     } else {
       const { data: userData, error: userError } = await supabase.auth.admin.getUserById(
         notification.user_id

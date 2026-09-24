@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -24,74 +24,82 @@ export interface StatCardTheme {
 
 export const STAT_CARD_THEMES: Record<StatCardThemeKey, StatCardTheme> = {
   emerald: {
-    iconBg: "bg-[#E7F6F1] dark:bg-emerald-950/40",
-    iconColor: "text-[#07AC7D] dark:text-emerald-400",
-    trendColor: "text-[#07AC7D] dark:text-emerald-400",
-    sparkStroke: "#07AC7D",
+    iconBg: "bg-[#E2ECE9] text-[#08B594] border border-white/60 shadow-[inset_1.5px_1.5px_3px_rgba(165,185,180,0.45),inset_-1.5px_-1.5px_3px_rgba(255,255,255,0.85)]",
+    iconColor: "text-[#08B594]",
+    trendColor: "text-[#08B594]",
+    sparkStroke: "#08B594",
     sparkGradientId: "spark-grad-emerald",
-    sparkStartColor: "#07AC7D",
+    sparkStartColor: "#08B594",
     sparkPath: "M 2,36 Q 18,36 32,30 T 58,28 T 78,12 T 96,6 T 110,12",
-    sparkArea: "M 2,36 Q 18,36 32,30 T 58,28 T 78,12 T 96,6 T 110,12 L 110,44 L 2,44 Z",
+    sparkArea:
+      "M 2,36 Q 18,36 32,30 T 58,28 T 78,12 T 96,6 T 110,12 L 110,44 L 2,44 Z",
   },
   violet: {
-    iconBg: "bg-[#F3E8FF] dark:bg-purple-950/40",
-    iconColor: "text-[#9333EA] dark:text-purple-400",
-    trendColor: "text-[#9333EA] dark:text-purple-400",
-    sparkStroke: "#A855F7",
+    iconBg: "bg-[#EDE9FE] text-[#7C3AED] border border-white/60 shadow-[inset_1.5px_1.5px_3px_rgba(180,170,210,0.4),inset_-1.5px_-1.5px_3px_rgba(255,255,255,0.85)]",
+    iconColor: "text-[#7C3AED]",
+    trendColor: "text-[#7C3AED]",
+    sparkStroke: "#8B5CF6",
     sparkGradientId: "spark-grad-violet",
-    sparkStartColor: "#A855F7",
+    sparkStartColor: "#8B5CF6",
     sparkPath: "M 2,36 Q 14,32 24,26 T 46,18 T 60,30 T 74,16 T 88,22 T 110,6",
-    sparkArea: "M 2,36 Q 14,32 24,26 T 46,18 T 60,30 T 74,16 T 88,22 T 110,6 L 110,44 L 2,44 Z",
+    sparkArea:
+      "M 2,36 Q 14,32 24,26 T 46,18 T 60,30 T 74,16 T 88,22 T 110,6 L 110,44 L 2,44 Z",
   },
   blue: {
-    iconBg: "bg-[#EFF6FF] dark:bg-blue-950/40",
-    iconColor: "text-[#2563EB] dark:text-blue-400",
-    trendColor: "text-[#07AC7D] dark:text-emerald-400",
+    iconBg: "bg-[#EFF6FF] text-[#2563EB] border border-white/60 shadow-[inset_1.5px_1.5px_3px_rgba(170,185,210,0.4),inset_-1.5px_-1.5px_3px_rgba(255,255,255,0.85)]",
+    iconColor: "text-[#2563EB]",
+    trendColor: "text-[#2563EB]",
     sparkStroke: "#3B82F6",
     sparkGradientId: "spark-grad-blue",
     sparkStartColor: "#3B82F6",
     sparkPath: "M 2,36 Q 18,36 34,26 T 62,26 T 82,8 T 100,16 T 110,10",
-    sparkArea: "M 2,36 Q 18,36 34,26 T 62,26 T 82,8 T 100,16 T 110,10 L 110,44 L 2,44 Z",
+    sparkArea:
+      "M 2,36 Q 18,36 34,26 T 62,26 T 82,8 T 100,16 T 110,10 L 110,44 L 2,44 Z",
   },
   amber: {
-    iconBg: "bg-[#FFF7ED] dark:bg-amber-950/40",
-    iconColor: "text-[#F97316] dark:text-amber-400",
-    trendColor: "text-[#07AC7D] dark:text-emerald-400",
+    iconBg: "bg-[#FFF7ED] text-[#EA580C] border border-white/60 shadow-[inset_1.5px_1.5px_3px_rgba(210,185,170,0.4),inset_-1.5px_-1.5px_3px_rgba(255,255,255,0.85)]",
+    iconColor: "text-[#EA580C]",
+    trendColor: "text-[#EA580C]",
     sparkStroke: "#F97316",
     sparkGradientId: "spark-grad-amber",
     sparkStartColor: "#F97316",
-    sparkPath: "M 2,36 Q 12,30 20,34 T 38,24 T 54,30 T 68,18 T 82,8 T 94,18 T 110,4",
-    sparkArea: "M 2,36 Q 12,30 20,34 T 38,24 T 54,30 T 68,18 T 82,8 T 94,18 T 110,4 L 110,44 L 2,44 Z",
+    sparkPath:
+      "M 2,36 Q 12,30 20,34 T 38,24 T 54,30 T 68,18 T 82,8 T 94,18 T 110,4",
+    sparkArea:
+      "M 2,36 Q 12,30 20,34 T 38,24 T 54,30 T 68,18 T 82,8 T 94,18 T 110,4 L 110,44 L 2,44 Z",
   },
   rose: {
-    iconBg: "bg-rose-50 dark:bg-rose-950/40",
-    iconColor: "text-rose-600 dark:text-rose-400",
-    trendColor: "text-rose-600 dark:text-rose-400",
+    iconBg: "bg-rose-50 text-rose-600 border border-white/60 shadow-[inset_1.5px_1.5px_3px_rgba(210,170,180,0.4),inset_-1.5px_-1.5px_3px_rgba(255,255,255,0.85)]",
+    iconColor: "text-rose-600",
+    trendColor: "text-rose-600",
     sparkStroke: "#F43F5E",
     sparkGradientId: "spark-grad-rose",
     sparkStartColor: "#F43F5E",
     sparkPath: "M 2,36 Q 16,30 30,34 T 56,22 T 74,28 T 92,12 T 110,8",
-    sparkArea: "M 2,36 Q 16,30 30,34 T 56,22 T 74,28 T 92,12 T 110,8 L 110,44 L 2,44 Z",
+    sparkArea:
+      "M 2,36 Q 16,30 30,34 T 56,22 T 74,28 T 92,12 T 110,8 L 110,44 L 2,44 Z",
   },
   teal: {
-    iconBg: "bg-teal-50 dark:bg-teal-950/40",
-    iconColor: "text-teal-600 dark:text-teal-400",
-    trendColor: "text-teal-600 dark:text-teal-400",
+    iconBg: "bg-[#E6F7F3] text-[#0D9488] border border-white/60 shadow-[inset_1.5px_1.5px_3px_rgba(165,185,180,0.45),inset_-1.5px_-1.5px_3px_rgba(255,255,255,0.85)]",
+    iconColor: "text-[#0D9488]",
+    trendColor: "text-[#0D9488]",
     sparkStroke: "#0D9488",
     sparkGradientId: "spark-grad-teal",
     sparkStartColor: "#0D9488",
     sparkPath: "M 2,36 Q 18,36 32,30 T 58,28 T 78,12 T 96,6 T 110,12",
-    sparkArea: "M 2,36 Q 18,36 32,30 T 58,28 T 78,12 T 96,6 T 110,12 L 110,44 L 2,44 Z",
+    sparkArea:
+      "M 2,36 Q 18,36 32,30 T 58,28 T 78,12 T 96,6 T 110,12 L 110,44 L 2,44 Z",
   },
   slate: {
-    iconBg: "bg-slate-100 dark:bg-slate-800",
-    iconColor: "text-slate-600 dark:text-slate-300",
-    trendColor: "text-emerald-600 dark:text-emerald-400",
+    iconBg: "bg-[#E2ECE9] text-[#475569] border border-white/60 shadow-[inset_1.5px_1.5px_3px_rgba(165,185,180,0.45),inset_-1.5px_-1.5px_3px_rgba(255,255,255,0.85)]",
+    iconColor: "text-[#475569]",
+    trendColor: "text-[#475569]",
     sparkStroke: "#64748B",
     sparkGradientId: "spark-grad-slate",
     sparkStartColor: "#64748B",
     sparkPath: "M 2,36 Q 18,36 34,26 T 62,26 T 82,8 T 100,16 T 110,10",
-    sparkArea: "M 2,36 Q 18,36 34,26 T 62,26 T 82,8 T 100,16 T 110,10 L 110,44 L 2,44 Z",
+    sparkArea:
+      "M 2,36 Q 18,36 34,26 T 62,26 T 82,8 T 100,16 T 110,10 L 110,44 L 2,44 Z",
   },
 };
 
@@ -105,13 +113,17 @@ export function MiniSparkline({
   return (
     <svg
       viewBox="0 0 112 44"
-      className={cn("w-12 sm:w-28 h-5 sm:h-10", className)}
+      className={cn("w-16 sm:w-24 h-6 sm:h-9", className)}
       preserveAspectRatio="none"
     >
       <defs>
         <linearGradient id={theme.sparkGradientId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={theme.sparkStartColor} stopOpacity="0.3" />
-          <stop offset="100%" stopColor={theme.sparkStartColor} stopOpacity="0.0" />
+          <stop offset="0%" stopColor={theme.sparkStartColor} stopOpacity="0.25" />
+          <stop
+            offset="100%"
+            stopColor={theme.sparkStartColor}
+            stopOpacity="0.0"
+          />
         </linearGradient>
       </defs>
       <path
@@ -123,7 +135,7 @@ export function MiniSparkline({
         d={theme.sparkPath}
         fill="none"
         stroke={theme.sparkStroke}
-        strokeWidth="2"
+        strokeWidth="2.2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -137,7 +149,6 @@ export interface StatCardProps {
   unit?: string;
   percentage?: string;
   change?: string;
-  changeType?: "positive" | "negative" | "neutral";
   trendLabel?: string;
   caption?: string;
   icon: React.ElementType | LucideIcon;
@@ -173,24 +184,25 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "bg-card border border-border/80 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between items-center sm:items-start text-center sm:text-left h-full relative overflow-hidden group",
-        compact ? "p-3 sm:p-4.5" : "p-3.5 sm:p-5",
+        "bg-white border border-white/90 rounded-[24px] shadow-[6px_6px_18px_rgba(145,170,165,0.2),-4px_-4px_14px_rgba(255,255,255,0.95)] hover:shadow-[8px_8px_22px_rgba(145,170,165,0.26),-4px_-4px_14px_rgba(255,255,255,0.98)] transition-all duration-200 flex flex-col justify-between h-full relative overflow-hidden group p-4 sm:p-5",
+        compact && "p-3 sm:p-4",
         className
       )}
     >
-      <div className="flex flex-col items-center sm:items-start w-full">
-        {/* Top Header: Icon Box + Mobile Trend Pill */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-1.5 w-full">
+      <div>
+        {/* Top Header: 3D Recessed Icon Box + Mobile Trend Badge */}
+        <div className="flex items-center justify-between gap-2">
           <div
             className={cn(
-              "rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 mx-auto sm:mx-0",
-              compact ? "w-8 h-8 sm:w-10 sm:h-10" : "w-8 h-8 sm:w-11 sm:h-11",
+              "w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+              compact && "w-9 h-9 rounded-xl",
               resolvedIconBg
             )}
           >
             <Icon
               className={cn(
-                compact ? "w-4 h-4 sm:w-4.5 sm:h-4.5" : "w-4 h-4 sm:w-5 sm:h-5",
+                "w-5 h-5 shrink-0",
+                compact && "w-4.5 h-4.5",
                 resolvedIconColor
               )}
             />
@@ -200,9 +212,8 @@ export function StatCard({
           {trendText && (
             <div
               className={cn(
-                "sm:hidden inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold mt-1 sm:mt-0",
-                resolvedIconBg,
-                t.trendColor
+                "sm:hidden inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black shadow-sm",
+                resolvedIconBg
               )}
             >
               <span>↑ {trendText}</span>
@@ -211,48 +222,42 @@ export function StatCard({
         </div>
 
         {/* Title */}
-        <p
-          className={cn(
-            "text-xs sm:text-sm font-medium text-muted-foreground truncate w-full text-center sm:text-left",
-            compact ? "mt-2 sm:mt-2.5" : "mt-2.5 sm:mt-3.5"
-          )}
-        >
+        <p className="text-xs font-bold uppercase tracking-wider text-[#7186A0] truncate mt-3.5">
           {title}
         </p>
 
-        {/* Main Number & Unit */}
-        <div className={cn("flex items-baseline justify-center sm:justify-start w-full", compact ? "mt-1" : "mt-1 sm:mt-1.5")}>
-          <span className="text-lg sm:text-2xl font-bold text-foreground tracking-tight leading-none">
+        {/* Value + Unit */}
+        <div className="flex items-baseline gap-1 mt-1">
+          <span className="text-2xl sm:text-3xl font-black text-[#0F172A] tracking-tight leading-none">
             {value}
           </span>
           {unit && (
-            <span className="text-xs sm:text-sm font-normal text-muted-foreground ml-1">
+            <span className="text-xs font-bold text-[#7186A0]">
               {unit}
             </span>
           )}
         </div>
       </div>
 
-      {/* Bottom: Desktop Trend and Sparkline */}
-      <div
-        className={cn(
-          "flex items-center sm:items-end justify-center sm:justify-between w-full pt-1.5",
-          compact ? "mt-1.5 sm:mt-2.5" : "mt-2 sm:mt-3"
-        )}
-      >
+      {/* Bottom: Desktop Trend + Sparkline */}
+      <div className="flex items-end justify-between pt-2 mt-auto">
         {trendText ? (
-          <div className="hidden sm:flex items-center text-xs font-semibold leading-none pb-0.5">
-            <span className={`${t.trendColor} font-bold mr-1`}>↑ {trendText}</span>
-            <span className="text-muted-foreground font-normal">{trendLabel}</span>
+          <div className="hidden sm:flex items-center gap-1.5 text-xs font-bold leading-none">
+            <span className={cn(t.trendColor, "font-black flex items-center gap-0.5")}>
+              ↑ {trendText}
+            </span>
+            <span className="text-[#7186A0] font-semibold text-[11px]">
+              {trendLabel}
+            </span>
           </div>
         ) : caption ? (
-          <p className="text-[10px] sm:text-xs text-muted-foreground text-center sm:text-left">{caption}</p>
+          <p className="text-[11px] text-[#7186A0] font-semibold">{caption}</p>
         ) : (
-          <div className="hidden sm:block" />
+          <div />
         )}
 
         {showSparkline && (
-          <div className="shrink-0 -mb-1 mx-auto sm:ml-auto sm:mr-0">
+          <div className="shrink-0 -mb-1 ml-auto">
             <MiniSparkline theme={t} />
           </div>
         )}

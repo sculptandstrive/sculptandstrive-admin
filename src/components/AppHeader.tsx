@@ -57,7 +57,7 @@ export function AppHeader({ onToggleSidebar, onToggleMobile, mobileMenuOpen }: A
           <Input
             type="search"
             placeholder="Search anything..."
-            className="pl-9 bg-muted/50 border-0 focus-visible:ring-1"
+            className="pl-10 bg-muted/50 border-0 focus-visible:ring-1"
           />
         </div>
       </div>

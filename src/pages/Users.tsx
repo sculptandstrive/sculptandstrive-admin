@@ -3,7 +3,7 @@ import {
   Users as UsersIcon, 
   Shield, 
   ShieldAlert, 
-  ShieldCheck, 
+  ShieldCheck, HeartPulse, ClipboardCheck, 
   UserCog, 
   Search, 
   RefreshCw, 
@@ -11,7 +11,6 @@ import {
   UserPlus, 
   Trash2
 } from "lucide-react";
-import { DashboardLayout } from "@/components/DashboardLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -80,6 +79,23 @@ const roleConfig: Record<AppRole, { label: string; color: string; icon: typeof S
   trial_user: { label: 'Trial User', color: "bg-muted text-muted-foreground border-border", icon: UserCog },
   coach: { label: 'Coach', color: "bg-purple-500/10 text-purple-400 border-purple-500/20", icon: ShieldCheck }
 };
+
+
+function renderSafeText(val: any, fallback = "None declared."): string {
+  if (val === null || val === undefined) return fallback;
+  if (typeof val === "string") return val.trim() || fallback;
+  if (typeof val === "number" || typeof val === "boolean") return String(val);
+  if (Array.isArray(val)) {
+    if (val.length === 0) return fallback;
+    return val.map((v) => (typeof v === "object" ? JSON.stringify(v) : String(v))).join(", ");
+  }
+  if (typeof val === "object") {
+    const vals = Object.values(val).filter((v) => v !== null && v !== undefined && v !== "");
+    if (vals.length === 0) return fallback;
+    return vals.map((v) => (typeof v === "object" ? JSON.stringify(v) : String(v))).join(", ");
+  }
+  return String(val);
+}
 
 export default function Users() {
   const [isAssignGroupOpen, setIsAssignGroupOpen] = useState(false);
@@ -684,210 +700,231 @@ export default function Users() {
 
   return (
     <>
-      <PageHeader title="User Management" description="Real-time access control.">
-        <div className="relative max-w-xs w-full">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search users..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8 bg-card text-xs border-input rounded-xl focus-visible:border-primary focus-visible:ring-primary/20"
-          />
+      <PageHeader title="User Management" description="Real-time access control & member role directory.">
+        <div className="flex w-full flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-end lg:w-auto">
+          <div className="relative w-full sm:w-[280px]">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#7186A0]" />
+            <Input
+              placeholder="Search name, email, or role..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-11 w-full rounded-2xl border border-white/80 bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] pl-10 text-sm font-semibold text-[#0F172A] placeholder:text-[#7186A0] focus-visible:ring-2 focus-visible:ring-[#08B594]/30"
+            />
+          </div>
+          <Button
+            variant="outline"
+            onClick={fetchUsers}
+            className="h-11 gap-2 rounded-2xl border border-white bg-white shadow-[4px_4px_10px_rgba(145,170,165,0.18),-3px_-3px_8px_rgba(255,255,255,0.95)] px-4 font-bold text-[#334155] hover:bg-[#F0F7F5] active:scale-95 transition-all"
+          >
+            <RefreshCw className={`h-4 w-4 text-[#08B594] ${loading ? "animate-spin" : ""}`} />
+            <span className="hidden sm:inline">Refresh</span>
+          </Button>
+          <div className="flex h-11 items-center px-4 rounded-2xl border border-white/80 bg-[#E2ECE9] shadow-[inset_1px_1px_2px_rgba(165,185,180,0.4),inset_-1px_-1px_2px_rgba(255,255,255,0.8)] text-xs font-black text-[#08B594] tracking-wider uppercase shrink-0">
+            {filteredUsers.length} {filteredUsers.length === 1 ? "Member" : "Members"}
+          </div>
         </div>
       </PageHeader>
 
-      <Card className="border border-border rounded-2xl shadow-sm overflow-hidden bg-card">
-        <CardHeader className="p-4 sm:p-5 border-b border-border flex flex-row items-center justify-between space-y-0 bg-muted/40">
-          <CardTitle className="flex items-center gap-2 text-[18px] sm:text-[20px] font-semibold text-foreground">
-            <UsersIcon className="w-4 h-4 text-primary" />
-            Registry ({filteredUsers.length})
-          </CardTitle>
-          <div className="relative hidden sm:block">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Filter by name/email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-9 w-64 text-sm rounded-xl bg-card border-input focus-visible:border-primary focus-visible:ring-primary/20"
-            />
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          {/* ── Mobile Card List (hidden on md+) ── */}
-          <div className="md:hidden divide-y divide-border">
-            {filteredUsers.map((user) => (
-              <div key={user.id} className="p-3 space-y-2.5">
+      <div className="rounded-[26px] border border-white/90 bg-white shadow-[6px_6px_20px_rgba(145,170,165,0.18),-4px_-4px_14px_rgba(255,255,255,0.98)] overflow-hidden">
+        {/* ── Mobile Card List (hidden on md+) ── */}
+        <div className="md:hidden divide-y divide-[#E2ECE9]">
+          {filteredUsers.length === 0 ? (
+            <div className="py-12 text-center text-sm font-semibold text-[#7186A0]">
+              No members found matching your search.
+            </div>
+          ) : (
+            filteredUsers.map((user) => (
+              <div key={user.id} className="p-4 space-y-3">
                 {/* Name + Role row */}
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[#0CC194]/15 via-[#08B594]/20 to-[#069D80]/25 border border-white shadow-[inset_1.5px_1.5px_3px_rgba(255,255,255,0.9),2px_2px_5px_rgba(8,169,130,0.12)] flex items-center justify-center text-xs font-black text-[#08B594] shrink-0">
                     {(user.full_name?.[0] || user.email?.[0] || "U").toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-foreground truncate">{user.full_name || "New Member"}</p>
-                    <p className="text-xs text-muted-foreground truncate" title={user.email || user.user_id || ""}>
+                    <p className="text-sm font-bold text-[#0F172A] truncate">{user.full_name || "New Member"}</p>
+                    <p className="text-xs font-semibold text-[#7186A0] truncate" title={user.email || user.user_id || ""}>
                       {user.email || (user.user_id ? (user.user_id.includes('@') ? user.user_id : `ID: ${user.user_id.slice(0, 12)}...`) : "not set")}
                     </p>
                   </div>
-                  <Badge variant="outline" className={`${(roleConfig[user.role] || roleConfig.user).color} text-[10px] px-1.5 py-0 border-none uppercase font-semibold shrink-0`}>
-                    {user.role === 'trial_user' ? 'Trial' : user.role}
-                  </Badge>
+                  <span className={`inline-flex items-center justify-center text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-white/60 shadow-[inset_1px_1px_2px_rgba(165,185,180,0.3)] shrink-0 ${
+                    user.role === 'admin'
+                      ? "bg-rose-100 text-rose-600"
+                      : user.role === 'coach'
+                      ? "bg-purple-100 text-purple-600"
+                      : "bg-[#E2ECE9] text-[#0F172A]"
+                  }`}>
+                    {user.role === 'trial_user' ? 'Trial' : user.role.toUpperCase()}
+                  </span>
                 </div>
                 {/* Coach info on mobile */}
                 {user.role === 'user' && (
-                  <div className="flex flex-wrap gap-1.5 items-center text-[11px] bg-muted/40 p-2 rounded-lg border border-border/50">
-                    <span className="text-muted-foreground font-medium">Coaches:</span>
+                  <div className="flex flex-wrap gap-1.5 items-center text-xs bg-[#E2ECE9] shadow-[inset_1.5px_1.5px_3px_rgba(165,185,180,0.35)] p-2.5 rounded-xl border border-white/50">
+                    <span className="text-[#7186A0] font-bold text-[10px] uppercase">Coaches:</span>
                     {user.coach_name && user.secondary_coach_name ? (
                       <>
-                        <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/20 text-[10px] px-1.5 py-0 font-medium">
+                        <span className="bg-purple-50 text-purple-600 border border-purple-200 text-[10px] px-2 py-0.5 font-bold rounded-lg">
                           1° {user.coach_name}
-                        </Badge>
-                        <Badge variant="outline" className="bg-teal-500/10 text-teal-400 border-teal-500/20 text-[10px] px-1.5 py-0 font-medium">
+                        </span>
+                        <span className="bg-teal-50 text-teal-600 border border-teal-200 text-[10px] px-2 py-0.5 font-bold rounded-lg">
                           2° {user.secondary_coach_name}
-                        </Badge>
+                        </span>
                       </>
                     ) : user.coach_name ? (
-                      <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/20 text-[10px] px-1.5 py-0 font-medium">
+                      <span className="bg-purple-50 text-purple-600 border border-purple-200 text-[10px] px-2 py-0.5 font-bold rounded-lg">
                         {user.coach_name}
-                      </Badge>
+                      </span>
                     ) : (
-                      <span className="text-muted-foreground italic text-[10px]">None assigned</span>
+                      <span className="text-[#94A3B8] italic text-[11px]">None assigned</span>
                     )}
                   </div>
                 )}
-                {/* Action buttons row */}
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {user.role === 'user' && (
+                {/* Action buttons row - responsive clean flow */}
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <div className="flex items-center gap-1.5 flex-1 min-w-[160px]">
+                    {user.role === 'user' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-2.5 text-xs font-bold bg-[#F5F3FF] border border-white shadow-[2px_2px_5px_rgba(180,200,196,0.2)] hover:bg-[#EDE9FE] text-[#7C3AED] rounded-xl flex items-center justify-center gap-1 shrink-0"
+                        onClick={() => {
+                          setSelectedUserForCoach(user);
+                          setPrimaryCoachSelection(user.coach_id || "none");
+                          setSecondaryCoachSelection(user.secondary_coach_id || "none");
+                          setIsAssignCoachOpen(true);
+                        }}
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                        <span>Coach</span>
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-7 px-2 text-[11px] font-semibold bg-card border-border text-purple-400 hover:bg-purple-500/10 rounded-lg flex-1 min-w-0"
-                      onClick={() => {
-                        setSelectedUserForCoach(user);
-                        setPrimaryCoachSelection(user.coach_id || "none");
-                        setSecondaryCoachSelection(user.secondary_coach_id || "none");
-                        setIsAssignCoachOpen(true);
-                      }}
+                      className="h-8 px-2.5 text-xs font-bold bg-[#F0F7F5] border border-white shadow-[2px_2px_5px_rgba(180,200,196,0.2)] hover:bg-[#E6F2EE] text-[#08B594] rounded-xl flex items-center justify-center gap-1 shrink-0"
+                      onClick={() => { setSelectedUserId(user.user_id); setIsAssignGroupOpen(true); }}
                     >
-                      <ShieldCheck className="w-3 h-3 mr-1 shrink-0" />
-                      Coaches
+                      <UsersIcon className="w-3.5 h-3.5 shrink-0" />
+                      <span>Group</span>
                     </Button>
-                  )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 px-2 text-[11px] font-semibold bg-card border-border text-foreground hover:bg-muted rounded-lg flex-1 min-w-0"
-                    onClick={() => { setSelectedUserId(user.user_id); setIsAssignGroupOpen(true); }}
-                  >
-                    <UsersIcon className="w-3 h-3 mr-1 shrink-0" />
-                    Group
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 px-2 text-[11px] font-semibold bg-card border-border text-foreground hover:bg-muted rounded-lg flex-1 min-w-0"
-                    onClick={() => { setSelectedProfileUser(user); setProfileDialogOpen(true); fetchClientProfile(user.user_id); }}
-                  >
-                    Profile
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-7 w-7 shrink-0 text-destructive border-destructive/30 hover:bg-destructive/10 rounded-lg"
-                    onClick={() => setDeleteDialog({ open: true, user })}
-                    disabled={user.user_id === currentUser?.id}
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
-                  <Select
-                    value={user.role}
-                    onValueChange={(val: AppRole) => handleRoleChange(user, val)}
-                    disabled={user.role === 'admin' || user.user_id === currentUser?.id || updating}
-                  >
-                    <SelectTrigger className="h-7 w-24 text-[11px] font-semibold bg-card border-input text-foreground rounded-lg disabled:opacity-75 disabled:cursor-not-allowed focus:border-primary focus:ring-primary/20">
-                      <SelectValue placeholder="Role" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl border border-border bg-popover p-1 shadow-lg min-w-[115px]">
-                      <SelectItem value="admin" className="text-xs font-semibold text-destructive py-2" disabled>ADMIN</SelectItem>
-                      <SelectItem value="user" className="text-xs font-medium py-2">USER</SelectItem>
-                      <SelectItem value="trial_user" className="text-xs font-medium py-2">TRIAL</SelectItem>
-                      <SelectItem value="coach" className="text-xs font-medium text-purple-400 py-2">COACH</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-2.5 text-xs font-bold bg-white border border-white shadow-[2px_2px_5px_rgba(180,200,196,0.2)] hover:bg-[#F8FAFC] text-[#334155] rounded-xl flex items-center justify-center gap-1 shrink-0"
+                      onClick={() => { setSelectedProfileUser(user); setProfileDialogOpen(true); fetchClientProfile(user.user_id); }}
+                    >
+                      <span>Profile</span>
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-1.5 ml-auto shrink-0">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8 shrink-0 text-[#94A3B8] hover:text-[#EF4444] hover:bg-rose-50 border border-white/60 bg-white shadow-[2px_2px_5px_rgba(180,200,196,0.15)] rounded-xl"
+                      onClick={() => setDeleteDialog({ open: true, user })}
+                      disabled={user.user_id === currentUser?.id}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                    <Select
+                      value={user.role}
+                      onValueChange={(val: AppRole) => handleRoleChange(user, val)}
+                      disabled={user.role === 'admin' || user.user_id === currentUser?.id || updating}
+                    >
+                      <SelectTrigger className="h-8 w-24 text-xs font-bold bg-[#E2ECE9] shadow-[inset_1px_1px_2px_rgba(165,185,180,0.4)] border border-white/60 text-[#0F172A] rounded-xl">
+                        <SelectValue placeholder="Role" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-2xl border border-white bg-white p-1.5 shadow-[6px_6px_20px_rgba(145,170,165,0.2)] min-w-[120px]">
+                        <SelectItem value="admin" className="text-xs font-bold text-rose-600 py-2 px-3 rounded-xl" disabled>ADMIN</SelectItem>
+                        <SelectItem value="user" className="text-xs font-bold text-[#0F172A] py-2 px-3 rounded-xl">USER</SelectItem>
+                        <SelectItem value="trial_user" className="text-xs font-bold text-[#08B594] py-2 px-3 rounded-xl">TRIAL</SelectItem>
+                        <SelectItem value="coach" className="text-xs font-bold text-purple-600 py-2 px-3 rounded-xl">COACH</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
+            ))
+          )}
+        </div>
 
-          {/* ── Desktop Table (hidden on mobile) ── */}
-          <div className="hidden md:block overflow-x-auto">
-            <Table className="min-w-full table-fixed border-collapse">
-              <TableHeader className="bg-muted/40">
+        {/* ── Desktop Table (hidden on mobile) ── */}
+        <div className="hidden md:block overflow-x-auto">
+          <Table className="min-w-full table-fixed border-collapse">
+            <TableHeader className="bg-[#F4F9F7] border-b border-[#E2ECE9]">
+              <TableRow className="border-none hover:bg-transparent">
+                <TableHead className="w-[190px] py-4 pl-6 text-xs font-black uppercase tracking-wider text-[#7186A0]">Member Name</TableHead>
+                <TableHead className="w-[230px] py-4 text-xs font-black uppercase tracking-wider text-[#7186A0]">Email Address</TableHead>
+                <TableHead className="w-[190px] py-4 text-center text-xs font-black uppercase tracking-wider text-[#7186A0]">Current Role & Coaches</TableHead>
+                <TableHead className="w-[500px] py-4 text-right pr-6 text-xs font-black uppercase tracking-wider text-[#7186A0]">Management</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredUsers.length === 0 ? (
                 <TableRow>
-                  <TableHead className="w-[180px] pl-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Member Name</TableHead>
-                  <TableHead className="w-[220px] text-xs font-semibold text-muted-foreground uppercase tracking-wider">Email Address</TableHead>
-                  <TableHead className="w-[180px] text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">Current Role & Coaches</TableHead>
-                  <TableHead className="w-[490px] text-right pr-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Management</TableHead>
+                  <TableCell colSpan={4} className="py-12 text-center text-sm font-semibold text-[#7186A0]">
+                    No members found matching your search.
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id} className="hover:bg-muted/50 border-b border-border last:border-0 transition-colors duration-150">
-                    <TableCell className="py-3.5 pl-6">
+              ) : (
+                filteredUsers.map((user) => (
+                  <TableRow key={user.id} className="hover:bg-[#F8FAFC] border-b border-[#E2ECE9] last:border-0 transition-colors">
+                    <TableCell className="py-4 pl-6">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary shrink-0">
+                        <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[#0CC194]/15 via-[#08B594]/20 to-[#069D80]/25 border border-white shadow-[inset_1.5px_1.5px_3px_rgba(255,255,255,0.9),2px_2px_5px_rgba(8,169,130,0.12)] flex items-center justify-center text-xs font-black text-[#08B594] shrink-0">
                           {(user.full_name?.[0] || user.email?.[0] || "U").toUpperCase()}
                         </div>
-                        <span className="text-sm font-semibold text-foreground truncate block max-w-[130px]" title={user.full_name || ""}>
+                        <span className="text-sm font-bold text-[#0F172A] truncate block max-w-[130px]" title={user.full_name || ""}>
                           {user.full_name || "New Member"}
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="py-3.5 text-sm text-muted-foreground">
+                    <TableCell className="py-4 text-xs font-semibold text-[#7186A0]">
                       <span className="truncate block max-w-[200px]" title={user.email || user.user_id || ""}>
                         {user.email || (user.user_id ? (user.user_id.includes('@') ? user.user_id : `ID: ${user.user_id.slice(0, 12)}...`) : "not set")}
                       </span>
                     </TableCell>
-                    <TableCell className="py-3.5 text-center">
-                      <div className="flex flex-col items-center justify-center gap-1.5 min-h-[50px]">
-                        <Badge
-                          variant="outline"
-                          className={`${(roleConfig[user.role] || roleConfig.user).color} text-[11px] h-6 w-24 inline-flex items-center justify-center border-none uppercase font-semibold tracking-wider rounded-md`}
-                        >
-                          {user.role === 'trial_user' ? 'Trial' : user.role}
-                        </Badge>
-                        {user.role === 'user' || user.role === 'trial_user' ? (
+                    <TableCell className="py-4 text-center">
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        <span className={`inline-flex items-center justify-center text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-white/60 shadow-[inset_1px_1px_2px_rgba(165,185,180,0.35)] ${
+                          user.role === 'admin'
+                            ? "bg-rose-50 text-rose-600 border-rose-200"
+                            : user.role === 'coach'
+                            ? "bg-purple-50 text-purple-600 border-purple-200"
+                            : user.role === 'trial_user'
+                            ? "bg-[#E2ECE9] text-[#08B594]"
+                            : "bg-[#E2ECE9] text-[#0F172A]"
+                        }`}>
+                          {user.role === 'trial_user' ? 'TRIAL' : user.role.toUpperCase()}
+                        </span>
+                        {user.role === 'user' && (
                           user.coach_name && user.secondary_coach_name ? (
-                            <div className="flex flex-col gap-1 items-center">
-                              <span className="inline-flex items-center justify-center text-[10px] font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20 h-5 px-2.5 rounded-full truncate max-w-[135px]" title={`Primary: ${user.coach_name}`}>
+                            <div className="flex flex-col gap-0.5 items-center mt-0.5">
+                              <span className="inline-flex items-center justify-center text-[9px] font-bold bg-purple-50 text-purple-600 border border-purple-200/60 h-4 px-2 rounded-md truncate max-w-[135px]" title={`Primary: ${user.coach_name}`}>
                                 1° {user.coach_name}
                               </span>
-                              <span className="inline-flex items-center justify-center text-[10px] font-medium bg-teal-500/10 text-teal-400 border border-teal-500/20 h-5 px-2.5 rounded-full truncate max-w-[135px]" title={`Secondary: ${user.secondary_coach_name}`}>
+                              <span className="inline-flex items-center justify-center text-[9px] font-bold bg-teal-50 text-teal-600 border border-teal-200/60 h-4 px-2 rounded-md truncate max-w-[135px]" title={`Secondary: ${user.secondary_coach_name}`}>
                                 2° {user.secondary_coach_name}
                               </span>
                             </div>
                           ) : user.coach_name ? (
-                            <span className="inline-flex items-center justify-center text-[10px] font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20 h-5 px-2.5 rounded-full truncate max-w-[135px]" title={`Coach: ${user.coach_name}`}>
+                            <span className="inline-flex items-center justify-center text-[9px] font-bold bg-purple-50 text-purple-600 border border-purple-200/60 h-4 px-2 rounded-md truncate max-w-[135px] mt-0.5" title={`Coach: ${user.coach_name}`}>
                               {user.coach_name}
                             </span>
                           ) : (
-                            <span className="inline-flex items-center justify-center text-[10px] font-medium text-muted-foreground/60 border border-border/40 bg-muted/20 h-5 px-2.5 rounded-full">
+                            <span className="text-[10px] font-medium text-[#94A3B8] mt-0.5">
                               No Coach
                             </span>
                           )
-                        ) : (
-                          <span className="inline-flex items-center justify-center text-[10px] text-muted-foreground/30 font-medium h-5 px-2.5">
-                            —
-                          </span>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="py-3.5 text-right pr-6">
+                    <TableCell className="py-4 text-right pr-6">
                       <div className="flex items-center gap-2 justify-end">
                         {user.role !== 'admin' ? (
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-8 w-[124px] px-2.5 text-xs font-semibold bg-card border-border text-foreground hover:bg-purple-500/10 hover:text-purple-400 hover:border-purple-500/40 rounded-lg flex items-center justify-center gap-1.5 whitespace-nowrap transition-colors shadow-xs shrink-0"
+                            className="h-8 px-3 text-xs font-bold bg-[#F5F3FF] border border-white shadow-[2px_2px_6px_rgba(180,200,196,0.22),-2px_-2px_6px_rgba(255,255,255,0.9)] hover:bg-[#EDE9FE] text-[#7C3AED] rounded-xl flex items-center justify-center gap-1.5 whitespace-nowrap transition-all active:scale-95 shrink-0"
                             onClick={() => {
                               setSelectedUserForCoach(user);
                               setPrimaryCoachSelection(user.coach_id || "none");
@@ -895,25 +932,25 @@ export default function Users() {
                               setIsAssignCoachOpen(true);
                             }}
                           >
-                            <ShieldCheck className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                            <ShieldCheck className="w-3.5 h-3.5 text-[#7C3AED] shrink-0" />
                             <span>Assign Coaches</span>
                           </Button>
                         ) : (
-                          <div className="w-[124px] shrink-0" />
+                          <div className="w-[120px] shrink-0" />
                         )}
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-8 w-[114px] px-2.5 text-xs font-semibold bg-card border-border text-foreground hover:bg-muted/80 hover:border-primary/40 rounded-lg flex items-center justify-center gap-1.5 whitespace-nowrap transition-colors shadow-xs shrink-0"
+                          className="h-8 px-3 text-xs font-bold bg-[#F0FDF4] border border-white shadow-[2px_2px_6px_rgba(180,200,196,0.22),-2px_-2px_6px_rgba(255,255,255,0.9)] hover:bg-[#DCFCE7] text-[#16A34A] rounded-xl flex items-center justify-center gap-1.5 whitespace-nowrap transition-all active:scale-95 shrink-0"
                           onClick={() => { setSelectedUserId(user.user_id); setIsAssignGroupOpen(true); }}
                         >
-                          <UsersIcon className="w-3.5 h-3.5 text-primary shrink-0" />
+                          <UsersIcon className="w-3.5 h-3.5 text-[#16A34A] shrink-0" />
                           <span>Assign Group</span>
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-8 w-[94px] px-2.5 text-xs font-semibold bg-card border-border text-foreground hover:bg-muted/80 hover:border-primary/40 rounded-lg flex items-center justify-center whitespace-nowrap transition-colors shadow-xs shrink-0"
+                          className="h-8 px-3 text-xs font-bold bg-white border border-white shadow-[2px_2px_6px_rgba(180,200,196,0.22),-2px_-2px_6px_rgba(255,255,255,0.9)] hover:bg-[#F8FAFC] text-[#334155] rounded-xl flex items-center justify-center whitespace-nowrap transition-all active:scale-95 shrink-0"
                           onClick={() => { setSelectedProfileUser(user); setProfileDialogOpen(true); fetchClientProfile(user.user_id); }}
                         >
                           View Profile
@@ -921,7 +958,7 @@ export default function Users() {
                         <Button
                           variant="outline"
                           size="icon"
-                          className="h-8 w-8 shrink-0 text-destructive border-destructive/30 hover:bg-destructive/10 rounded-lg transition-colors flex items-center justify-center shadow-xs"
+                          className="h-8 w-8 shrink-0 text-[#94A3B8] hover:text-[#EF4444] hover:bg-rose-50 border border-white/80 bg-white shadow-[2px_2px_6px_rgba(180,200,196,0.18),-2px_-2px_6px_rgba(255,255,255,0.85)] rounded-xl transition-all flex items-center justify-center"
                           onClick={() => setDeleteDialog({ open: true, user })}
                           disabled={user.role === 'admin' || user.user_id === currentUser?.id}
                           title="Delete User"
@@ -933,40 +970,39 @@ export default function Users() {
                           onValueChange={(val: AppRole) => handleRoleChange(user, val)}
                           disabled={user.role === 'admin' || user.user_id === currentUser?.id || updating}
                         >
-                          <SelectTrigger className="h-8 w-[98px] px-2.5 text-xs font-semibold bg-card border-input text-foreground rounded-lg disabled:opacity-75 disabled:cursor-not-allowed focus:border-primary focus:ring-primary/20 transition-colors shadow-xs shrink-0 justify-between">
+                          <SelectTrigger className="h-8 w-[98px] px-2.5 text-xs font-bold bg-[#E2ECE9] shadow-[inset_1.5px_1.5px_3px_rgba(165,185,180,0.4),inset_-1.5px_-1.5px_3px_rgba(255,255,255,0.8)] border border-white/60 text-[#0F172A] rounded-xl disabled:opacity-75 disabled:cursor-not-allowed transition-all shrink-0 justify-between">
                             <SelectValue placeholder="Role" />
                           </SelectTrigger>
-                          <SelectContent className="rounded-xl border border-border bg-popover p-1 shadow-lg min-w-[115px]">
-                            <SelectItem value="admin" className="text-xs font-semibold text-destructive py-2" disabled>ADMIN</SelectItem>
-                            <SelectItem value="user" className="text-xs font-medium py-2">USER</SelectItem>
-                            <SelectItem value="trial_user" className="text-xs font-medium py-2">TRIAL</SelectItem>
-                            <SelectItem value="coach" className="text-xs font-medium text-purple-400 py-2">COACH</SelectItem>
+                          <SelectContent className="rounded-2xl border border-white/90 bg-white p-1.5 shadow-[6px_6px_22px_rgba(145,170,165,0.25)] min-w-[130px]">
+                            <SelectItem value="admin" className="text-xs font-bold text-rose-600 py-2 px-3 rounded-xl focus:bg-rose-50" disabled>ADMIN</SelectItem>
+                            <SelectItem value="user" className="text-xs font-bold text-[#0F172A] py-2 px-3 rounded-xl focus:bg-[#E2ECE9]/50">USER</SelectItem>
+                            <SelectItem value="trial_user" className="text-xs font-bold text-[#08B594] py-2 px-3 rounded-xl focus:bg-emerald-50">TRIAL</SelectItem>
+                            <SelectItem value="coach" className="text-xs font-bold text-purple-600 py-2 px-3 rounded-xl focus:bg-purple-50">COACH</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-      
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
 
       {/* ── Assign Group Dialog ── */}
       <Dialog open={isAssignGroupOpen} onOpenChange={setIsAssignGroupOpen}>
-        <DialogContent className="sm:max-w-[440px] rounded-2xl bg-card border border-border p-6 sm:p-7 shadow-2xl">
-          <DialogHeader className="space-y-2 pb-2 border-b border-border/60">
+        <DialogContent className="sm:max-w-[440px] rounded-[26px] bg-white border border-white p-6 sm:p-7 shadow-[8px_8px_30px_rgba(145,170,165,0.25)]">
+          <DialogHeader className="space-y-2 pb-3 border-b border-[#E2ECE9]">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#0CC194]/15 via-[#08B594]/20 to-[#069D80]/25 border border-white shadow-[inset_1.5px_1.5px_3px_rgba(255,255,255,0.9)] flex items-center justify-center text-[#08B594] shrink-0">
                 <UsersIcon className="w-5 h-5" />
               </div>
               <div>
-                <DialogTitle className="text-lg font-bold text-foreground tracking-tight">
+                <DialogTitle className="text-lg font-black text-[#0F172A] tracking-tight">
                   Assign User to Group
                 </DialogTitle>
-                <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                <DialogDescription className="text-xs font-semibold text-[#7186A0] mt-0.5">
                   Select a workout or coaching group for this member.
                 </DialogDescription>
               </div>
@@ -974,22 +1010,22 @@ export default function Users() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-foreground uppercase tracking-wider">
+              <label className="text-xs font-bold text-[#7186A0] uppercase tracking-wider">
                 Select Group
               </label>
               <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
-                <SelectTrigger className="h-11 border-input bg-card text-foreground rounded-xl focus:border-primary focus:ring-primary/20 text-sm px-3.5">
+                <SelectTrigger className="h-11 rounded-2xl border border-white/80 bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] px-3 text-sm font-semibold text-[#0F172A]">
                   <SelectValue placeholder="Choose a group..." />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl border border-border bg-popover p-1.5 shadow-xl">
+                <SelectContent className="rounded-2xl border border-white bg-white p-1.5 shadow-[6px_6px_20px_rgba(145,170,165,0.2)]">
                   {groups.length === 0 ? (
                     <SelectItem value="none" disabled className="text-muted-foreground text-xs py-2.5 px-3">
                       No groups available
                     </SelectItem>
                   ) : (
                     groups.map((g) => (
-                      <SelectItem key={g.id} value={g.id} className="rounded-lg py-2.5 px-3 text-sm focus:bg-muted focus:text-foreground">
-                        <span className="font-medium text-foreground">{g.name}</span>
+                      <SelectItem key={g.id} value={g.id} className="rounded-xl py-2.5 px-3 text-xs font-bold text-[#0F172A] hover:bg-[#F0F7F5] hover:text-[#08B594]">
+                        <span>{g.name}</span>
                       </SelectItem>
                     ))
                   )}
@@ -997,10 +1033,10 @@ export default function Users() {
               </Select>
             </div>
           </div>
-          <DialogFooter className="gap-2.5 sm:gap-2.5 pt-2 border-t border-border/60">
+          <DialogFooter className="gap-2.5 sm:gap-2.5 pt-2 border-t border-[#E2ECE9]">
             <Button
-              variant="outline"
-              className="h-10 border-border rounded-xl text-xs font-semibold px-5 hover:bg-muted"
+              variant="ghost"
+              className="h-11 rounded-2xl border border-white bg-white shadow-[2px_2px_6px_rgba(180,200,196,0.2)] font-bold text-[#7186A0] hover:bg-[#F0F7F5] px-5"
               onClick={() => setIsAssignGroupOpen(false)}
             >
               Cancel
@@ -1008,7 +1044,7 @@ export default function Users() {
             <Button
               onClick={handleAssignGroup}
               disabled={!selectedGroupId || assigning}
-              className="h-10 bg-[#07AC7D] hover:bg-[#06966D] text-white font-semibold text-xs px-5 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-colors"
+              className="h-11 bg-gradient-to-r from-[#08B594] via-[#07AB8C] to-[#069D80] text-white font-bold text-xs px-6 rounded-2xl disabled:opacity-50 shadow-[0_4px_12px_rgba(8,169,130,0.35),inset_0_1px_1px_rgba(255,255,255,0.4)] hover:brightness-105 active:scale-95 transition-all"
             >
               {assigning ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -1023,18 +1059,18 @@ export default function Users() {
 
       {/* ── Assign Coaches Dialog (Dual-Coach Assignment) ── */}
       <Dialog open={isAssignCoachOpen} onOpenChange={setIsAssignCoachOpen}>
-        <DialogContent className="sm:max-w-[500px] rounded-2xl bg-card border border-border p-6 sm:p-7 shadow-2xl text-foreground">
-          <DialogHeader className="space-y-2 pb-2 border-b border-border/60">
+        <DialogContent className="sm:max-w-[500px] rounded-[26px] bg-white border border-white p-6 sm:p-7 shadow-[8px_8px_30px_rgba(145,170,165,0.25)]">
+          <DialogHeader className="space-y-2 pb-3 border-b border-[#E2ECE9]">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 shrink-0">
+              <div className="w-10 h-10 rounded-2xl bg-purple-100 flex items-center justify-center text-purple-600 shadow-[inset_1.5px_1.5px_3px_rgba(255,255,255,0.9)] shrink-0">
                 <ShieldCheck className="w-5 h-5" />
               </div>
               <div>
-                <DialogTitle className="text-lg font-bold text-foreground tracking-tight">
+                <DialogTitle className="text-lg font-black text-[#0F172A] tracking-tight">
                   Dual-Coach Assignment
                 </DialogTitle>
-                <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-                  Assign primary and secondary coaches to <span className="font-semibold text-foreground">{selectedUserForCoach?.full_name || selectedUserForCoach?.email}</span>
+                <DialogDescription className="text-xs font-semibold text-[#7186A0] mt-0.5">
+                  Assign primary and secondary coaches to <span className="font-bold text-[#0F172A]">{selectedUserForCoach?.full_name || selectedUserForCoach?.email}</span>
                 </DialogDescription>
               </div>
             </div>
@@ -1044,10 +1080,10 @@ export default function Users() {
             {/* Primary Coach Selection */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                <label className="text-xs font-bold text-[#7186A0] uppercase tracking-wider">
                   Primary Coach
                 </label>
-                <span className="text-[11px] text-purple-400 font-medium bg-purple-500/10 px-2 py-0.5 rounded-md border border-purple-500/20">
+                <span className="text-[10px] text-purple-600 font-bold bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200/60">
                   Main point of contact
                 </span>
               </div>
@@ -1060,18 +1096,18 @@ export default function Users() {
                   }
                 }}
               >
-                <SelectTrigger className="h-12 border-input bg-card text-foreground rounded-xl focus:border-purple-500 focus:ring-purple-500/20 text-sm px-3.5">
+                <SelectTrigger className="h-11 rounded-2xl border border-white/80 bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] px-3 text-sm font-semibold text-[#0F172A]">
                   <SelectValue placeholder="Choose primary coach..." />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl border border-border bg-popover p-1.5 shadow-xl max-h-64">
-                  <SelectItem value="none" className="rounded-lg py-2.5 px-3 text-sm text-muted-foreground">
+                <SelectContent className="rounded-2xl border border-white bg-white p-1.5 shadow-[6px_6px_20px_rgba(145,170,165,0.2)] max-h-64">
+                  <SelectItem value="none" className="rounded-xl py-2.5 px-3 text-xs font-bold text-[#7186A0]">
                     None (Unassign Primary)
                   </SelectItem>
                   {coachesList.map((c) => (
-                    <SelectItem key={c.id} value={c.id} className="rounded-lg py-2.5 px-3 text-sm my-0.5">
+                    <SelectItem key={c.id} value={c.id} className="rounded-xl py-2.5 px-3 text-xs font-bold text-[#0F172A] hover:bg-[#F0F7F5]">
                       <div className="flex flex-col text-left space-y-0.5">
-                        <span className="font-semibold text-foreground text-sm leading-tight">{c.full_name}</span>
-                        {c.email && <span className="text-xs text-muted-foreground leading-normal">{c.email}</span>}
+                        <span className="font-bold text-[#0F172A] text-xs leading-tight">{c.full_name}</span>
+                        {c.email && <span className="text-[10px] text-[#7186A0] leading-normal">{c.email}</span>}
                       </div>
                     </SelectItem>
                   ))}
@@ -1082,10 +1118,10 @@ export default function Users() {
             {/* Secondary Coach Selection */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-foreground uppercase tracking-wider">
+                <label className="text-xs font-bold text-[#7186A0] uppercase tracking-wider">
                   Secondary Coach
                 </label>
-                <span className="text-[11px] text-teal-400 font-medium bg-teal-500/10 px-2 py-0.5 rounded-md border border-teal-500/20">
+                <span className="text-[10px] text-[#08B594] font-bold bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200/60">
                   Optional Co-Coach
                 </span>
               </div>
@@ -1098,41 +1134,30 @@ export default function Users() {
                   }
                 }}
               >
-                <SelectTrigger className="h-12 border-input bg-card text-foreground rounded-xl focus:border-teal-500 focus:ring-teal-500/20 text-sm px-3.5">
-                  <SelectValue placeholder="Choose secondary coach (optional)..." />
+                <SelectTrigger className="h-11 rounded-2xl border border-white/80 bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] px-3 text-sm font-semibold text-[#0F172A]">
+                  <SelectValue placeholder="Choose secondary coach..." />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl border border-border bg-popover p-1.5 shadow-xl max-h-64">
-                  <SelectItem value="none" className="rounded-lg py-2.5 px-3 text-sm text-muted-foreground">
-                    None (No secondary coach)
+                <SelectContent className="rounded-2xl border border-white bg-white p-1.5 shadow-[6px_6px_20px_rgba(145,170,165,0.2)] max-h-64">
+                  <SelectItem value="none" className="rounded-xl py-2.5 px-3 text-xs font-bold text-[#7186A0]">
+                    None (Unassign Secondary)
                   </SelectItem>
-                  {coachesList
-                    .filter((c) => c.id !== primaryCoachSelection)
-                    .map((c) => (
-                      <SelectItem key={c.id} value={c.id} className="rounded-lg py-2.5 px-3 text-sm my-0.5">
-                        <div className="flex flex-col text-left space-y-0.5">
-                          <span className="font-semibold text-foreground text-sm leading-tight">{c.full_name}</span>
-                          {c.email && <span className="text-xs text-muted-foreground leading-normal">{c.email}</span>}
-                        </div>
-                      </SelectItem>
-                    ))}
+                  {coachesList.map((c) => (
+                    <SelectItem key={c.id} value={c.id} className="rounded-xl py-2.5 px-3 text-xs font-bold text-[#0F172A] hover:bg-[#F0F7F5]">
+                      <div className="flex flex-col text-left space-y-0.5">
+                        <span className="font-bold text-[#0F172A] text-xs leading-tight">{c.full_name}</span>
+                        {c.email && <span className="text-[10px] text-[#7186A0] leading-normal">{c.email}</span>}
+                      </div>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
-
-            {/* Help Note */}
-            <div className="p-4 bg-muted/40 rounded-xl border border-border text-xs text-muted-foreground space-y-1.5 leading-relaxed">
-              <p className="font-semibold text-foreground flex items-center gap-1.5">
-                <Shield className="w-3.5 h-3.5 text-primary" />
-                Dual Permissions Access
-              </p>
-              <p>Both assigned coaches will receive full dashboard permissions to monitor check-ins, view health history, assign workouts, and track progress.</p>
-            </div>
           </div>
 
-          <DialogFooter className="gap-2.5 sm:gap-2.5 pt-2 border-t border-border/60">
+          <DialogFooter className="gap-2.5 pt-2 border-t border-[#E2ECE9]">
             <Button
-              variant="outline"
-              className="h-10 border-border rounded-xl text-xs font-semibold px-5 hover:bg-muted"
+              variant="ghost"
+              className="h-11 rounded-2xl border border-white bg-white shadow-[2px_2px_6px_rgba(180,200,196,0.2)] font-bold text-[#7186A0] hover:bg-[#F0F7F5] px-5"
               onClick={() => setIsAssignCoachOpen(false)}
             >
               Cancel
@@ -1148,232 +1173,185 @@ export default function Users() {
                 }
               }}
               disabled={assigning}
-              className="h-10 bg-[#07AC7D] hover:bg-[#06966D] text-white font-semibold text-xs px-5 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-colors"
+              className="h-11 bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 text-white font-bold text-xs px-6 rounded-2xl shadow-[0_4px_12px_rgba(124,58,237,0.35)] hover:brightness-105 active:scale-95 transition-all"
             >
               {assigning ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : (
                 <ShieldCheck className="w-4 h-4 mr-2" />
               )}
-              Save Coach Assignment
+              Save Coaches
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={roleChangeDialog.open} onOpenChange={(o) => !updating && setRoleChangeDialog(prev => ({ ...prev, open: o }))}>
-        <AlertDialogContent className="max-w-xs rounded-2xl bg-card border-border text-foreground">
+      {/* ── Role Change Dialog ── */}
+      <AlertDialog open={roleChangeDialog.open} onOpenChange={(open) => !open && setRoleChangeDialog({ open: false, user: null, newRole: null })}>
+        <AlertDialogContent className="rounded-[26px] bg-white border border-white p-6 sm:p-7 shadow-[8px_8px_30px_rgba(145,170,165,0.25)]">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-[18px] font-semibold text-foreground">Modify Permissions?</AlertDialogTitle>
-            <AlertDialogDescription className="text-xs text-muted-foreground">
-              Assign <b className="text-foreground">{roleChangeDialog.newRole?.toUpperCase()}</b> access to this account?
+            <AlertDialogTitle className="text-lg font-black text-[#0F172A]">Confirm Role Change</AlertDialogTitle>
+            <AlertDialogDescription className="text-xs font-semibold text-[#7186A0]">
+              Are you sure you want to change the role of{" "}
+              <span className="font-bold text-[#0F172A]">{roleChangeDialog.user?.full_name || roleChangeDialog.user?.email}</span> to{" "}
+              <span className="font-black text-[#08B594] uppercase">{roleChangeDialog.newRole}</span>?
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex-row gap-2">
-            <AlertDialogCancel className="text-xs h-8 flex-1 border-border rounded-xl">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmRoleChange} className="text-xs h-8 flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl">Confirm</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* ── Delete User Confirmation Dialog ── */}
-      <AlertDialog open={deleteDialog.open} onOpenChange={(o) => !deleting && setDeleteDialog((prev) => ({ ...prev, open: o }))}>
-        <AlertDialogContent className="max-w-xs rounded-2xl bg-card border-border text-foreground">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-[18px] font-semibold text-foreground">Delete this user?</AlertDialogTitle>
-            <AlertDialogDescription className="text-xs text-muted-foreground">
-              This permanently deletes <b className="text-foreground">{deleteDialog.user?.email}</b> and all associated data (workouts, check-ins, photos, notifications). This cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-row gap-2">
-            <AlertDialogCancel className="text-xs h-8 flex-1 border-border rounded-xl">Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="mt-4 gap-2">
+            <AlertDialogCancel className="h-11 rounded-2xl border border-white bg-white shadow-[2px_2px_6px_rgba(180,200,196,0.2)] font-bold text-[#7186A0] hover:bg-[#F0F7F5] px-5">
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDeleteUser}
-              disabled={deleting}
-              className="text-xs h-8 flex-1 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-xl"
+              onClick={confirmRoleChange}
+              className="h-11 bg-gradient-to-r from-[#08B594] via-[#07AB8C] to-[#069D80] text-white font-bold text-xs px-6 rounded-2xl shadow-[0_4px_12px_rgba(8,169,130,0.35)] hover:brightness-105 active:scale-95 transition-all"
             >
-              {deleting ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : null}
-              Delete
+              Confirm Change
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* ── Client Profile Dialog ── */}
+      {/* ── Delete User Dialog ── */}
+      <AlertDialog open={deleteDialog.open} onOpenChange={(open) => !open && setDeleteDialog({ open: false, user: null })}>
+        <AlertDialogContent className="rounded-[26px] bg-white border border-white p-6 sm:p-7 shadow-[8px_8px_30px_rgba(145,170,165,0.25)]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-lg font-black text-rose-600">Delete User Account</AlertDialogTitle>
+            <AlertDialogDescription className="text-xs font-semibold text-[#7186A0]">
+              Are you sure you want to permanently delete{" "}
+              <span className="font-bold text-[#0F172A]">{deleteDialog.user?.full_name || deleteDialog.user?.email}</span>?
+              This action cannot be undone and will remove all their records.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-4 gap-2">
+            <AlertDialogCancel className="h-11 rounded-2xl border border-white bg-white shadow-[2px_2px_6px_rgba(180,200,196,0.2)] font-bold text-[#7186A0] hover:bg-[#F0F7F5] px-5">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteUser}
+              disabled={deleting}
+              className="h-11 bg-gradient-to-r from-rose-500 to-red-600 text-white font-bold text-xs px-6 rounded-2xl shadow-[0_4px_12px_rgba(239,68,68,0.35)] hover:brightness-105 active:scale-95 transition-all"
+            >
+              {deleting ? "Deleting..." : "Delete User"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ── Profile Dialog ── */}
       <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto bg-card border border-border text-foreground rounded-2xl p-6 custom-scrollbar">
-          <DialogHeader className="border-b border-border pb-4 mb-4">
-            <DialogTitle className="text-[18px] font-semibold flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
-                {(selectedProfileUser?.full_name?.[0] || selectedProfileUser?.email?.[0] || "U").toUpperCase()}
-              </div>
-              <div>
-                <span className="text-foreground block text-lg font-bold">{selectedProfileUser?.full_name || "Client Profile"}</span>
-                <span className="text-xs text-muted-foreground font-normal">{selectedProfileUser?.email}</span>
-              </div>
-            </DialogTitle>
-            <div className="pt-2 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs text-muted-foreground">
-              <span className="font-normal text-muted-foreground">
-                Joined on {selectedProfileUser?.created_at ? new Date(selectedProfileUser.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
-              </span>
-              {selectedProfileUser?.role === 'user' && (
-                <div className="flex flex-wrap items-center gap-4 bg-muted/40 px-3.5 py-2 rounded-xl border border-border/70">
-                  {/* Primary Coach */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-foreground tracking-tight">Primary Coach:</span>
-                    <Select
-                      value={selectedProfileUser?.coach_id || "none"}
-                      onValueChange={(coachId) =>
-                        handleDirectAssignCoaches(
-                          selectedProfileUser.id,
-                          coachId,
-                          selectedProfileUser.secondary_coach_id || null
-                        )
-                      }
-                      disabled={assigning}
-                    >
-                      <SelectTrigger className="h-8 text-xs w-44 bg-card border-input text-foreground font-medium px-3 rounded-lg focus:border-purple-500 focus:ring-purple-500/20 shadow-xs">
-                        <SelectValue placeholder="None (Unassigned)" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl border border-border bg-popover p-1 shadow-lg">
-                        <SelectItem value="none" className="rounded-lg py-2 px-3 text-xs text-muted-foreground">
-                          None (Unassigned)
-                        </SelectItem>
-                        {coachesList.map((c) => (
-                          <SelectItem key={c.id} value={c.id} className="rounded-lg py-2 px-3 text-xs">
-                            <span className="font-medium text-foreground">{c.full_name}</span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Divider */}
-                  <div className="hidden sm:block h-4 w-px bg-border" />
-
-                  {/* Secondary Coach */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-foreground tracking-tight">Secondary Coach:</span>
-                    <Select
-                      value={selectedProfileUser?.secondary_coach_id || "none"}
-                      onValueChange={(secondaryId) =>
-                        handleDirectAssignCoaches(
-                          selectedProfileUser.id,
-                          selectedProfileUser.coach_id || null,
-                          secondaryId
-                        )
-                      }
-                      disabled={assigning}
-                    >
-                      <SelectTrigger className="h-8 text-xs w-44 bg-card border-input text-foreground font-medium px-3 rounded-lg focus:border-teal-500 focus:ring-teal-500/20 shadow-xs">
-                        <SelectValue placeholder="None (Optional)" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl border border-border bg-popover p-1 shadow-lg">
-                        <SelectItem value="none" className="rounded-lg py-2 px-3 text-xs text-muted-foreground">
-                          None (Optional)
-                        </SelectItem>
-                        {coachesList
-                          .filter((c) => c.id !== selectedProfileUser?.coach_id)
-                          .map((c) => (
-                            <SelectItem key={c.id} value={c.id} className="rounded-lg py-2 px-3 text-xs">
-                              <span className="font-medium text-foreground">{c.full_name}</span>
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+        <DialogContent className="max-w-3xl max-h-[88vh] flex flex-col rounded-[26px] bg-white border border-white p-6 sm:p-8 shadow-2xl overflow-hidden">
+          <DialogHeader className="border-b border-[#E2ECE9] pb-4 shrink-0 pr-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#0CC194]/20 via-[#08B594]/25 to-[#069D80]/30 border border-white shadow-[inset_1.5px_1.5px_3px_rgba(255,255,255,0.9),2px_2px_6px_rgba(8,169,130,0.15)] flex items-center justify-center text-base font-black text-[#08B594] shrink-0">
+                  {(selectedProfileUser?.full_name?.[0] || selectedProfileUser?.email?.[0] || "U").toUpperCase()}
                 </div>
-              )}
+                <div>
+                  <DialogTitle className="text-xl font-black text-[#0F172A] tracking-tight">
+                    {selectedProfileUser?.full_name || "Member Profile"}
+                  </DialogTitle>
+                  <p className="text-xs font-semibold text-[#7186A0] mt-0.5">
+                    {selectedProfileUser?.email} • Member Since {selectedProfileUser?.created_at ? new Date(selectedProfileUser.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Recently"}
+                  </p>
+                </div>
+              </div>
             </div>
           </DialogHeader>
 
           {profileLoading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground font-medium">Retrieving client record...</p>
+              <Loader2 className="w-8 h-8 animate-spin text-[#08B594]" />
+              <p className="text-xs font-bold text-[#7186A0]">Retrieving client record...</p>
             </div>
           ) : !profileData ? (
-            <p className="text-center py-20 text-muted-foreground text-sm">Failed to load profile details.</p>
+            <p className="text-center py-20 text-[#7186A0] text-xs font-semibold">Failed to load profile details.</p>
           ) : (
-            <div className="space-y-6">
+            <div className="flex-1 overflow-y-auto space-y-6 pt-3 pr-1">
               {/* Stats Summary Panel */}
-              <div className="grid grid-cols-3 gap-4 p-4 rounded-2xl bg-muted/40 border border-border">
+              <div className="grid grid-cols-3 gap-3 p-4 rounded-2xl bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] border border-white/60">
                 <div className="text-center">
-                  <span className="text-sm font-medium text-muted-foreground block mb-1">Workouts Assigned</span>
-                  <span className="text-2xl font-semibold text-foreground tracking-tight leading-none">{profileData.workoutsSummary.totalCount}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#7186A0] block mb-1">Workouts Assigned</span>
+                  <span className="text-xl font-black text-[#0F172A] tracking-tight leading-none">{profileData.workoutsSummary.totalCount}</span>
                 </div>
-                <div className="text-center border-x border-border">
-                  <span className="text-sm font-medium text-muted-foreground block mb-1">Sessions Done</span>
-                  <span className="text-2xl font-semibold text-emerald-500 tracking-tight leading-none">{profileData.workoutsSummary.completedCount}</span>
+                <div className="text-center border-x border-white/60">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#7186A0] block mb-1">Sessions Done</span>
+                  <span className="text-xl font-black text-[#08B594] tracking-tight leading-none">{profileData.workoutsSummary.completedCount}</span>
                 </div>
                 <div className="text-center">
-                  <span className="text-sm font-medium text-muted-foreground block mb-1">Est. Kcal Burned</span>
-                  <span className="text-2xl font-semibold text-amber-500 tracking-tight leading-none">{profileData.workoutsSummary.totalCalories.toLocaleString()}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#7186A0] block mb-1">Est. Kcal Burned</span>
+                  <span className="text-xl font-black text-amber-500 tracking-tight leading-none">{profileData.workoutsSummary.totalCalories.toLocaleString()}</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {/* Column 1: Health History */}
-                <div className="space-y-4">
-                  <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-widest border-b border-border pb-1.5">Health Questionnaire</h4>
-                  <div className="space-y-4 bg-muted/40 border border-border p-4 rounded-2xl text-xs">
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold text-[#08B594] flex items-center gap-1.5 uppercase tracking-wider border-b border-[#E2ECE9] pb-1.5">
+                    <HeartPulse className="w-3.5 h-3.5" /> Health Questionnaire
+                  </h4>
+                  <div className="space-y-3 bg-[#E2ECE9] shadow-[inset_1.5px_1.5px_3px_rgba(165,185,180,0.35)] border border-white/60 p-4 rounded-2xl text-xs">
                     <div>
-                      <span className="text-xs font-medium text-muted-foreground block mb-1">Medical Conditions</span>
-                      <p className="text-foreground bg-card p-2.5 rounded-xl border border-border min-h-[40px]">
-                        {profileData.healthHistory?.medical_conditions || "None declared."}
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#7186A0] block mb-1">Medical Conditions</span>
+                      <p className="text-[#0F172A] font-semibold bg-white p-3 rounded-xl border border-white shadow-[2px_2px_5px_rgba(180,200,196,0.15)] min-h-[40px]">
+                        {renderSafeText(profileData.healthHistory?.medical_conditions)}
                       </p>
                     </div>
                     <div>
-                      <span className="text-xs font-medium text-muted-foreground block mb-1">Injuries</span>
-                      <p className="text-foreground bg-card p-2.5 rounded-xl border border-border min-h-[40px]">
-                        {profileData.healthHistory?.injuries || "None declared."}
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#7186A0] block mb-1">Injuries</span>
+                      <p className="text-[#0F172A] font-semibold bg-white p-3 rounded-xl border border-white shadow-[2px_2px_5px_rgba(180,200,196,0.15)] min-h-[40px]">
+                        {renderSafeText(profileData.healthHistory?.injuries)}
                       </p>
                     </div>
                     <div>
-                      <span className="text-xs font-medium text-muted-foreground block mb-1">Allergies</span>
-                      <p className="text-foreground bg-card p-2.5 rounded-xl border border-border min-h-[40px]">
-                        {profileData.healthHistory?.allergies || "None declared."}
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#7186A0] block mb-1">Allergies</span>
+                      <p className="text-[#0F172A] font-semibold bg-white p-3 rounded-xl border border-white shadow-[2px_2px_5px_rgba(180,200,196,0.15)] min-h-[40px]">
+                        {renderSafeText(profileData.healthHistory?.allergies)}
                       </p>
                     </div>
                     <div>
-                      <span className="text-xs font-medium text-muted-foreground block mb-1">Medications</span>
-                      <p className="text-foreground bg-card p-2.5 rounded-xl border border-border min-h-[40px]">
-                        {profileData.healthHistory?.medications || "None declared."}
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#7186A0] block mb-1">Medications</span>
+                      <p className="text-[#0F172A] font-semibold bg-white p-3 rounded-xl border border-white shadow-[2px_2px_5px_rgba(180,200,196,0.15)] min-h-[40px]">
+                        {renderSafeText(profileData.healthHistory?.medications)}
                       </p>
                     </div>
                   </div>
                 </div>
 
                 {/* Column 2: Weekly Check-ins */}
-                <div className="space-y-4">
-                  <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-widest border-b border-border pb-1.5">Weekly Check-in Log</h4>
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold text-[#08B594] flex items-center gap-1.5 uppercase tracking-wider border-b border-[#E2ECE9] pb-1.5">
+                    <ClipboardCheck className="w-3.5 h-3.5" /> Weekly Check-in Log
+                  </h4>
                   {profileData.checkins.length === 0 ? (
-                    <p className="text-xs text-muted-foreground italic py-8 text-center bg-muted/40 rounded-2xl border border-border">No check-ins submitted yet.</p>
+                    <div className="flex flex-col items-center justify-center py-14 bg-[#E2ECE9] rounded-2xl border border-white/60 shadow-[inset_1.5px_1.5px_3px_rgba(165,185,180,0.35)]">
+                      <ClipboardCheck className="w-8 h-8 text-[#7186A0]/50 mb-2" />
+                      <p className="text-xs text-[#7186A0] font-bold">No check-ins submitted yet.</p>
+                    </div>
                   ) : (
-                    <div className="space-y-3 max-h-[360px] overflow-y-auto pr-2 custom-scrollbar">
+                    <div className="space-y-3 max-h-[340px] overflow-y-auto pr-1">
                       {profileData.checkins.map((c) => (
-                        <div key={c.id} className="p-3 rounded-2xl bg-card border border-border space-y-2 text-xs">
-                          <div className="flex justify-between items-center border-b border-border pb-1.5">
-                            <span className="text-xs font-medium text-foreground">{new Date(c.checkin_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
-                            <span className="text-xs font-medium text-foreground bg-muted px-2 py-0.5 rounded-lg border border-border">{c.weight_kg} kg</span>
+                        <div key={c.id} className="p-3.5 rounded-2xl bg-white border border-white shadow-[2px_2px_8px_rgba(145,170,165,0.15)] space-y-2 text-xs">
+                          <div className="flex justify-between items-center border-b border-[#E2ECE9] pb-1.5">
+                            <span className="text-xs font-bold text-[#0F172A]">{new Date(c.checkin_date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                            <span className="text-[10px] font-black text-[#08B594] bg-[#E2ECE9] px-2 py-0.5 rounded-lg border border-white/60 shadow-[inset_1px_1px_2px_rgba(165,185,180,0.3)]">{c.weight_kg} kg</span>
                           </div>
                           <div className="grid grid-cols-3 gap-2 text-[11px]">
                             <div>
-                              <span className="text-xs font-medium text-muted-foreground block mb-1">Energy</span>
-                              <span className="text-foreground font-semibold">{c.energy_level}/5</span>
+                              <span className="text-[10px] font-bold uppercase text-[#7186A0] block">Energy</span>
+                              <span className="text-[#0F172A] font-bold">{c.energy_level}/5</span>
                             </div>
                             <div>
-                              <span className="text-xs font-medium text-muted-foreground block mb-1">Mood</span>
-                              <span className="text-foreground font-semibold capitalize">{c.mood}</span>
+                              <span className="text-[10px] font-bold uppercase text-[#7186A0] block">Mood</span>
+                              <span className="text-[#0F172A] font-bold capitalize">{c.mood}</span>
                             </div>
                             <div>
-                              <span className="text-xs font-medium text-muted-foreground block mb-1">Sleep</span>
-                              <span className="text-foreground font-semibold">{c.sleep_hours ? `${c.sleep_hours} hrs` : "—"}</span>
+                              <span className="text-[10px] font-bold uppercase text-[#7186A0] block">Sleep</span>
+                              <span className="text-[#0F172A] font-bold">{c.sleep_hours ? `${c.sleep_hours} hrs` : "—"}</span>
                             </div>
                           </div>
                           {c.notes && (
-                            <div className="bg-muted/60 p-2 rounded-xl border border-border text-[11px] text-muted-foreground">
-                              <span className="text-xs font-medium text-muted-foreground block mb-0.5">Notes:</span>
+                            <div className="bg-[#E2ECE9] p-2.5 rounded-xl border border-white/60 text-[11px] font-medium text-[#334155]">
+                              <span className="text-[10px] font-bold uppercase text-[#7186A0] block mb-0.5">Notes:</span>
                               {c.notes}
                             </div>
                           )}
@@ -1383,7 +1361,6 @@ export default function Users() {
                   )}
                 </div>
               </div>
-
             </div>
           )}
         </DialogContent>

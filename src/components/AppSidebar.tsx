@@ -1,23 +1,24 @@
-import { 
-  LayoutDashboard, 
-  Calendar, 
-  Dumbbell, 
-  Apple, 
-  TrendingUp, 
-  HelpCircle, 
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  LayoutDashboard,
+  Calendar,
+  Dumbbell,
+  Apple,
+  TrendingUp,
+  HelpCircle,
   Settings,
   ChevronLeft,
   ChevronRight,
   LogOut,
   Users,
-  UsersRound
+  UsersRound,
+  ShieldCheck,
 } from "lucide-react";
-import { NavLink } from "@/components/NavLink";
-import { cn } from "@/lib/utils";
-import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
+import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AppSidebarProps {
   collapsed: boolean;
@@ -37,16 +38,20 @@ const menuItems = [
 ];
 
 export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
-  const { user, signOut } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/auth");
   };
 
-  const displayName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Admin";
-  const displayEmail = user?.email || "";
+  const displayName =
+    user?.user_metadata?.full_name ||
+    user?.email?.split("@")[0] ||
+    "Admin";
+  const displayEmail = user?.email || "admin@sculptandstrive.com";
   const userInitials = displayName
     .split(" ")
     .map((n: string) => n[0])
@@ -55,110 +60,184 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
     .slice(0, 2);
 
   return (
-    <aside
-      className={cn(
-        "fixed left-0 top-0 z-50 h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out flex flex-col",
-        collapsed ? "w-20" : "w-64",
-      )}
+    <motion.aside
+      initial={false}
+      animate={{ width: collapsed ? 80 : 256 }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
+      className="fixed left-3 top-3 bottom-3 bg-[#EEF6F5] rounded-[28px] border border-white/85 shadow-[8px_8px_24px_rgba(160,185,180,0.3),-4px_-4px_16px_rgba(255,255,255,0.95)] flex flex-col z-50 overflow-visible"
     >
-      {/* Header */}
-      <div className="p-4 border-b border-sidebar-border">
-        <div className="flex items-center gap-3 overflow-hidden">
-          <img
-            src={
-              user?.user_metadata?.avatar_url
-                ? user?.user_metadata?.avatar_url
-                : logo
-            }
-            alt="Sculpt and Strive"
-            className="w-12 h-12 object-contain flex-shrink-0"
-          />
-          {!collapsed && (
-            <div className="animate-fade-in overflow-hidden">
-              <h1 className="font-display font-bold text-lg leading-tight text-primary whitespace-nowrap">
-                Sculpt And Strive
-              </h1>
-              <p className="text-xs text-muted-foreground whitespace-nowrap">Admin Portal</p>
-            </div>
+      {/* Header: Logo + Title + Collapse Button */}
+      <div
+        className={cn(
+          "p-3.5 pb-2.5 flex items-center transition-all relative",
+          collapsed ? "justify-center" : "justify-between"
+        )}
+      >
+        <div
+          className={cn(
+            "flex items-center gap-2.5 min-w-0",
+            collapsed && "justify-center"
           )}
+        >
+          <div className="w-11 h-11 rounded-[16px] bg-white p-1.5 flex items-center justify-center shrink-0 shadow-[3px_3px_8px_rgba(150,175,170,0.22),-3px_-3px_8px_rgba(255,255,255,0.95)] border border-white/90">
+            <img
+              src={logo}
+              alt="Sculpt and Strive"
+              className="w-full h-full object-contain"
+            />
+          </div>
+
+          <AnimatePresence>
+            {!collapsed && (
+              <motion.div
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: "auto" }}
+                exit={{ opacity: 0, width: 0 }}
+                className="overflow-hidden min-w-0"
+              >
+                <h1 className="font-extrabold text-[15px] leading-tight text-[#08A982] whitespace-nowrap truncate tracking-tight">
+                  Sculpt And Strive
+                </h1>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#E1F3ED] text-[#08A982] text-[10.5px] font-extrabold shadow-[inset_1px_1px_2px_rgba(8,169,130,0.15)]">
+                    <ShieldCheck className="w-3 h-3" /> Admin
+                  </span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
+
+        {/* Circular Toggle Button */}
+        <button
+          type="button"
+          onClick={onToggle}
+          className={cn(
+            "w-8 h-8 rounded-full flex items-center justify-center border transition-all shrink-0 cursor-pointer",
+            collapsed
+              ? "absolute right-0 translate-x-1/2 top-[22px] bg-white hover:bg-[#F2F8F6] text-[#08A982] shadow-[3px_3px_8px_rgba(150,175,170,0.25),-2px_-2px_6px_rgba(255,255,255,0.95)] border border-white/90 z-50"
+              : "bg-white hover:bg-[#F2F8F6] text-[#6F849A] hover:text-[#08A982] shadow-[3px_3px_7px_rgba(150,175,170,0.2),-3px_-3px_7px_rgba(255,255,255,0.95)] border border-white/80 ml-1"
+          )}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? (
+            <ChevronRight className="w-4 h-4 text-[#08A982]" />
+          ) : (
+            <ChevronLeft className="w-4 h-4" />
+          )}
+        </button>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 no-scrollbar overflow-y-auto py-4 px-3">
-        <ul className="space-y-1">
-          {menuItems.map((item) => (
-            <li key={item.title}>
-              <NavLink
-                to={item.url}
-                end={item.url === "/"}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground transition-all duration-200 group text-sm font-medium relative",
-                  collapsed && "justify-center px-2",
+      {/* Navigation List */}
+      <nav className="flex-1 py-2 px-3 overflow-y-auto no-scrollbar">
+        <ul className="space-y-2">
+          {menuItems.map((item) => {
+            const isActive =
+              item.url === "/"
+                ? location.pathname === "/"
+                : location.pathname.startsWith(item.url);
+
+            return (
+              <li key={item.title} className="relative">
+                {isActive && (
+                  <motion.div
+                    layoutId="sidebarActiveBar"
+                    className="absolute -left-3 top-2.5 bottom-2.5 w-1.5 bg-[#08A982] rounded-r-full z-10 shadow-[0_0_6px_rgba(8,169,130,0.4)]"
+                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                  />
                 )}
-                activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
-              >
-                <item.icon
+
+                <NavLink
+                  to={item.url}
+                  title={collapsed ? item.title : undefined}
                   className={cn(
-                    "w-5 h-5 flex-shrink-0 transition-colors",
+                    "flex items-center gap-3 px-3.5 h-[46px] rounded-[20px] transition-all duration-200 group relative border",
+                    isActive
+                      ? "bg-white text-[#08A982] border-[#08A982]/30 shadow-[4px_4px_12px_rgba(8,169,130,0.18),-3px_-3px_10px_rgba(255,255,255,0.98),inset_0_1px_1px_rgba(255,255,255,0.9)]"
+                      : "bg-white hover:bg-[#F9FCFB] text-[#2D3E50] hover:text-[#08A982] border-white/90 shadow-[3.5px_3.5px_10px_rgba(150,175,170,0.18),-3px_-3px_8px_rgba(255,255,255,0.95)] hover:shadow-[4.5px_4.5px_12px_rgba(150,175,170,0.25),-3px_-3px_10px_rgba(255,255,255,1)]",
+                    collapsed ? "justify-center px-0" : ""
                   )}
-                />
-                {!collapsed && (
-                  <span className="truncate animate-fade-in">{item.title}</span>
-                )}
-              </NavLink>
-            </li>
-          ))}
+                >
+                  <div
+                    className={cn(
+                      "w-8 h-8 rounded-[12px] flex items-center justify-center shrink-0 transition-colors",
+                      isActive
+                        ? "bg-[#E6F7F2] text-[#08A982] shadow-[inset_1px_1px_2px_rgba(8,169,130,0.15),1px_1px_3px_rgba(255,255,255,0.8)]"
+                        : "bg-[#F2F8F6] text-[#64748B] group-hover:text-[#08A982] group-hover:bg-[#EAF7F3] shadow-[inset_1px_1px_2px_rgba(165,185,180,0.15),1px_1px_2px_rgba(255,255,255,0.9)]"
+                    )}
+                  >
+                    <item.icon className="w-4 h-4" />
+                  </div>
+
+                  <AnimatePresence>
+                    {!collapsed && (
+                      <motion.span
+                        initial={{ opacity: 0, width: 0 }}
+                        animate={{ opacity: 1, width: "auto" }}
+                        exit={{ opacity: 0, width: 0 }}
+                        className={cn(
+                          "text-[13.5px] whitespace-nowrap overflow-hidden truncate tracking-tight",
+                          isActive
+                            ? "font-extrabold text-[#08A982]"
+                            : "font-bold text-[#334D66] group-hover:text-[#10203B]"
+                        )}
+                      >
+                        {item.title}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </NavLink>
+              </li>
+            );
+          })}
         </ul>
       </nav>
 
-      {/* User Section */}
-      <div className="p-4 border-t border-sidebar-border">
+      {/* Bottom Section: Admin User Profile Card */}
+      <div className="p-3 pt-1">
         <div
           className={cn(
-            "flex items-center gap-3",
-            collapsed && "justify-center",
+            "p-2.5 rounded-[20px] bg-white border border-white/90 shadow-[4px_4px_12px_rgba(160,185,180,0.25),-3px_-3px_10px_rgba(255,255,255,0.95)] flex items-center gap-2.5 transition-all",
+            collapsed ? "justify-center p-2" : ""
           )}
         >
-          <Avatar className="w-10 h-10 border-2 border-primary/30 flex-shrink-0">
+          <Avatar className="w-9 h-9 rounded-xl border border-white/90 shadow-[2px_2px_5px_rgba(160,185,180,0.3),-2px_-2px_5px_rgba(255,255,255,0.9)] shrink-0">
             <AvatarImage src={user?.user_metadata?.avatar_url} />
-            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+            <AvatarFallback className="bg-[#E1F3ED] text-[#08A982] font-extrabold text-xs">
               {userInitials}
             </AvatarFallback>
           </Avatar>
-          {!collapsed && (
-            <div className="flex-1 min-w-0 animate-fade-in overflow-hidden">
-              <p className="font-medium text-sm text-foreground whitespace-nowrap truncate">
-                {displayName}
-              </p>
-              <p className="text-xs text-muted-foreground whitespace-nowrap truncate">
-                {displayEmail || "Administrator"}
-              </p>
-            </div>
-          )}
+
+          <AnimatePresence>
+            {!collapsed && (
+              <motion.div
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: "auto" }}
+                exit={{ opacity: 0, width: 0 }}
+                className="flex-1 min-w-0 overflow-hidden"
+              >
+                <p className="text-xs font-bold text-[#10203B] truncate leading-tight">
+                  {displayName}
+                </p>
+                <p className="text-[10px] font-medium text-[#6F849A] truncate mt-0.5">
+                  {displayEmail}
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {!collapsed && (
             <button
+              type="button"
               onClick={handleSignOut}
-              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-[#6F849A] hover:text-rose-600 bg-[#F2F8F6] hover:bg-rose-50 shadow-[1.5px_1.5px_3px_rgba(165,185,180,0.2),-1.5px_-1.5px_3px_rgba(255,255,255,0.85)] border border-white/80 transition-all shrink-0 cursor-pointer"
               title="Sign out"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
       </div>
-
-      {/* Toggle Button */}
-      <button
-        onClick={onToggle}
-        className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-card border border-border shadow-md text-muted-foreground hover:bg-muted hover:text-foreground flex items-center justify-center transition-all z-10"
-      >
-        {collapsed ? (
-          <ChevronRight className="w-3.5 h-3.5" />
-        ) : (
-          <ChevronLeft className="w-3.5 h-3.5" />
-        )}
-      </button>
-    </aside>
+    </motion.aside>
   );
 }

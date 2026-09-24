@@ -63,17 +63,41 @@ const TDEECalculator = () => {
   const activity = watch("activity");
 
   const handleUnitsChange = (newUnits: string) => {
-    reset({
-      units: newUnits as "metric" | "imperial",
-      gender,
-      age,
-      activity,
-      weight: "70",
-      height: "175",
-      weightLbs: "154",
-      heightFt: "5",
-      heightIn: "9",
-    });
+    if (newUnits === units) return;
+    if (newUnits === "imperial") {
+      const wKg = parseFloat(weight) || 70;
+      const hCm = parseFloat(height) || 175;
+      const totalInches = hCm / 2.54;
+      const ft = Math.floor(totalInches / 12);
+      const inches = Math.round(totalInches % 12);
+      reset({
+        units: "imperial",
+        gender,
+        age,
+        activity,
+        weight,
+        height,
+        weightLbs: (wKg * 2.20462).toFixed(1),
+        heightFt: String(Math.max(1, ft)),
+        heightIn: String(inches),
+      });
+    } else {
+      const wLbs = parseFloat(weightLbs) || 154;
+      const ft = parseFloat(heightFt) || 5;
+      const inches = parseFloat(heightIn) || 9;
+      const hCm = Math.round((ft * 12 + inches) * 2.54);
+      reset({
+        units: "metric",
+        gender,
+        age,
+        activity,
+        weight: (wLbs / 2.20462).toFixed(1),
+        height: String(hCm),
+        heightFt,
+        heightIn,
+        weightLbs,
+      });
+    }
   };
 
   const handleGenderChange = (newGender: string) => {
@@ -119,16 +143,56 @@ const TDEECalculator = () => {
     return bmr * parseFloat(activity);
   }, [bmr, activity]);
 
+  const handleTDEESave = handleSubmit(async () => {
+    if (!tdee) {
+      toast({
+        title: "Cannot Save",
+        description: "Please enter valid measurements to calculate TDEE.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!user?.id) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to save your TDEE.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { error } = await supabase
+      .from("hf_data")
+      .upsert(
+        { tdee_maintain: tdee, user_id: user.id },
+        { onConflict: "user_id" },
+      );
+
+    if (error) {
+      toast({
+        title: "Failed to update TDEE Values",
+        description: "Server error",
+        variant: "destructive",
+      });
+      console.error(error);
+      return;
+    }
+
+    toast({ title: "Saved TDEE Successfully" });
+  });
+
   return (
     <CalculatorLayout
       title="Calorie / TDEE Calculator"
-      // subtitle="Total Daily Energy Expenditure — the total calories you burn per day including activity."
+      subtitle="Total Daily Energy Expenditure — the total calories you burn per day including activity."
     >
       <StaggerItem>
         <SegmentedControl
+          size="md"
           options={[
-            { label: "Metric", value: "metric" },
-            { label: "Imperial", value: "imperial" },
+            { label: "Metric (kg / cm)", value: "metric" },
+            { label: "Imperial (lbs / ft)", value: "imperial" },
           ]}
           value={units}
           onChange={handleUnitsChange}
@@ -137,6 +201,7 @@ const TDEECalculator = () => {
 
       <StaggerItem>
         <SegmentedControl
+          size="md"
           options={[
             { label: "Male", value: "male" },
             { label: "Female", value: "female" },
@@ -147,7 +212,7 @@ const TDEECalculator = () => {
       </StaggerItem>
 
       <StaggerItem>
-        <div className="surface p-6 rounded-xl space-y-4">
+        <div className="bg-white rounded-2xl border border-white/90 p-4 sm:p-5 shadow-[5px_5px_14px_rgba(168,190,185,0.28),-5px_-5px_14px_rgba(255,255,255,0.95)] space-y-3 sm:space-y-3.5">
           {/* Age — always visible, no shouldUnregister needed */}
           <Controller
             name="age"
@@ -251,7 +316,7 @@ const TDEECalculator = () => {
                   />
                 )}
               />
-              <div className="grid gridd-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <Controller
                   name="heightFt"
                   control={control}
@@ -307,26 +372,26 @@ const TDEECalculator = () => {
       </StaggerItem>
 
       <StaggerItem>
-        <div className="surface p-6 rounded-xl">
-          <span className="label-instrument mb-3 block">Activity Level</span>
+        <div className="bg-white rounded-2xl border border-white/90 p-4 sm:p-5 shadow-[5px_5px_14px_rgba(168,190,185,0.28),-5px_-5px_14px_rgba(255,255,255,0.95)]">
+          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#7186A0] mb-2.5 block">Activity Level</span>
           <div className="space-y-2">
             {ACTIVITY_LEVELS.map((level) => (
               <button
                 key={level.value}
                 type="button"
                 onClick={() => reset({ ...watch(), activity: level.value })}
-                className={`w-full text-left px-4 py-3 rounded-lg border transition-all duration-200 ${
+                className={`w-full text-left px-3.5 sm:px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer ${
                   activity === level.value
-                    ? "border-accent bg-accent/10"
-                    : "border-border hover:border-muted-foreground/30"
+                    ? "bg-gradient-to-r from-[#08B594] via-[#07AB8C] to-[#069D80] text-white shadow-[0_3px_10px_rgba(8,181,148,0.32),inset_0_1.5px_2px_rgba(255,255,255,0.5)]"
+                    : "bg-[#E1EDE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.8)] border border-white/50 text-[#0F172A] hover:text-[#08B594]"
                 }`}
               >
                 <span
-                  className={`text-sm font-medium ${activity === level.value ? "text-accent" : "text-foreground"}`}
+                  className={`text-xs sm:text-sm font-bold ${activity === level.value ? "text-white" : "text-[#0F172A]"}`}
                 >
                   {level.label}
                 </span>
-                <span className="text-xs text-muted-foreground ml-2">
+                <span className={`text-xs ml-2 font-normal ${activity === level.value ? "text-white/90" : "text-[#7186A0]"}`}>
                   {level.desc}
                 </span>
               </button>
@@ -345,31 +410,33 @@ const TDEECalculator = () => {
               ? `Based on a ${ACTIVITY_LEVELS.find((l) => l.value === activity)?.label.toLowerCase()} activity level. To lose weight, consume fewer calories; to gain, consume more.`
               : "Enter your measurements above."
           }
-          showSave={false}
+          handleDBSave={handleTDEESave}
+          showSave={true}
         />
       </StaggerItem>
 
       {tdee && (
         <StaggerItem>
-          <div className="surface p-3 md:p-6 rounded-xl">
-            <span className="label-instrument mb-4 block">Daily Targets</span>
-            <div className="grid grid-cols-3 gap-4">
+          <div className="bg-white rounded-2xl border border-white/90 p-4 sm:p-5 shadow-[5px_5px_14px_rgba(168,190,185,0.28),-5px_-5px_14px_rgba(255,255,255,0.95)]">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#7186A0] mb-3 block">Daily Targets</span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
               {[
-                { label: "Lose weight", delta: -500, color: "text-primary" },
-                { label: "Maintain", delta: 0, color: "text-success" },
-                { label: "Gain weight", delta: 500, color: "text-accent" },
+                { label: "Lose Weight", sub: "-0.45 kg / -1 lb per week", delta: -500, color: "text-[#08B594]" },
+                { label: "Maintain", sub: "Weight stability", delta: 0, color: "text-[#08B594]" },
+                { label: "Gain Weight", sub: "+0.45 kg / +1 lb per week", delta: 500, color: "text-[#08B594]" },
               ].map((goal) => (
-                <div key={goal.label} className="text-center">
-                  <span className="text-xs text-muted-foreground uppercase tracking-wider">
+                <div key={goal.label} className="text-center p-3 sm:p-3.5 bg-[#E1EDE9] rounded-xl shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.8)] border border-white/50">
+                  <span className="text-[10px] sm:text-[11px] text-[#7186A0] font-bold uppercase tracking-wider leading-tight block">
                     {goal.label}
                   </span>
-                  <p
-                    className={`text-xl font-mono font-bold tracking-tighter mt-1 ${goal.color}`}
-                  >
+                  <p className={`text-lg sm:text-xl font-black tracking-tight mt-0.5 ${goal.color}`}>
                     {Math.round(tdee + goal.delta).toLocaleString()}
                   </p>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-[10px] font-bold text-[#7186A0] block">
                     kcal/day
+                  </span>
+                  <span className="text-[10px] text-[#7186A0] font-normal block mt-0.5">
+                    {goal.sub}
                   </span>
                 </div>
               ))}

@@ -17,7 +17,7 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-10 w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span:first-child]:truncate [&>span:first-child]:text-left [&>span:first-child]:flex-1",
+      "flex h-10 w-full items-center justify-between gap-2 rounded-xl border border-white/80 bg-white px-3.5 py-2 text-sm text-[#2D3748] shadow-[2.5px_2.5px_6px_rgba(180,200,196,0.2),-2px_-2px_6px_rgba(255,255,255,0.95)] ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#08B594]/30 focus:border-[#08B594] disabled:cursor-not-allowed disabled:opacity-50 transition-all [&>span:first-child]:truncate [&>span:first-child]:text-left [&>span:first-child]:flex-1",
       className,
     )}
     {...props}
@@ -66,7 +66,7 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+        "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-2xl border border-white/90 bg-white text-foreground shadow-[6px_6px_20px_rgba(160,185,180,0.35),-4px_-4px_14px_rgba(255,255,255,0.95)] p-1.5 backdrop-blur-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
         position === "popper" &&
           "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
         className,
@@ -79,7 +79,7 @@ const SelectContent = React.forwardRef<
         className={cn(
           "p-1",
           position === "popper" &&
-            "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]",
+            "w-full min-w-[var(--radix-select-trigger-width)]",
         )}
       >
         {children}
@@ -105,12 +105,12 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-default select-none items-center rounded-lg py-2 pl-7 pr-3 text-sm outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-muted/80 focus:bg-muted/80 focus:text-foreground data-[state=checked]:bg-primary/10 data-[state=checked]:text-primary data-[state=checked]:font-semibold transition-colors",
+      "relative flex w-full cursor-pointer select-none items-center rounded-xl py-2 pl-7 pr-3 text-sm font-medium outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-[#E5F2EE] focus:bg-[#E5F2EE] focus:text-[#08B594] data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-[#08B594] data-[state=checked]:to-[#069D80] data-[state=checked]:text-white data-[state=checked]:font-semibold data-[state=checked]:shadow-[0_2px_6px_rgba(8,169,130,0.3)] transition-all",
       className,
     )}
     {...props}
   >
-    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center text-primary">
+    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center text-current">
       <SelectPrimitive.ItemIndicator>
         <Check className="h-3.5 w-3.5" />
       </SelectPrimitive.ItemIndicator>

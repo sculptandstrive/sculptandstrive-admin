@@ -1,565 +1,325 @@
-import { useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-
-type UnitSystem = "us" | "metric";
-type Gender = "male" | "female";
-type Formula = "mifflin" | "harris" | "katch";
+import { useMemo } from "react";
+import { useForm, Controller } from "react-hook-form";
+import CalculatorLayout, { StaggerItem } from "@/components/CalculatorLayout";
+import InstrumentInput from "@/components/InstrumentInput";
+import SegmentedControl from "@/components/SegmentedControl";
+import ReadoutCard from "@/components/ReadoutCard";
 
 type FormValues = {
-  unitSystem: UnitSystem;
-  gender: Gender;
-  age: number;
-  heightFeet: number;
-  heightInches: number;
-  weightLbs: number;
-  heightCm: number;
-  weightKg: number;
-  formula: Formula;
-  bodyFatPct: number | "";
-  resultUnit: "cal" | "kj";
+  units: "metric" | "imperial";
+  gender: "male" | "female";
+  age: string;
+  weight: string;
+  height: string;
+  weightLbs: string;
+  heightFt: string;
+  heightIn: string;
 };
 
-const ACTIVITY_LEVELS = [
-  { label: "Sedentary: little or no exercise", factor: 1.2 },
-  { label: "Exercise 1-3 times/week", factor: 1.375 },
-  { label: "Exercise 4-5 times/week", factor: 1.465 },
-  { label: "Daily exercise or intense exercise 3-4 times/week", factor: 1.55 },
-  { label: "Intense exercise 6-7 times/week", factor: 1.725 },
-  { label: "Very intense exercise daily, or physical job", factor: 1.9 },
-];
-
-function calculateBMR(
-  weightKg: number,
-  heightCm: number,
-  age: number,
-  gender: Gender,
-  formula: Formula,
-  bodyFatPct?: number,
-): number {
-  switch (formula) {
-    case "mifflin":
-      return gender === "male"
-        ? 10 * weightKg + 6.25 * heightCm - 5 * age + 5
-        : 10 * weightKg + 6.25 * heightCm - 5 * age - 161;
-    case "harris":
-      return gender === "male"
-        ? 13.397 * weightKg + 4.799 * heightCm - 5.677 * age + 88.362
-        : 9.247 * weightKg + 3.098 * heightCm - 4.33 * age + 447.593;
-    case "katch": {
-      if (bodyFatPct === undefined) return 0;
-      const leanMass = weightKg * (1 - bodyFatPct / 100);
-      return 370 + 21.6 * leanMass;
-    }
-    default:
-      return 0;
-  }
-}
-
-function FieldError({ message }: { message?: string }) {
-  if (!message) return null;
-  return <p className="text-xs text-destructive mt-1">{message}</p>;
-}
-
-const BMR = () => {
-  const [bmr, setBmr] = useState<number | null>(null);
-  const [showSettings, setShowSettings] = useState(false);
-
+const BMRCalculator = () => {
   const {
-    register,
-    handleSubmit,
+    control,
     watch,
-    setValue,
-    formState: { errors },
+    reset,
+    formState: { errors, isValid },
   } = useForm<FormValues>({
     mode: "onChange",
     defaultValues: {
-      unitSystem: "us",
+      units: "metric",
       gender: "male",
-      age: 30,
-      heightFeet: 5,
-      heightInches: 6,
-      weightLbs: 170,
-      heightCm: 168,
-      weightKg: 77,
-      formula: "mifflin",
-      bodyFatPct: "",
-      resultUnit: "cal",
+      age: "25",
+      weight: "70",
+      height: "175",
+      weightLbs: "154",
+      heightFt: "5",
+      heightIn: "9",
     },
   });
 
-  const unitSystem = watch("unitSystem");
+  const units = watch("units");
   const gender = watch("gender");
-  const formula = watch("formula");
-  const resultUnit = watch("resultUnit");
+  const age = watch("age");
+  const weight = watch("weight");
+  const height = watch("height");
+  const weightLbs = watch("weightLbs");
+  const heightFt = watch("heightFt");
+  const heightIn = watch("heightIn");
 
-  const onSubmit = (data: FormValues) => {
-    const { age, unitSystem, gender, formula, bodyFatPct } = data;
-
-    let wKg: number, hCm: number;
-    if (unitSystem === "us") {
-      wKg = data.weightLbs * 0.453592;
-      hCm = (data.heightFeet * 12 + data.heightInches) * 2.54;
+  const handleUnitsChange = (newUnits: string) => {
+    if (newUnits === units) return;
+    if (newUnits === "imperial") {
+      const wKg = parseFloat(weight) || 70;
+      const hCm = parseFloat(height) || 175;
+      const totalInches = hCm / 2.54;
+      const ft = Math.floor(totalInches / 12);
+      const inches = Math.round(totalInches % 12);
+      reset({
+        units: "imperial",
+        gender,
+        age,
+        weight,
+        height,
+        weightLbs: (wKg * 2.20462).toFixed(1),
+        heightFt: String(Math.max(1, ft)),
+        heightIn: String(inches),
+      });
     } else {
-      wKg = data.weightKg;
-      hCm = data.heightCm;
+      const wLbs = parseFloat(weightLbs) || 154;
+      const ft = parseFloat(heightFt) || 5;
+      const inches = parseFloat(heightIn) || 9;
+      const hCm = Math.round((ft * 12 + inches) * 2.54);
+      reset({
+        units: "metric",
+        gender,
+        age,
+        weight: (wLbs / 2.20462).toFixed(1),
+        height: String(hCm),
+        heightFt,
+        heightIn,
+        weightLbs,
+      });
+    }
+  };
+
+  const handleGenderChange = (newGender: string) => {
+    reset({ ...watch(), gender: newGender as "male" | "female" });
+  };
+
+  const bmr = useMemo(() => {
+    if (!isValid) return null;
+
+    const a = parseFloat(age);
+    let w: number, h: number;
+
+    if (units === "metric") {
+      w = parseFloat(weight);
+      h = parseFloat(height);
+    } else {
+      w = parseFloat(weightLbs) * 0.453592;
+      h = (parseFloat(heightFt) * 12 + parseFloat(heightIn)) * 2.54;
     }
 
-    const result = calculateBMR(
-      wKg,
-      hCm,
-      age,
-      gender,
-      formula,
-      bodyFatPct !== "" ? Number(bodyFatPct) : undefined,
-    );
+    if (!a || !w || !h) return null;
 
-    setBmr(Math.round(result));
-  };
+    return gender === "male"
+      ? 10 * w + 6.25 * h - 5 * a + 5
+      : 10 * w + 6.25 * h - 5 * a - 161;
+  }, [
+    units,
+    gender,
+    age,
+    weight,
+    height,
+    weightLbs,
+    heightFt,
+    heightIn,
+    isValid,
+  ]);
 
-  const displayValue = (val: number) => {
-    const converted = resultUnit === "kj" ? Math.round(val * 4.184) : val;
-    return converted.toLocaleString();
-  };
-
-
-  const unitLabel = resultUnit === "kj" ? "kJ/day" : "Calories/day";
-
-  const toggleButtonClass = (active: boolean) =>
-    `flex-1 py-2.5 text-sm font-medium transition-colors ${
-      active
-        ? "bg-accent text-primary-foreground"
-        : "bg-card text-muted-foreground hover:bg-secondary"
-    }`;
-
-  const inputClass = (hasError: boolean) =>
-    `w-full rounded-md border bg-card px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
-      hasError ? "border-destructive" : ""
-    }`;
   return (
-    <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground mb-3">
-          BMR Calculator
-        </h1>
+    <CalculatorLayout
+      title="BMR Calculator"
+      subtitle="Basal Metabolic Rate — the number of calories your body needs at complete rest."
+    >
+      <StaggerItem>
+        <SegmentedControl
+          size="md"
+          options={[
+            { label: "Metric (kg / cm)", value: "metric" },
+            { label: "Imperial (lbs / ft)", value: "imperial" },
+          ]}
+          value={units}
+          onChange={handleUnitsChange}
+        />
+      </StaggerItem>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          <div className="lg:col-span-2">
-            <form
-              onSubmit={handleSubmit(onSubmit)}
-              className="bg-card rounded-lg border p-6 space-y-5"
-            >
-              {/* Unit Toggle */}
-              <div className="flex rounded-lg border overflow-hidden">
-                {(["us", "metric"] as UnitSystem[]).map((u) => (
-                  <button
-                    key={u}
-                    type="button"
-                    onClick={() => setValue("unitSystem", u)}
-                    className={toggleButtonClass(unitSystem === u)}
-                  >
-                    {u === "us" ? "US Units" : "Metric Units"}
-                  </button>
-                ))}
-              </div>
+      <StaggerItem>
+        <SegmentedControl
+          size="md"
+          options={[
+            { label: "Male", value: "male" },
+            { label: "Female", value: "female" },
+          ]}
+          value={gender}
+          onChange={handleGenderChange}
+        />
+      </StaggerItem>
 
-              {/* Age */}
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">
-                  Age
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    className={inputClass(!!errors.age)}
-                    {...register("age", {
-                      required: "Age is required.",
-                      valueAsNumber: true,
-                      min: {
-                        value: 15,
-                        message: "Age must be between 15 and 80.",
-                      },
-                      max: {
-                        value: 80,
-                        message: "Age must be between 15 and 80.",
-                      },
-                      validate: (v) => !isNaN(v) || "Age must be a number.",
-                    })}
-                  />
-                  <span className="text-sm text-muted-foreground whitespace-nowrap">
-                    ages 15–80
-                  </span>
-                </div>
-                <FieldError message={errors.age?.message} />
-              </div>
-
-              {/* Gender */}
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">
-                  Gender
-                </label>
-                <div className="flex rounded-lg border overflow-hidden">
-                  {(["male", "female"] as Gender[]).map((g) => (
-                    <button
-                      key={g}
-                      type="button"
-                      onClick={() => setValue("gender", g)}
-                      className={toggleButtonClass(gender === g)}
-                    >
-                      {g.charAt(0).toUpperCase() + g.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Height & Weight — US */}
-              {unitSystem === "us" ? (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1.5">
-                      Height
-                    </label>
-                    <div className="flex gap-2">
-                      <div className="flex-1 flex flex-col gap-1">
-                        <div className="flex items-center gap-1.5">
-                          <input
-                            type="number"
-                            className={inputClass(!!errors.heightFeet)}
-                            {...register("heightFeet", {
-                              required: "Feet is required.",
-                              valueAsNumber: true,
-                              min: {
-                                value: 1,
-                                message: "Enter a valid feet value (1–8).",
-                              },
-                              max: {
-                                value: 8,
-                                message: "Enter a valid feet value (1–8).",
-                              },
-                              validate: (v) =>
-                                !isNaN(v) || "Enter a valid number.",
-                            })}
-                          />
-                          <span className="text-sm text-muted-foreground">
-                            ft
-                          </span>
-                        </div>
-                        <FieldError message={errors.heightFeet?.message} />
-                      </div>
-                      <div className="flex-1 flex flex-col gap-1">
-                        <div className="flex items-center gap-1.5">
-                          <input
-                            type="number"
-                            className={inputClass(!!errors.heightInches)}
-                            {...register("heightInches", {
-                              required: "Inches is required.",
-                              valueAsNumber: true,
-                              min: {
-                                value: 0,
-                                message: "Inches must be 0–11.",
-                              },
-                              max: {
-                                value: 11,
-                                message: "Inches must be 0–11.",
-                              },
-                              validate: (v) =>
-                                !isNaN(v) || "Enter a valid number.",
-                            })}
-                          />
-                          <span className="text-sm text-muted-foreground">
-                            in
-                          </span>
-                        </div>
-                        <FieldError message={errors.heightInches?.message} />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1.5">
-                      Weight
-                    </label>
-                    <div className="flex items-center gap-1.5">
-                      <input
-                        type="number"
-                        className={inputClass(!!errors.weightLbs)}
-                        {...register("weightLbs", {
-                          required: "Weight is required.",
-                          valueAsNumber: true,
-                          min: {
-                            value: 50,
-                            message: "Enter a valid weight (50–1000 lbs).",
-                          },
-                          max: {
-                            value: 1000,
-                            message: "Enter a valid weight (50–1000 lbs).",
-                          },
-                          validate: (v) => !isNaN(v) || "Enter a valid number.",
-                        })}
-                      />
-                      <span className="text-sm text-muted-foreground">lbs</span>
-                    </div>
-                    <FieldError message={errors.weightLbs?.message} />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1.5">
-                      Height
-                    </label>
-                    <div className="flex items-center gap-1.5">
-                      <input
-                        type="number"
-                        className={inputClass(!!errors.heightCm)}
-                        {...register("heightCm", {
-                          required: "Height is required.",
-                          valueAsNumber: true,
-                          min: {
-                            value: 50,
-                            message: "Enter a valid height (50–300 cm).",
-                          },
-                          max: {
-                            value: 300,
-                            message: "Enter a valid height (50–300 cm).",
-                          },
-                          validate: (v) => !isNaN(v) || "Enter a valid number.",
-                        })}
-                      />
-                      <span className="text-sm text-muted-foreground">cm</span>
-                    </div>
-                    <FieldError message={errors.heightCm?.message} />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1.5">
-                      Weight
-                    </label>
-                    <div className="flex items-center gap-1.5">
-                      <input
-                        type="number"
-                        className={inputClass(!!errors.weightKg)}
-                        {...register("weightKg", {
-                          required: "Weight is required.",
-                          valueAsNumber: true,
-                          min: {
-                            value: 20,
-                            message: "Enter a valid weight (20–500 kg).",
-                          },
-                          max: {
-                            value: 500,
-                            message: "Enter a valid weight (20–500 kg).",
-                          },
-                          validate: (v) => !isNaN(v) || "Enter a valid number.",
-                        })}
-                      />
-                      <span className="text-sm text-muted-foreground">kg</span>
-                    </div>
-                    <FieldError message={errors.weightKg?.message} />
-                  </div>
-                </>
-              )}
-
-              {/* Settings */}
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setShowSettings(!showSettings)}
-                  className="text-sm font-medium text-primary hover:underline"
-                >
-                  {showSettings ? "− Settings" : "+ Settings"}
-                </button>
-                {showSettings && (
-                  <div className="mt-3 space-y-4 border-t pt-4">
-                    {/* Result Unit */}
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-1.5">
-                        Results unit
-                      </label>
-                      <div className="flex gap-4">
-                        {(["cal", "kj"] as const).map((u) => (
-                          <label
-                            key={u}
-                            className="flex items-center gap-1.5 text-sm text-foreground cursor-pointer"
-                          >
-                            <input
-                              type="radio"
-                              value={u}
-                              className="accent-primary"
-                              {...register("resultUnit")}
-                            />
-                            {u === "cal" ? "Calories" : "Kilojoules"}
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Formula */}
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-1.5">
-                        BMR estimation formula
-                      </label>
-                      <div className="space-y-1.5">
-                        {(["mifflin", "harris", "katch"] as Formula[]).map(
-                          (f) => (
-                            <label
-                              key={f}
-                              className="flex items-center gap-1.5 text-sm text-foreground cursor-pointer"
-                            >
-                              <input
-                                type="radio"
-                                value={f}
-                                className="accent-primary"
-                                {...register("formula")}
-                              />
-                              {f === "mifflin"
-                                ? "Mifflin-St Jeor"
-                                : f === "harris"
-                                  ? "Revised Harris-Benedict"
-                                  : "Katch-McArdle"}
-                            </label>
-                          ),
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Body Fat % — only for Katch */}
-                    {formula === "katch" && (
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-1.5">
-                          Body Fat %
-                        </label>
-                        <div className="flex items-center gap-1.5">
-                          <input
-                            type="number"
-                            placeholder="e.g. 20"
-                            className={inputClass(!!errors.bodyFatPct)}
-                            {...register("bodyFatPct", {
-                              required:
-                                "Body fat % is required for this formula.",
-                              valueAsNumber: true,
-                              min: {
-                                value: 1,
-                                message: "Body fat % must be between 1 and 70.",
-                              },
-                              max: {
-                                value: 70,
-                                message: "Body fat % must be between 1 and 70.",
-                              },
-                              validate: (v) =>
-                                !isNaN(Number(v)) || "Enter a valid number.",
-                            })}
-                          />
-                          <span className="text-sm text-muted-foreground">
-                            %
-                          </span>
-                        </div>
-                        <FieldError message={errors.bodyFatPct?.message} />
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Calculate Button */}
-              <button
-                type="submit"
-                className="w-full bg-accent text-accent-foreground font-display font-semibold py-3 rounded-lg hover:opacity-90 transition-opacity"
-              >
-                Calculate
-              </button>
-            </form>
-          </div>
-
-          {/* Results */}
-          <div className="lg:col-span-3">
-            {bmr !== null ? (
-              <div className="animate-fade-in space-y-6">
-                <div>
-                  <div className="flex flex-row justify-between">
-                    <h2 className="text-xl font-display font-bold text-foreground mb-3">
-                      Result
-                    </h2>
-                  </div>
-                  <div className="result-card">
-                    <p className="text-muted-foreground text-sm">
-                      Your Basal Metabolic Rate
-                    </p>
-                    <p className="text-4xl font-display font-bold text-primary mt-1">
-                      {displayValue(bmr)}
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {unitLabel}
-                    </p>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-display font-semibold text-foreground mb-3">
-                    Daily calorie needs based on activity level
-                  </h3>
-                  <div className="bg-card rounded-lg border overflow-hidden">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="text-left px-4 py-3 font-semibold text-foreground">
-                            Activity Level
-                          </th>
-                          <th className="text-right px-4 py-3 font-semibold text-foreground">
-                            {resultUnit === "kj" ? "kJ" : "Calorie"}
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {ACTIVITY_LEVELS.map((level, i) => (
-                          <tr
-                            key={i}
-                            className={i % 2 === 1 ? "table-stripe" : ""}
-                          >
-                            <td className="px-4 py-3 text-foreground">
-                              {level.label}
-                            </td>
-                            <td className="px-4 py-3 text-right font-display font-semibold text-foreground">
-                              {displayValue(Math.round(bmr * level.factor))}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className="mt-4 space-y-1 text-xs text-muted-foreground">
-                    <p>
-                      <strong className="text-foreground">Exercise:</strong>{" "}
-                      15-30 minutes of elevated heart rate activity.
-                    </p>
-                    <p>
-                      <strong className="text-foreground">
-                        Intense exercise:
-                      </strong>{" "}
-                      45-120 minutes of elevated heart rate activity.
-                    </p>
-                    <p>
-                      <strong className="text-foreground">
-                        Very intense exercise:
-                      </strong>{" "}
-                      2+ hours of elevated heart rate activity.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center text-center h-full min-h-[250px] sm:min-h-[300px] bg-card rounded-lg border border-border p-6 w-full">
-                <p className="text-muted-foreground text-sm sm:text-base max-w-xs sm:max-w-sm leading-relaxed">
-                  Enter your details and click Calculate to see results.
-                </p>
-              </div>
+      <StaggerItem>
+        <div className="bg-white rounded-2xl border border-white/90 p-4 sm:p-5 shadow-[5px_5px_14px_rgba(168,190,185,0.28),-5px_-5px_14px_rgba(255,255,255,0.95)] space-y-3 sm:space-y-3.5">
+          {/* Age — always visible, no shouldUnregister needed */}
+          <Controller
+            name="age"
+            control={control}
+            rules={{
+              required: "Age is required.",
+              validate: (v) => {
+                const n = parseFloat(v);
+                if (isNaN(n)) return "Age must be a valid number.";
+                if (n < 1) return "Age must be at least 1.";
+                if (n > 120) return "Age must be no more than 120.";
+                return true;
+              },
+            }}
+            render={({ field }) => (
+              <InstrumentInput
+                label="Age"
+                value={field.value}
+                onChange={field.onChange}
+                unit="years"
+                error={errors.age?.message}
+              />
             )}
-          </div>
+          />
+
+          {units === "metric" ? (
+            <>
+              <Controller
+                name="weight"
+                control={control}
+                shouldUnregister
+                rules={{
+                  required: "Weight is required.",
+                  validate: (v) => {
+                    const n = parseFloat(v);
+                    if (isNaN(n)) return "Weight must be a valid number.";
+                    if (n < 1) return "Weight must be at least 1 kg.";
+                    if (n > 500) return "Weight must be no more than 500 kg.";
+                    return true;
+                  },
+                }}
+                render={({ field }) => (
+                  <InstrumentInput
+                    label="Weight"
+                    value={field.value}
+                    onChange={field.onChange}
+                    unit="kg"
+                    error={errors.weight?.message}
+                  />
+                )}
+              />
+              <Controller
+                name="height"
+                control={control}
+                shouldUnregister
+                rules={{
+                  required: "Height is required.",
+                  validate: (v) => {
+                    const n = parseFloat(v);
+                    if (isNaN(n)) return "Height must be a valid number.";
+                    if (n < 1) return "Height must be at least 1 cm.";
+                    if (n > 300) return "Height must be no more than 300 cm.";
+                    return true;
+                  },
+                }}
+                render={({ field }) => (
+                  <InstrumentInput
+                    label="Height"
+                    value={field.value}
+                    onChange={field.onChange}
+                    unit="cm"
+                    error={errors.height?.message}
+                  />
+                )}
+              />
+            </>
+          ) : (
+            <>
+              <Controller
+                name="weightLbs"
+                control={control}
+                shouldUnregister
+                rules={{
+                  required: "Weight is required.",
+                  validate: (v) => {
+                    const n = parseFloat(v);
+                    if (isNaN(n)) return "Weight must be a valid number.";
+                    if (n < 1) return "Weight must be at least 1 lbs.";
+                    if (n > 1000)
+                      return "Weight must be no more than 1000 lbs.";
+                    return true;
+                  },
+                }}
+                render={({ field }) => (
+                  <InstrumentInput
+                    label="Weight"
+                    value={field.value}
+                    onChange={field.onChange}
+                    unit="lbs"
+                    error={errors.weightLbs?.message}
+                  />
+                )}
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <Controller
+                  name="heightFt"
+                  control={control}
+                  shouldUnregister
+                  rules={{
+                    required: "Feet is required.",
+                    validate: (v) => {
+                      const n = parseFloat(v);
+                      if (isNaN(n)) return "Must be a valid number.";
+                      if (n < 0) return "Height must be at least 0 ft.";
+                      if (n > 8) return "Height must be no more than 8 ft.";
+                      return true;
+                    },
+                  }}
+                  render={({ field }) => (
+                    <InstrumentInput
+                      label="Height (ft)"
+                      value={field.value}
+                      onChange={field.onChange}
+                      unit="ft"
+                      error={errors.heightFt?.message}
+                    />
+                  )}
+                />
+                <Controller
+                  name="heightIn"
+                  control={control}
+                  shouldUnregister
+                  rules={{
+                    required: "Inches is required.",
+                    validate: (v) => {
+                      const n = parseFloat(v);
+                      if (isNaN(n)) return "Must be a valid number.";
+                      if (n < 0) return "Inches must be at least 0.";
+                      if (n > 11) return "Inches must be no more than 11.";
+                      return true;
+                    },
+                  }}
+                  render={({ field }) => (
+                    <InstrumentInput
+                      label="Height (in)"
+                      value={field.value}
+                      onChange={field.onChange}
+                      unit="in"
+                      error={errors.heightIn?.message}
+                    />
+                  )}
+                />
+              </div>
+            </>
+          )}
         </div>
-      </div>
-    </motion.div>
+      </StaggerItem>
+
+      <StaggerItem>
+        <ReadoutCard
+          label="Basal Metabolic Rate"
+          value={bmr ? Math.round(bmr).toLocaleString() : "—"}
+          unit="kcal/day"
+          description={
+            bmr
+              ? "Mifflin-St Jeor equation. This is the energy your body expends at complete rest over 24 hours."
+              : "Enter your measurements above."
+          }
+          showSave={false}
+        />
+      </StaggerItem>
+    </CalculatorLayout>
   );
 };
 
-export default BMR;
+export default BMRCalculator;

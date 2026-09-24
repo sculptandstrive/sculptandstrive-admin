@@ -5,7 +5,6 @@ import {
 } from "lucide-react";
 import { useGoogleLogin } from '@react-oauth/google';
 import { supabase } from "@/integrations/supabase/client";
-import { DashboardLayout } from "@/components/DashboardLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,11 +25,31 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import SegmentedControl from "@/components/SegmentedControl";
 import { VideoUploadModal } from "@/components/video/VideoUploadModal";
+import { StatCard } from "@/components/StatCard";
 
 const isValidUUID = (str: any): boolean => {
   if (typeof str !== "string") return false;
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
 };
+
+
+function SessionStatCard({ title, value, icon: Icon, theme }: { title: string; value: string | number; icon: any; theme?: string }) {
+  const isEmerald = theme === "emerald";
+  const isTeal = theme === "teal";
+  const iconColor = isEmerald ? "text-[#08B594]" : isTeal ? "text-[#0D9488]" : "text-[#475569]";
+  const iconBg = isEmerald ? "bg-[#E2ECE9]" : isTeal ? "bg-[#E6F7F3]" : "bg-[#E2ECE9]";
+  return (
+    <div className="rounded-[24px] border border-white/90 bg-white p-4 sm:p-5 shadow-[5px_5px_16px_rgba(130,155,151,0.14),-3px_-3px_10px_rgba(255,255,255,0.98)] hover:shadow-[7px_7px_20px_rgba(130,155,151,0.18)] flex items-center justify-between gap-3 transition-all">
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-bold uppercase tracking-wider text-[#7186A0] truncate">{title}</p>
+        <p className="text-2xl sm:text-3xl font-black text-[#0F172A] tracking-tight leading-none mt-1.5">{value}</p>
+      </div>
+      <div className={`w-11 h-11 rounded-2xl ${iconBg} ${iconColor} border border-white/60 shadow-[inset_1.5px_1.5px_3px_rgba(165,185,180,0.45),inset_-1.5px_-1.5px_3px_rgba(255,255,255,0.85)] flex items-center justify-center shrink-0`}>
+        <Icon className="w-5 h-5" />
+      </div>
+    </div>
+  );
+}
 
 export default function Sessions() {
   const [sessions, setSessions] = useState<any[]>([]);
@@ -1465,7 +1484,7 @@ export default function Sessions() {
                               placeholder="Search name or email..."
                               value={searchTerm}
                               onChange={(e) => setSearchTerm(e.target.value)}
-                              className="h-8 text-xs pl-8 pr-2.5 border-border bg-card text-foreground w-full placeholder:text-muted-foreground focus-visible:ring-primary"
+                              className="h-8 text-xs pl-10 pr-2.5 border-border bg-card text-foreground w-full placeholder:text-muted-foreground focus-visible:ring-primary"
                             />
                           </div>
                         </div>
@@ -1576,7 +1595,7 @@ export default function Sessions() {
 
       {/* Tabs Navigation */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="space-y-6">
-        <div className="w-full overflow-x-auto mb-2">
+        <div className="w-full max-w-[360px] sm:max-w-[390px]">
           <SegmentedControl
             options={[
               { label: "Live Sessions", value: "live", icon: <Video className="w-4 h-4" /> },
@@ -1584,41 +1603,45 @@ export default function Sessions() {
             ]}
             value={activeTab === "tutorial" ? "tutorials" : activeTab}
             onChange={(val) => setActiveTab(val as any)}
-            size="md"
+            size="lg"
+            variant="default"
+            shape="rounded"
           />
         </div>
 
         {/* Tab 1: Live Sessions */}
         <TabsContent value="live" className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            <StatCard
+            <SessionStatCard
               title="Live Now"
               value={sessions.filter((s) => getLiveStatus(s.scheduled_at, s.type)).length}
-              icon={<Video className="w-5 h-5 text-emerald-600" />}
-              bgColor="bg-emerald-100"
+              icon={Video}
+              theme="emerald"
             />
-            <StatCard
+            <SessionStatCard
               title="Total Workouts"
               value={sessions.filter(s => s.type === "live").length}
-              icon={<CalendarIcon className="w-5 h-5 text-emerald-600" />}
-              bgColor="bg-emerald-100"
+              icon={CalendarIcon}
+              theme="teal"
             />
-            <StatCard
+            <SessionStatCard
               title="Active Clients"
               value={clients.length}
-              icon={<UsersIcon className="w-5 h-5 text-slate-600" />}
-              bgColor="bg-slate-100"
+              icon={UsersIcon}
+              theme="slate"
             />
           </div>
 
-          <Card className="border border-border shadow-sm rounded-2xl overflow-hidden bg-card">
-            <CardHeader className="px-5 py-4 border-b border-border bg-card">
-              <CardTitle className="text-[20px] font-semibold text-foreground leading-snug">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-1">
+              <h2 className="text-xl font-extrabold text-[#10203B] tracking-tight">
                 Live Workout Sessions
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-5 py-4">
-              <div className="space-y-2.5">
+              </h2>
+              <span className="rounded-full bg-[#E2ECE9] shadow-[inset_1px_1px_2px_rgba(165,185,180,0.45),inset_-1px_-1px_2px_rgba(255,255,255,0.85)] border border-white/60 text-xs font-bold text-[#08B594] px-3.5 py-1">
+                {sessions.filter(s => s.type === "live").length} {sessions.filter(s => s.type === "live").length === 1 ? "SESSION" : "SESSIONS"}
+              </span>
+            </div>
+            <div className="space-y-3.5">
                 {loading ? (
                   <p className="text-center py-6 text-muted-foreground text-sm">Syncing database...</p>
                 ) : sessions.filter(s => s.type === "live").length === 0 ? (
@@ -1692,89 +1715,92 @@ export default function Sessions() {
                     return (
                       <div
                         key={session.id}
-                        className={`flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-3.5 rounded-xl border transition-all ${isPast
-                          ? "bg-card/70 border-border/80 hover:border-border"
-                          : isLive
-                          ? "bg-emerald-500/[0.03] border-emerald-500/40 ring-1 ring-emerald-500/20"
-                          : "bg-card border-border hover:border-[#07AC7D]/50"
-                          }`}
+                        className={`bg-white rounded-[22px] p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 transition-all border border-white/90 ${
+                          isLive
+                            ? "shadow-[0_0_0_2px_rgba(8,169,130,0.6),6px_6px_20px_rgba(160,185,180,0.25),-4px_-4px_14px_rgba(255,255,255,0.98)]"
+                            : "shadow-[5px_5px_16px_rgba(150,175,170,0.18),-4px_-4px_12px_rgba(255,255,255,0.98)] hover:shadow-[7px_7px_20px_rgba(150,175,170,0.24),-5px_-5px_15px_rgba(255,255,255,1)]"
+                        }`}
                       >
-                        <div className="flex-1 min-w-0">
-                          <div className="flex flex-wrap items-center gap-2 mb-0.5">
-                            <h4 className="font-semibold text-sm text-foreground truncate">
-                              {session.title}
-                            </h4>
-                            <div className="flex gap-1.5 flex-wrap">
+                        <div className="flex items-center gap-3.5 sm:gap-4 flex-1 min-w-0">
+                          <div className="w-12 h-12 rounded-2xl bg-[#F0FAF7] shadow-[inset_1.5px_1.5px_3px_rgba(160,185,180,0.25),inset_-1.5px_-1.5px_3px_rgba(255,255,255,0.9)] border border-white/80 shrink-0 flex items-center justify-center overflow-hidden">
+                            <span className="text-base font-extrabold text-[#08B594]">
+                              {session.instructor?.[0] || session.title?.[0] || "S"}
+                            </span>
+                          </div>
+
+                          <div className="flex-1 min-w-0 space-y-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h4 className="font-extrabold text-sm sm:text-base text-[#10203B] tracking-tight truncate">
+                                {session.title}
+                              </h4>
                               {isLive && (
-                                <Badge className="bg-[#07AC7D] text-white text-[11px] font-semibold px-2 py-0 animate-pulse">
+                                <span className="bg-gradient-to-r from-[#0CC194] to-[#08A982] text-white text-[10px] font-black px-2.5 py-0.5 rounded-full animate-pulse shadow-[0_2px_6px_rgba(8,169,130,0.4)]">
                                   ● LIVE NOW
-                                </Badge>
+                                </span>
                               )}
                               {isPast && (
-                                <Badge variant="secondary" className="text-[11px] bg-muted text-muted-foreground border border-border px-2 py-0 font-semibold">
+                                <span className="text-[10px] bg-[#F1F5F9] text-[#64748B] border border-slate-200/80 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
                                   PAST
-                                </Badge>
+                                </span>
                               )}
                               {session.admin_is_mass ? (
-                                <Badge variant="outline" className="text-[11px] border-[#07AC7D]/40 text-[#07AC7D] px-2 py-0 font-semibold">
+                                <span className="text-[10px] bg-[#F1F5F9] text-[#475569] border border-slate-200/80 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
                                   PUBLIC
-                                </Badge>
+                                </span>
                               ) : (
-                                <Badge variant="outline" className="text-[11px] border-blue-500/40 text-blue-600 px-2 py-0 font-semibold">
+                                <span className="text-[10px] bg-[#EFF6FF] text-[#2563EB] border border-[#BFDBFE] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
                                   1-ON-1
-                                </Badge>
+                                </span>
                               )}
-                              <Badge variant="outline" className={`text-[10px] px-1.5 py-0 font-medium ${platformBadge.color}`}>
+                              <span className="text-[10px] bg-[#E6F7F3] text-[#08B594] border border-[#BDEADE] px-2.5 py-0.5 rounded-full font-bold">
                                 {platformBadge.label}
-                              </Badge>
+                              </span>
+                            </div>
+                            <p className="text-xs font-semibold text-[#6F849A]">
+                              Coach {session.instructor || "Trainer"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center flex-wrap lg:flex-nowrap gap-3 shrink-0">
+                          <div className="flex items-center flex-wrap gap-2">
+                            <div className="flex items-center gap-1.5 text-xs font-bold text-[#10203B] bg-[#F4FAF8] px-3 py-1.5 rounded-xl shadow-[inset_1px_1px_2px_rgba(160,185,180,0.22),inset_-1px_-1px_2px_rgba(255,255,255,0.9)] border border-white/70">
+                              <CalendarIcon className="w-3.5 h-3.5 text-[#08A982]" />
+                              <span>{dateLabel}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 text-xs font-bold text-[#10203B] bg-[#F4FAF8] px-3 py-1.5 rounded-xl shadow-[inset_1px_1px_2px_rgba(160,185,180,0.22),inset_-1px_-1px_2px_rgba(255,255,255,0.9)] border border-white/70">
+                              <Clock className="w-3.5 h-3.5 text-[#08A982]" />
+                              <span>{sessionTime}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 text-xs font-bold text-[#10203B] bg-[#F4FAF8] px-3 py-1.5 rounded-xl shadow-[inset_1px_1px_2px_rgba(160,185,180,0.22),inset_-1px_-1px_2px_rgba(255,255,255,0.9)] border border-white/70">
+                              <UsersIcon className="w-3.5 h-3.5 text-[#6F849A]" />
+                              <span>{participantCount} Clients</span>
                             </div>
                           </div>
-                          <p className="text-xs text-muted-foreground font-normal">
-                            Coach {session.instructor}
-                          </p>
-                        </div>
 
-                        <div className="flex items-center flex-wrap gap-2">
-                          <div className="flex items-center gap-1.5 text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-lg border border-border text-xs font-semibold">
-                            <CalendarIcon className="w-3.5 h-3.5 text-[#07AC7D]" />
-                            <span>{dateLabel}</span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              className="bg-gradient-to-b from-[#0CC194] via-[#09B38A] to-[#079975] hover:from-[#0db88e] hover:to-[#068c6b] text-white text-xs h-10 px-4 sm:px-5 font-bold rounded-2xl shadow-[0_4px_12px_rgba(8,169,130,0.35),inset_0_1.5px_2px_rgba(255,255,255,0.6)] active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer"
+                              onClick={handleOpenMeeting}
+                            >
+                              <Video className="w-3.5 h-3.5" />
+                              <span>{session.platform === "whatsapp" ? "Open Chat" : "Join / View"}</span>
+                            </button>
+                            <button
+                              className="h-10 w-10 rounded-2xl bg-white text-[#94A3B8] hover:text-[#EF4444] hover:bg-rose-50 border border-white/80 shadow-[3px_3px_8px_rgba(160,185,180,0.2),-3px_-3px_8px_rgba(255,255,255,0.95)] active:scale-95 transition-all flex items-center justify-center cursor-pointer shrink-0"
+                              onClick={() => handleDelete(session.id, session.title, session.instructor)}
+                              title="Delete Session"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </div>
-                          <div className="flex items-center gap-1.5 text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-lg border border-border text-xs font-semibold">
-                            <Clock className="w-3.5 h-3.5 text-[#07AC7D]" />
-                            <span>{sessionTime}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-lg border border-border text-xs font-semibold">
-                            <UsersIcon className="w-3.5 h-3.5 text-muted-foreground/70" />
-                            <span>{participantCount} Clients</span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-end gap-1.5">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-[#07AC7D] hover:text-[#06966D] dark:text-emerald-400 dark:hover:text-emerald-300 text-xs font-semibold hover:bg-[#07AC7D]/10 h-8 px-2.5 rounded-[8px] transition-colors"
-                            onClick={handleOpenMeeting}
-                          >
-                            <Video className="w-3.5 h-3.5 mr-1" />
-                            {session.platform === "whatsapp" ? "Open Chat" : "Join / View"}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-7 w-7"
-                            onClick={() => handleDelete(session.id, session.title, session.instructor)}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
                         </div>
                       </div>
                     );
                   })
                 )}
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </TabsContent>
 
         {/* Tab 2: Video Tutorials (Playlist Architecture) */}
@@ -1871,10 +1897,12 @@ export default function Sessions() {
               </div>
 
               {/* SECTION 1: Videos in Selected Playlist */}
-              <Card className="border border-border shadow-sm rounded-2xl overflow-hidden bg-card">
-                <CardHeader className="px-4 py-3 border-b border-border bg-muted/40 flex flex-row items-center justify-between">
-                  <CardTitle className="text-[20px] font-semibold text-foreground flex items-center gap-2">
-                    <Play className="w-4 h-4 text-primary" />
+              <Card className="bg-white border border-white/90 shadow-[6px_6px_20px_rgba(145,170,165,0.2),-4px_-4px_14px_rgba(255,255,255,0.95)] rounded-[28px] overflow-hidden">
+                <CardHeader className="px-5 py-4 border-b border-[#E2ECE9]/70 bg-[#F8FBFA]/80 flex flex-row items-center justify-between">
+                  <CardTitle className="text-base sm:text-[19px] font-bold text-[#0F172A] flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-[#E6F7F3] border border-[#BEE7DC] text-[#07AC7D] flex items-center justify-center shadow-sm shrink-0">
+                      <Play className="w-3.5 h-3.5 fill-[#07AC7D] text-[#07AC7D]" />
+                    </div>
                     Videos in "{selectedPlaylist.title}"
                   </CardTitle>
                   <Button
@@ -1882,109 +1910,109 @@ export default function Sessions() {
                       setAddVideoMode("library");
                       setIsVideoModalOpen(true);
                     }}
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm h-8 px-3 font-semibold"
+                    className="gap-1.5 bg-gradient-to-r from-[#0CC194] to-[#07AC7D] hover:from-[#0bb389] hover:to-[#06966D] text-white rounded-[12px] h-9 px-4 text-xs sm:text-sm font-semibold shadow-[0_3px_10px_rgba(7,172,125,0.3)] hover:shadow-[0_5px_14px_rgba(7,172,125,0.4)] transition-all flex items-center"
                   >
-                    <Plus className="w-4 h-4 mr-1" /> Add Video
+                    <Plus className="w-4 h-4" /> Add Video
                   </Button>
                 </CardHeader>
                 <CardContent className="p-0">
                   {(!selectedPlaylist.videos || selectedPlaylist.videos.length === 0) ? (
-                    <div className="text-center py-8 px-4">
-                      <Video className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
-                      <h3 className="text-base font-semibold text-foreground">No Videos in this Playlist</h3>
-                      <p className="text-sm font-normal text-muted-foreground mt-0.5 mb-3">Click below to select or upload videos for this playlist.</p>
+                    <div className="text-center py-10 px-4">
+                      <Video className="w-10 h-10 text-[#7186A0]/40 mx-auto mb-2.5" />
+                      <h3 className="text-base font-bold text-[#0F172A]">No Videos in this Playlist</h3>
+                      <p className="text-sm font-normal text-[#7186A0] mt-0.5 mb-4">Click below to select or upload videos for this playlist.</p>
                       <Button
                         onClick={() => {
                           setAddVideoMode("library");
                           setIsVideoModalOpen(true);
                         }}
-                        className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm h-8 px-3 font-semibold"
+                        className="bg-[#07AC7D] hover:bg-[#06966D] text-white text-sm h-9 px-4 rounded-xl font-semibold shadow-sm"
                       >
-                        <Plus className="w-3.5 h-3.5 mr-1" /> Select / Add Video
+                        <Plus className="w-3.5 h-3.5 mr-1.5" /> Select / Add Video
                       </Button>
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
-                          <tr className="border-b border-border bg-muted/40 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            <th className="py-2.5 px-3 text-center">Plan ID</th>
-                            <th className="py-2.5 px-4">Title</th>
-                            <th className="py-2.5 px-3 text-center">Category</th>
-                            <th className="py-2.5 px-3 text-center">Trainer</th>
-                            <th className="py-2.5 px-3 text-center">Video Small (360p)</th>
-                            <th className="py-2.5 px-3 text-center">Video Large (720p)</th>
-                            <th className="py-2.5 px-3 text-center">Status</th>
-                            <th className="py-2.5 px-3 text-center">Audience</th>
-                            <th className="py-2.5 px-4 text-right">Actions</th>
+                          <tr className="border-b border-[#E2ECE9] bg-[#F8FBFA] text-left text-xs font-bold text-[#7186A0] uppercase tracking-wider">
+                            <th className="py-3 px-3.5 text-center">Plan ID</th>
+                            <th className="py-3 px-4">Title</th>
+                            <th className="py-3 px-3.5 text-center">Category</th>
+                            <th className="py-3 px-3.5 text-center">Trainer</th>
+                            <th className="py-3 px-3.5 text-center">Video Small (360p)</th>
+                            <th className="py-3 px-3.5 text-center">Video Large (720p)</th>
+                            <th className="py-3 px-3.5 text-center">Status</th>
+                            <th className="py-3 px-3.5 text-center">Audience</th>
+                            <th className="py-3 px-4 text-right">Actions</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-border">
+                        <tbody className="divide-y divide-[#E2ECE9]/70">
                           {selectedPlaylist.videos.map((vid: any, index: number) => (
-                            <tr key={vid.id || index} className="hover:bg-muted/50 transition-colors">
-                              <td className="py-3 px-3 text-center font-mono font-bold text-muted-foreground text-xs">
+                            <tr key={vid.id || index} className="hover:bg-[#F8FBFA]/70 transition-colors">
+                              <td className="py-3.5 px-3.5 text-center font-mono font-bold text-[#7186A0] text-xs">
                                 {vid.plan_id || index + 1}
                               </td>
-                              <td className="py-3 px-4 font-medium text-foreground">
+                              <td className="py-3.5 px-4 font-medium text-foreground">
                                 <div className="flex items-center gap-3">
                                   {vid.thumbnail_url ? (
-                                    <img src={vid.thumbnail_url} alt="" className="w-12 h-8 rounded object-cover border border-border shrink-0" />
+                                    <img src={vid.thumbnail_url} alt="" className="w-12 h-9 rounded-lg object-cover border border-[#E2ECE9] shadow-sm shrink-0" />
                                   ) : (
-                                    <div className="w-12 h-8 rounded bg-muted flex items-center justify-center text-muted-foreground text-[8px] shrink-0 font-mono">
+                                    <div className="w-12 h-9 rounded-lg bg-[#E2ECE9] flex items-center justify-center text-[#7186A0] text-[9px] shrink-0 font-mono font-bold">
                                       VID
                                     </div>
                                   )}
                                   <div>
-                                    <p className="font-semibold text-sm text-foreground line-clamp-1">{vid.title}</p>
-                                    <p className="text-[12px] font-normal text-muted-foreground line-clamp-1">{vid.description || "No description."}</p>
+                                    <p className="font-bold text-sm text-[#0F172A] line-clamp-1">{vid.title}</p>
+                                    <p className="text-[12px] font-normal text-[#7186A0] line-clamp-1">{vid.description || "No description."}</p>
                                   </div>
                                 </div>
                               </td>
-                              <td className="py-3 px-3 text-center">
-                                <Badge variant="outline" className="text-[11px] py-0.5 px-2 border-border text-muted-foreground bg-muted font-medium">
+                              <td className="py-3.5 px-3.5 text-center">
+                                <Badge variant="outline" className="text-[10.5px] py-0.5 px-2.5 border-[#DCE8E5] text-[#7186A0] bg-[#F8FBFA] font-bold rounded-full shadow-[1px_1px_2px_rgba(165,185,180,0.08)] uppercase tracking-wide">
                                   {vid.category || selectedPlaylist.category || "General"}
                                 </Badge>
                               </td>
-                              <td className="py-3 px-3 text-center">
-                                <span className="text-xs font-semibold text-foreground">
+                              <td className="py-3.5 px-3.5 text-center">
+                                <span className="text-xs font-bold text-[#0F172A]">
                                   {vid.trainer_name || `Trainer ${vid.plan_id || index + 1}`}
                                 </span>
                               </td>
-                              <td className="py-3 px-3 text-center">
+                              <td className="py-3.5 px-3.5 text-center">
                                 <a
                                   href={vid.video_url_small || vid.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-400 hover:text-blue-300 bg-blue-500/10 px-2 py-1 rounded border border-blue-500/20"
+                                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0284C7] hover:text-[#0369A1] bg-[#F0F9FF] px-2.5 py-1 rounded-lg border border-[#BAE6FD] shadow-[1px_1px_3px_rgba(165,185,180,0.1)] hover:shadow-sm transition-all"
                                 >
-                                  <Play className="w-3 h-3" /> SD 360p
+                                  <Play className="w-3 h-3 fill-current" /> SD 360p
                                 </a>
                               </td>
-                              <td className="py-3 px-3 text-center">
+                              <td className="py-3.5 px-3.5 text-center">
                                 <a
                                   href={vid.video_url_large || vid.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20"
+                                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#07AC7D] hover:text-[#06966D] bg-[#E6F7F3] px-2.5 py-1 rounded-lg border border-[#BEE7DC] shadow-[1px_1px_3px_rgba(165,185,180,0.1)] hover:shadow-sm transition-all"
                                 >
-                                  <Play className="w-3 h-3" /> HD 720p
+                                  <Play className="w-3 h-3 fill-current" /> HD 720p
                                 </a>
                               </td>
-                              <td className="py-3 px-3 text-center">
-                                <Badge variant="secondary" className={`text-xs font-semibold px-2.5 py-0.5 ${vid.status === "published" ? "bg-primary/10 text-primary border border-primary/20" : "bg-amber-500/10 text-amber-400 border border-amber-500/20"}`}>
+                              <td className="py-3.5 px-3.5 text-center">
+                                <Badge variant="outline" className={`text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-[1px_1px_2px_rgba(165,185,180,0.08)] ${vid.status === "published" ? "bg-[#E6F7F3] text-[#07AC7D] border-[#BEE7DC]" : "bg-[#FFF7ED] text-[#EA580C] border-[#FFEDD5]"}`}>
                                   {vid.status === "published" ? "Published" : "Draft"}
                                 </Badge>
                               </td>
-                              <td className="py-3 px-3 text-center">
-                                <Badge variant="outline" className="text-[11px] py-0.5 px-2 border-border text-purple-400 bg-purple-500/10 font-medium capitalize">
-                                  {vid.audience || "Customers"}
+                              <td className="py-3.5 px-3.5 text-center">
+                                <Badge variant="outline" className="text-[10.5px] font-bold px-2.5 py-0.5 rounded-full border-[#DDD6FE] text-[#7C3AED] bg-[#F5F3FF] shadow-[1px_1px_2px_rgba(165,185,180,0.08)] capitalize">
+                                  {vid.audience || "All"}
                                 </Badge>
                               </td>
-                              <td className="py-3 px-4 text-right">
+                              <td className="py-3.5 px-4 text-right">
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                  className="h-8 w-8 text-[#94A3B8] hover:text-[#EF4444] hover:bg-rose-50 rounded-xl transition-all"
                                   title="Remove from playlist"
                                   onClick={() => handleDeleteVideoFromPlaylist(vid.id)}
                                 >
@@ -2062,12 +2090,12 @@ export default function Sessions() {
                     {/* Filter Bar */}
                     <div className="p-3 border-b border-border bg-muted/20 flex flex-wrap items-center gap-3">
                       <div className="relative flex-1 min-w-[200px]">
-                        <Search className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground" />
+                        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                         <Input
                           placeholder="Search available videos..."
                           value={librarySearch}
                           onChange={(e) => setLibrarySearch(e.target.value)}
-                          className="pl-9 h-8 text-sm font-normal border-input bg-card placeholder:text-muted-foreground text-foreground"
+                          className="pl-10 h-8 text-sm font-normal border-input bg-card placeholder:text-muted-foreground text-foreground"
                         />
                       </div>
 
@@ -2190,7 +2218,7 @@ export default function Sessions() {
             /* =================================================== */
             <div className="space-y-6">
               {/* Filters & Create Playlist Button */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-card p-4 rounded-2xl border border-border shadow-sm">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-4 rounded-[24px] border border-white/90 shadow-[5px_5px_14px_rgba(168,190,185,0.25),-4px_-4px_12px_rgba(255,255,255,0.95)]">
                 <div className="flex flex-wrap items-center gap-3 flex-1">
                   <div className="relative w-full sm:w-64">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -2198,7 +2226,7 @@ export default function Sessions() {
                       placeholder="Search playlists..."
                       value={tutorialSearch}
                       onChange={(e) => setTutorialSearch(e.target.value)}
-                      className="pl-9 h-9 text-sm font-normal border-border bg-input placeholder:text-muted-foreground"
+                      className="pl-10 h-10 text-sm font-medium border-0 bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] placeholder:text-[#7186A0]/70 rounded-xl"
                     />
                   </div>
 
@@ -2244,7 +2272,7 @@ export default function Sessions() {
                       });
                       setIsPlaylistModalOpen(true);
                     }}
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 px-4 text-sm font-semibold shadow-sm shrink-0"
+                    className="h-10 px-5 text-sm font-bold bg-gradient-to-r from-[#08B594] via-[#07AB8C] to-[#069D80] text-white shadow-[0_4px_12px_rgba(8,169,130,0.35),inset_0_1px_1px_rgba(255,255,255,0.5)] hover:brightness-105 active:scale-95 rounded-2xl transition-all flex items-center gap-1.5 shrink-0"
                   >
                     <Plus className="w-4 h-4 mr-1.5" /> Create Playlist
                   </Button>
@@ -2284,7 +2312,7 @@ export default function Sessions() {
                     const matchLvl = playlistLevelFilter === "all" || p.level === playlistLevelFilter;
                     return matchSearch && matchCat && matchLvl;
                   }).map((pl) => (
-                    <Card key={pl.id} className="border border-border hover:border-primary/40 shadow-sm hover:shadow-md transition-all rounded-2xl overflow-hidden group bg-card flex flex-col">
+                    <Card key={pl.id} className="bg-white border border-white/90 shadow-[6px_6px_18px_rgba(130,155,151,0.14),-4px_-4px_14px_rgba(255,255,255,0.95)] hover:shadow-[8px_8px_24px_rgba(130,155,151,0.22),-6px_-6px_20px_rgba(255,255,255,0.98)] transition-all duration-300 rounded-[24px] overflow-hidden group flex flex-col">
                       {/* Playlist Thumbnail Container */}
                       <div className="relative aspect-video bg-slate-900 overflow-hidden flex items-center justify-center cursor-pointer" onClick={() => setSelectedPlaylist(pl)}>
                         <img
@@ -2330,7 +2358,7 @@ export default function Sessions() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="h-8 text-sm font-semibold border-border text-foreground hover:bg-muted px-3"
+                              className="h-8.5 text-xs font-semibold bg-[#F0F7F5] border border-white shadow-[2px_2px_5px_rgba(180,200,196,0.2),-2px_-2px_5px_rgba(255,255,255,0.9)] hover:bg-[#E6F2EE] text-[#2D3748] rounded-xl px-3 transition-all"
                               onClick={() => {
                                 setEditingPlaylist(pl);
                                 setPlaylistFormData({
@@ -2348,7 +2376,7 @@ export default function Sessions() {
                             </Button>
                             <Button
                               size="sm"
-                              className="h-8 text-sm font-semibold bg-primary hover:bg-primary/90 text-primary-foreground px-3"
+                              className="h-8.5 text-xs font-bold bg-gradient-to-r from-[#08B594] via-[#07AB8C] to-[#069D80] text-white shadow-[0_3px_8px_rgba(8,169,130,0.35),inset_0_1px_1px_rgba(255,255,255,0.4)] hover:brightness-105 active:scale-95 rounded-xl px-3.5 transition-all"
                               onClick={() => setSelectedPlaylist(pl)}
                             >
                               Manage Videos
@@ -2356,7 +2384,7 @@ export default function Sessions() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                              className="h-8.5 w-8.5 text-[#8899A6] hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
                               onClick={() => handleDeletePlaylist(pl)}
                             >
                               <Trash2 className="w-4 h-4" />
@@ -2535,16 +2563,3 @@ export default function Sessions() {
   );
 }
 
-function StatCard({ title, value, icon, bgColor }: any) {
-  return (
-    <Card className="border border-border shadow-sm rounded-2xl bg-card">
-      <CardContent className="p-5 flex items-center justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <p className="text-2xl font-semibold text-foreground tracking-tight leading-none mt-1.5">{value}</p>
-        </div>
-        <div className={`h-11 w-11 rounded-xl flex items-center justify-center shrink-0 ${bgColor}`}>{icon}</div>
-      </CardContent>
-    </Card>
-  );
-}

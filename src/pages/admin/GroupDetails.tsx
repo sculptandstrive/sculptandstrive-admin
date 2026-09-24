@@ -284,56 +284,56 @@ export default function GroupDetails() {
       </div>
     );
 return (
-  <div className="space-y-6">
+  <div className="space-y-5 sm:space-y-6">
     <PageHeader
       title={group.name}
       description={`Coach: ${group.coach_name}`}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <NavLink to={`/admin/groups/${id}/progress`}>
           <Button
             variant="outline"
-            className="gap-2 border-border text-foreground hover:bg-muted shadow-sm rounded-xl"
+            className="gap-2 border border-white/90 bg-white text-[#0F172A] hover:bg-[#F8FAFC] shadow-[3px_3px_8px_rgba(145,170,165,0.15),-2px_-2px_6px_rgba(255,255,255,0.95)] rounded-xl text-xs sm:text-sm font-bold"
           >
-            <TrendingUp className="w-4 h-4 text-primary" />
+            <TrendingUp className="w-4 h-4 text-[#08B594]" />
             View Progress
           </Button>
         </NavLink>
         <Button
           variant="outline"
           onClick={() => window.history.back()}
-          className="border-border text-foreground hover:bg-muted shadow-sm rounded-xl"
+          className="border border-white/90 bg-white text-[#0F172A] hover:bg-[#F8FAFC] shadow-[3px_3px_8px_rgba(145,170,165,0.15),-2px_-2px_6px_rgba(255,255,255,0.95)] rounded-xl text-xs sm:text-sm font-bold"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
+          <ArrowLeft className="w-4 h-4 mr-1.5 sm:mr-2" />
           Back
         </Button>
       </div>
     </PageHeader>
 
     {/* Stats Grid */}
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <Card className="bg-card border border-border shadow-sm rounded-2xl">
-        <CardContent className="p-5">
-          <p className="text-sm font-medium text-muted-foreground">Total Members</p>
-          <p className="text-2xl font-semibold text-foreground tracking-tight leading-none mt-1.5">{stats.totalMembers}</p>
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+      <Card className="rounded-[22px] sm:rounded-2xl bg-white border border-white/90 shadow-[6px_6px_20px_rgba(145,170,165,0.18),-4px_-4px_14px_rgba(255,255,255,0.98)]">
+        <CardContent className="p-4 sm:p-5">
+          <p className="text-xs sm:text-sm font-bold text-[#7186A0]">Total Members</p>
+          <p className="text-2xl sm:text-3xl font-black text-[#0F172A] tracking-tight leading-none mt-2">{stats.totalMembers}</p>
         </CardContent>
       </Card>
-      <Card className="bg-card border border-border shadow-sm rounded-2xl">
-        <CardContent className="p-5">
-          <p className="text-sm font-medium text-muted-foreground">Avg Completion</p>
-          <p className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400 tracking-tight leading-none mt-1.5">{stats.avgCompletion}%</p>
+      <Card className="rounded-[22px] sm:rounded-2xl bg-white border border-white/90 shadow-[6px_6px_20px_rgba(145,170,165,0.18),-4px_-4px_14px_rgba(255,255,255,0.98)]">
+        <CardContent className="p-4 sm:p-5">
+          <p className="text-xs sm:text-sm font-bold text-[#7186A0]">Avg Completion</p>
+          <p className="text-2xl sm:text-3xl font-black text-[#08B594] tracking-tight leading-none mt-2">{stats.avgCompletion}%</p>
         </CardContent>
       </Card>
-      <Card className="bg-card border border-border shadow-sm rounded-2xl">
-        <CardContent className="p-5">
-          <p className="text-sm font-medium text-muted-foreground">Avg Weight Loss</p>
-          <p className="text-2xl font-semibold text-emerald-600 dark:text-emerald-400 tracking-tight leading-none mt-1.5">{stats.avgWeightLoss} kg</p>
+      <Card className="rounded-[22px] sm:rounded-2xl bg-white border border-white/90 shadow-[6px_6px_20px_rgba(145,170,165,0.18),-4px_-4px_14px_rgba(255,255,255,0.98)]">
+        <CardContent className="p-4 sm:p-5">
+          <p className="text-xs sm:text-sm font-bold text-[#7186A0]">Avg Weight Loss</p>
+          <p className="text-2xl sm:text-3xl font-black text-[#08B594] tracking-tight leading-none mt-2">{stats.avgWeightLoss} kg</p>
         </CardContent>
       </Card>
-      <Card className="bg-card border border-border shadow-sm rounded-2xl">
-        <CardContent className="p-5">
-          <p className="text-sm font-medium text-muted-foreground">Check-ins</p>
-          <p className="text-2xl font-semibold text-foreground tracking-tight leading-none mt-1.5">
+      <Card className="rounded-[22px] sm:rounded-2xl bg-white border border-white/90 shadow-[6px_6px_20px_rgba(145,170,165,0.18),-4px_-4px_14px_rgba(255,255,255,0.98)]">
+        <CardContent className="p-4 sm:p-5">
+          <p className="text-xs sm:text-sm font-bold text-[#7186A0]">Check-ins</p>
+          <p className="text-2xl sm:text-3xl font-black text-[#0F172A] tracking-tight leading-none mt-2">
             {stats.completedCheckins}/{stats.totalCheckins}
           </p>
         </CardContent>
@@ -341,41 +341,41 @@ return (
     </div>
 
     {/* Members Section */}
-    <Card className="bg-card border border-border shadow-sm rounded-2xl">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-[20px] font-semibold text-foreground flex items-center gap-2">
-          <Users className="w-4 h-4 text-primary" />
-          Members ({group.members.length})
+    <Card className="rounded-[26px] bg-white border border-white/90 shadow-[6px_6px_20px_rgba(145,170,165,0.18),-4px_-4px_14px_rgba(255,255,255,0.98)]">
+      <CardHeader className="flex flex-row items-center justify-between gap-3 p-4 sm:p-6 pb-2 sm:pb-4">
+        <CardTitle className="text-lg sm:text-xl font-black text-[#0F172A] flex items-center gap-2">
+          <Users className="w-5 h-5 text-[#08B594]" />
+          <span>Members ({group.members.length})</span>
         </CardTitle>
         <Button
           onClick={() => setIsAssignOpen(true)}
-          className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-sm"
+          className="gap-2 bg-gradient-to-r from-[#0CC194] to-[#079975] hover:opacity-95 text-white rounded-xl shadow-[0_3px_10px_rgba(8,169,130,0.35)] shrink-0 text-xs sm:text-sm font-bold h-9 px-3 sm:px-4"
         >
           <UserPlus className="w-4 h-4" />
-          Add Member
+          <span>Add Member</span>
         </Button>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 sm:p-6 pt-0">
         {group.members.length === 0 ? (
-          <p className="text-center py-8 text-muted-foreground text-sm">
+          <p className="text-center py-8 text-[#7186A0] text-sm font-medium">
             No members in this group yet.
           </p>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {group.members.map((member) => (
               <div
                 key={member.id}
-                className="flex items-center justify-between p-3.5 rounded-xl bg-muted/40 border border-border hover:bg-muted/60 transition-colors"
+                className="flex items-center justify-between p-3.5 rounded-2xl bg-[#F8FCFB] border border-white shadow-[2px_2px_6px_rgba(145,170,165,0.12),-1.5px_-1.5px_4px_rgba(255,255,255,0.95)] hover:shadow-[3px_3px_8px_rgba(145,170,165,0.18)] transition-all"
               >
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{member.full_name}</p>
-                  <p className="text-xs text-muted-foreground">{member.email}</p>
+                <div className="min-w-0 flex-1 pr-2">
+                  <p className="text-sm font-bold text-[#0F172A] truncate">{member.full_name}</p>
+                  <p className="text-xs font-semibold text-[#7186A0] truncate">{member.email}</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-8 w-8 rounded-lg transition-colors"
+                    className="text-[#94A3B8] hover:text-[#EF4444] hover:bg-rose-50 h-8 w-8 rounded-xl transition-colors"
                     onClick={() => handleRemoveMember(member.id, member.full_name)}
                   >
                     <Trash2 className="w-4 h-4" />
@@ -387,51 +387,40 @@ return (
         )}
       </CardContent>
     </Card>
- 
+
     {/* Assign User Dialog */}
     <Dialog open={isAssignOpen} onOpenChange={setIsAssignOpen}>
-      <DialogContent className="bg-card border border-border shadow-xl rounded-2xl max-w-md text-foreground">
+      <DialogContent className="rounded-3xl border border-white bg-white p-6 shadow-[8px_8px_28px_rgba(145,170,165,0.22)] max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-[18px] font-semibold text-foreground">Add Member to Group</DialogTitle>
+          <DialogTitle className="text-xl font-black text-[#0F172A]">Assign User to Group</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">Select User</p>
-            <Select value={selectedUser} onValueChange={setSelectedUser}>
-              <SelectTrigger className="bg-card border border-input text-foreground rounded-xl">
-                <SelectValue placeholder="Choose a user..." />
-              </SelectTrigger>
-              <SelectContent className="bg-popover border border-border shadow-md rounded-xl">
-                {availableUsers.length === 0 ? (
-                  <SelectItem value="none" disabled className="text-muted-foreground">
-                    No available users
-                  </SelectItem>
-                ) : (
-                  availableUsers.map((u) => (
-                    <SelectItem key={u.user_id} value={u.user_id}>
-                      {u.full_name} ({u.email})
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="space-y-4 py-4">
+          <Select value={selectedUser} onValueChange={setSelectedUser}>
+            <SelectTrigger className="rounded-xl border border-white bg-[#F8FCFB] shadow-[inset_1.5px_1.5px_3px_rgba(145,170,165,0.2)]">
+              <SelectValue placeholder="Select a user" />
+            </SelectTrigger>
+            <SelectContent className="rounded-2xl border border-white bg-white shadow-[6px_6px_20px_rgba(145,170,165,0.2)]">
+              {availableUsers.map((u) => (
+                <SelectItem key={u.user_id} value={u.user_id}>
+                  {u.full_name} ({u.email})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <DialogFooter className="gap-2">
           <Button
             variant="outline"
             onClick={() => setIsAssignOpen(false)}
-            className="rounded-xl border-border text-foreground hover:bg-muted"
+            className="rounded-xl border border-white bg-white shadow-[2px_2px_6px_rgba(145,170,165,0.15)] font-bold"
           >
             Cancel
           </Button>
           <Button
             onClick={handleAssignUser}
-            disabled={!selectedUser}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl disabled:opacity-50"
+            className="rounded-xl bg-gradient-to-r from-[#0CC194] to-[#079975] text-white shadow-[0_3px_10px_rgba(8,169,130,0.35)] font-bold"
           >
-            <UserPlus className="w-4 h-4 mr-2" />
-            Add to Group
+            Assign
           </Button>
         </DialogFooter>
       </DialogContent>

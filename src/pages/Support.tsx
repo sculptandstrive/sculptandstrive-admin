@@ -425,7 +425,7 @@ export default function Support() {
             <Input
               placeholder="Search tickets..."
               aria-label="Search support tickets"
-              className="h-10 w-full rounded-[10px] border-border bg-card pl-9 text-sm text-foreground placeholder:text-muted-foreground shadow-none focus-visible:border-[#07AC7D] focus-visible:ring-[#07AC7D]/15"
+              className="h-10 w-full rounded-xl border-0 bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] pl-10 text-sm font-medium text-[#0F172A] placeholder:text-[#7186A0]/70"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -435,7 +435,7 @@ export default function Support() {
             variant="outline"
             onClick={fetchData}
             disabled={loading}
-            className="order-3 h-10 w-full gap-2 rounded-[10px] border-border bg-card px-4 text-foreground shadow-none hover:border-[#07AC7D] hover:bg-muted sm:order-2 sm:w-auto"
+            className="order-3 h-10 w-full gap-2 rounded-xl border border-white bg-[#F0F7F5] shadow-[2px_2px_5px_rgba(180,200,196,0.2),-2px_-2px_5px_rgba(255,255,255,0.9)] px-4 text-xs font-bold text-[#0F172A] hover:bg-[#E6F2EE] sm:order-2 sm:w-auto transition-all"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             <span>Sync Data</span>
@@ -452,7 +452,7 @@ export default function Support() {
             icon: AlertCircle,
             filter: "open" as FilterTab,
             iconClass:
-              "bg-red-100 dark:bg-red-950/50 text-red-600 dark:text-red-400",
+              "bg-[#FEF2F2] border-[#FECACA] text-[#DC2626]",
           },
           {
             label: "In Review (Viewing)",
@@ -460,7 +460,7 @@ export default function Support() {
             icon: Eye,
             filter: "viewing" as FilterTab,
             iconClass:
-              "bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400",
+              "bg-[#FFF7ED] border-[#FFEDD5] text-[#EA580C]",
           },
           {
             label: "Closed Tickets",
@@ -468,7 +468,7 @@ export default function Support() {
             icon: CheckCircle,
             filter: "closed" as FilterTab,
             iconClass:
-              "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400",
+              "bg-[#E6F7F3] border-[#BEE7DC] text-[#07AC7D]",
           },
           {
             label: "Total Tickets",
@@ -476,27 +476,29 @@ export default function Support() {
             icon: MessageCircle,
             filter: "all" as FilterTab,
             iconClass:
-              "bg-blue-100 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
+              "bg-[#EFF6FF] border-[#BFDBFE] text-[#2563EB]",
           },
         ].map(({ label, value, icon: Icon, iconClass, filter }) => (
           <Card
             key={label}
             onClick={() => setActiveFilter(filter)}
-            className={`cursor-pointer rounded-2xl border border-border bg-card shadow-sm transition-all hover:border-[#07AC7D]/50 hover:shadow-md ${
-              activeFilter === filter ? "ring-2 ring-[#07AC7D]" : ""
+            className={`cursor-pointer rounded-2xl border border-white/90 bg-white transition-all duration-200 ${
+              activeFilter === filter
+                ? "shadow-[5px_5px_14px_rgba(8,181,148,0.25),-3px_-3px_10px_rgba(255,255,255,0.98)] ring-2 ring-[#08B594] -translate-y-0.5"
+                : "shadow-[3px_3px_8px_rgba(180,200,196,0.2),-2px_-2px_6px_rgba(255,255,255,0.95)] hover:shadow-[5px_5px_14px_rgba(160,185,180,0.28),-3px_-3px_10px_rgba(255,255,255,0.98)] hover:-translate-y-0.5"
             }`}
           >
             <CardContent className="flex items-center justify-between p-4 sm:p-5">
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">
+                <p className="text-xs sm:text-sm font-bold text-[#7186A0] truncate">
                   {label}
                 </p>
-                <p className="text-xl sm:text-2xl font-semibold text-foreground tracking-tight leading-none mt-1.5">
+                <p className="text-xl sm:text-2xl font-extrabold text-[#0F172A] tracking-tight leading-none mt-1.5">
                   {value}
                 </p>
               </div>
               <div
-                className={`ml-2 flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl ${iconClass}`}
+                className={`ml-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/80 shadow-[inset_1.5px_1.5px_3px_rgba(255,255,255,0.9),2px_2px_5px_rgba(0,0,0,0.06)] ${iconClass}`}
               >
                 <Icon className="h-5 w-5" strokeWidth={2} />
               </div>
@@ -507,7 +509,7 @@ export default function Support() {
 
       {/* Main Support Tickets Table/Card */}
       <div className="mt-6">
-        <Card className="rounded-2xl border border-border bg-card shadow-sm">
+        <Card className="bg-white border border-white/90 shadow-[6px_6px_18px_rgba(145,170,165,0.22),-4px_-4px_14px_rgba(255,255,255,0.95)] rounded-[28px] overflow-hidden">
           <CardHeader className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
             <div className="flex items-center gap-2">
               <CardTitle className="text-[18px] font-semibold text-foreground">
@@ -522,53 +524,53 @@ export default function Support() {
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex flex-wrap items-center gap-1.5">
+            <div className="flex flex-wrap items-center bg-[#E1EDE9] shadow-[inset_2px_2px_4px_rgba(165,188,183,0.5),inset_-2px_-2px_4px_rgba(255,255,255,0.9)] p-1 rounded-2xl gap-1">
               <button
                 onClick={() => setActiveFilter("active")}
-                className={`rounded-[10px] px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
                   activeFilter === "active"
-                    ? "bg-[#07AC7D] text-white shadow-sm"
-                    : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "bg-gradient-to-r from-[#08B594] via-[#07AB8C] to-[#069D80] text-white shadow-[0_2px_6px_rgba(8,169,130,0.35)]"
+                    : "text-[#7186A0] hover:text-[#08B594]"
                 }`}
               >
                 Active ({activeCount})
               </button>
               <button
                 onClick={() => setActiveFilter("open")}
-                className={`rounded-[10px] px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
                   activeFilter === "open"
-                    ? "bg-red-600 text-white shadow-sm"
-                    : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "bg-red-600 text-white shadow-[0_2px_6px_rgba(220,38,38,0.35)]"
+                    : "text-[#7186A0] hover:text-red-500"
                 }`}
               >
                 Open ({openCount})
               </button>
               <button
                 onClick={() => setActiveFilter("viewing")}
-                className={`rounded-[10px] px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
                   activeFilter === "viewing"
-                    ? "bg-amber-500 text-white shadow-sm"
-                    : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "bg-amber-500 text-white shadow-[0_2px_6px_rgba(245,158,11,0.35)]"
+                    : "text-[#7186A0] hover:text-amber-600"
                 }`}
               >
                 Viewing ({viewingCount})
               </button>
               <button
                 onClick={() => setActiveFilter("closed")}
-                className={`rounded-[10px] px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
                   activeFilter === "closed"
-                    ? "bg-emerald-600 text-white shadow-sm"
-                    : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "bg-emerald-600 text-white shadow-[0_2px_6px_rgba(5,150,105,0.35)]"
+                    : "text-[#7186A0] hover:text-emerald-600"
                 }`}
               >
                 Closed ({closedCount})
               </button>
               <button
                 onClick={() => setActiveFilter("all")}
-                className={`rounded-[10px] px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
                   activeFilter === "all"
-                    ? "bg-foreground text-background shadow-sm"
-                    : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "bg-slate-800 text-white shadow-[0_2px_6px_rgba(30,41,59,0.35)]"
+                    : "text-[#7186A0] hover:text-slate-900"
                 }`}
               >
                 All ({tickets.length})
@@ -589,10 +591,10 @@ export default function Support() {
                   return (
                     <div
                       key={ticket.id}
-                      className={`space-y-3.5 rounded-2xl border p-4 sm:p-5 transition-all duration-150 ${
+                      className={`space-y-3.5 rounded-2xl border transition-all duration-200 p-4 sm:p-5 ${
                         isClosed
-                          ? "border-emerald-500/20 bg-muted/20 opacity-80"
-                          : "border-border bg-card hover:border-[#07AC7D]/40 hover:shadow-sm"
+                          ? "border-white/70 bg-white/80 shadow-[2px_2px_5px_rgba(180,200,196,0.15),-2px_-2px_5px_rgba(255,255,255,0.95)] opacity-80"
+                          : "border-white/90 bg-white shadow-[3px_3px_8px_rgba(180,200,196,0.18),-2px_-2px_6px_rgba(255,255,255,0.95)] hover:shadow-[4px_4px_12px_rgba(180,200,196,0.25),-3px_-3px_10px_rgba(255,255,255,0.98)]"
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
@@ -634,7 +636,7 @@ export default function Support() {
                       </div>
 
                       {/* User Message */}
-                      <div className="overflow-hidden break-words rounded-[10px] border border-border/80 bg-muted/30 p-3.5 text-sm font-normal leading-relaxed text-foreground">
+                      <div className="overflow-hidden break-words rounded-xl border border-white/60 bg-[#E2ECE9] shadow-[inset_1.5px_1.5px_3px_rgba(165,185,180,0.4),inset_-1.5px_-1.5px_3px_rgba(255,255,255,0.8)] p-3.5 text-sm font-medium leading-relaxed text-[#0F172A]">
                         <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                           User Message
                         </span>
@@ -643,7 +645,7 @@ export default function Support() {
 
                       {/* Admin Response Snippet if available */}
                       {ticket.admin_response && (
-                        <div className="overflow-hidden break-words rounded-[10px] border border-[#07AC7D]/25 bg-[#07AC7D]/5 p-3.5 text-sm leading-relaxed text-foreground">
+                        <div className="overflow-hidden break-words rounded-xl border border-[#08B594]/30 bg-[#E6F4F0] shadow-[inset_1.5px_1.5px_3px_rgba(8,169,130,0.15),inset_-1.5px_-1.5px_3px_rgba(255,255,255,0.8)] p-3.5 text-sm font-medium leading-relaxed text-[#065F46]">
                           <span className="mb-1 flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-[#07AC7D]">
                             <Sparkles className="h-3.5 w-3.5" /> Admin Response
                           </span>
@@ -657,7 +659,7 @@ export default function Support() {
                         <Button
                           type="button"
                           variant="outline"
-                          className="h-9 flex-1 rounded-[10px] border-border bg-card px-4 text-xs font-medium text-foreground hover:border-[#07AC7D] hover:bg-muted hover:text-foreground transition-colors sm:flex-none"
+                          className="h-9 flex-1 rounded-xl border border-white bg-[#F0F7F5] shadow-[2px_2px_5px_rgba(180,200,196,0.2),-2px_-2px_5px_rgba(255,255,255,0.9)] hover:bg-[#E6F2EE] px-4 text-xs font-bold text-[#08B594] transition-all sm:flex-none"
                           onClick={() => handleViewTicket(ticket)}
                         >
                           <Eye className="mr-1.5 h-3.5 w-3.5 text-muted-foreground" />
@@ -677,7 +679,7 @@ export default function Support() {
                         ) : (
                           <Button
                             type="button"
-                            className="h-9 flex-1 rounded-[10px] bg-emerald-600 px-4 text-xs font-medium text-white hover:bg-emerald-700 transition-colors sm:flex-none"
+                            className="h-9 flex-1 rounded-xl bg-gradient-to-r from-[#08B594] via-[#07AB8C] to-[#069D80] shadow-[0_2px_6px_rgba(8,169,130,0.3)] hover:brightness-105 active:scale-95 px-4 text-xs font-bold text-white transition-all sm:flex-none"
                             onClick={() => updateStatus(ticket.id, "closed")}
                           >
                             <Check className="mr-1.5 h-3.5 w-3.5 stroke-[2.5]" />
@@ -696,15 +698,15 @@ export default function Support() {
 
       {/* Ticket Details View & Response Modal */}
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-        <DialogContent className="max-h-[90vh] w-[calc(100%-1rem)] max-w-lg overflow-y-auto rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-xl">
-          <DialogHeader>
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-[18px] font-semibold text-foreground">
+        <DialogContent className="max-h-[90vh] flex flex-col w-[calc(100%-1.5rem)] max-w-lg rounded-[26px] bg-white border border-white p-6 sm:p-7 shadow-[8px_8px_30px_rgba(145,170,165,0.25)] overflow-hidden">
+          <DialogHeader className="border-b border-[#E2ECE9] pb-3.5 shrink-0">
+            <div className="flex items-center justify-between pr-8">
+              <DialogTitle className="text-lg font-bold text-[#0F172A] tracking-tight">
                 Support Ticket Details
               </DialogTitle>
               {selectedTicket && getStatusBadge(selectedTicket.status)}
             </div>
-            <DialogDescription className="text-xs text-muted-foreground">
+            <DialogDescription className="text-xs font-medium text-[#7186A0]">
               Submitted on{" "}
               {selectedTicket?.created_at
                 ? new Date(selectedTicket.created_at).toLocaleString()
@@ -713,17 +715,17 @@ export default function Support() {
           </DialogHeader>
 
           {selectedTicket && (
-            <div className="space-y-4 py-2">
+            <div className="flex-1 overflow-y-auto space-y-4 py-3 pr-1">
               {/* Sender Details */}
-              <div className="space-y-1.5 rounded-[10px] border border-border bg-muted/30 p-3.5">
+              <div className="rounded-2xl bg-[#E2ECE9] p-3.5 shadow-[inset_1.5px_1.5px_3px_rgba(165,185,180,0.35),inset_-1.5px_-1.5px_3px_rgba(255,255,255,0.8)] border border-white/60">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-foreground">
+                  <span className="text-sm font-bold text-[#0F172A]">
                     {selectedTicket.user_name || "Member User"}
                   </span>
                   {selectedTicket.user_email && (
                     <a
                       href={`mailto:${selectedTicket.user_email}`}
-                      className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                      className="flex items-center gap-1 text-xs font-bold text-[#08B594] hover:underline"
                     >
                       <Mail className="h-3.5 w-3.5" /> {selectedTicket.user_email}
                     </a>
@@ -733,10 +735,10 @@ export default function Support() {
 
               {/* USER MESSAGE */}
               <div>
-                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-[#7186A0]">
                   Ticket Message
                 </p>
-                <div className="rounded-[10px] border border-border bg-muted/20 p-3.5 text-sm leading-relaxed text-foreground whitespace-pre-wrap">
+                <div className="rounded-2xl bg-white border border-white/90 p-4 text-xs sm:text-sm font-medium leading-relaxed text-[#0F172A] shadow-[2px_2px_8px_rgba(145,170,165,0.15)] whitespace-pre-wrap">
                   {selectedTicket.user_message}
                 </div>
               </div>
@@ -744,40 +746,37 @@ export default function Support() {
               {/* ADMIN RESPONSE SECTION */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#7186A0]">
                     Admin Response
                   </p>
                   {selectedTicket.admin_response && (
-                    <Badge
-                      variant="outline"
-                      className="border-emerald-500/20 bg-emerald-500/10 text-[10px] font-medium text-emerald-600"
-                    >
+                    <span className="bg-[#E6F7F3] text-[#08B594] border border-[#BDEADE] text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                       Answered
-                    </Badge>
+                    </span>
                   )}
                 </div>
 
                 {selectedTicket.admin_response ? (
-                  <div className="rounded-[10px] border border-emerald-500/20 bg-emerald-500/5 p-3.5 text-sm leading-relaxed text-foreground whitespace-pre-wrap">
-                    <p className="mb-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                  <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-xs sm:text-sm leading-relaxed text-[#0F172A] whitespace-pre-wrap shadow-[inset_1px_1px_2px_rgba(165,185,180,0.2)]">
+                    <p className="mb-1 text-xs font-bold text-[#08B594]">
                       Current Response:
                     </p>
                     {selectedTicket.admin_response}
                   </div>
                 ) : (
-                  <p className="px-1 text-xs italic text-muted-foreground">
+                  <p className="px-1 text-xs font-medium italic text-[#7186A0]">
                     No response added yet.
                   </p>
                 )}
 
                 {/* Write or Edit Response */}
-                <div className="space-y-2 pt-1">
+                <div className="space-y-2.5 pt-1">
                   <textarea
                     rows={3}
                     placeholder="Write your response to the member..."
                     value={adminResponseText}
                     onChange={(e) => setAdminResponseText(e.target.value)}
-                    className="w-full resize-y rounded-[10px] border border-border bg-background p-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-[#07AC7D] focus:outline-none focus:ring-2 focus:ring-[#07AC7D]/15"
+                    className="w-full resize-y rounded-2xl border border-white bg-[#E2ECE9] p-3 text-xs sm:text-sm font-semibold text-[#0F172A] placeholder:text-[#7186A0] shadow-[inset_1.5px_1.5px_3px_rgba(165,185,180,0.4),inset_-1.5px_-1.5px_3px_rgba(255,255,255,0.8)] focus:outline-none focus:ring-2 focus:ring-[#08B594]/40 transition-all"
                   />
                   <Button
                     onClick={handleSendResponse}
@@ -786,7 +785,7 @@ export default function Support() {
                       !adminResponseText.trim() ||
                       adminResponseText.trim() === selectedTicket.admin_response
                     }
-                    className="h-10 w-full gap-2 rounded-[10px] bg-[#07AC7D] text-sm font-medium text-white shadow-none hover:bg-[#06966D]"
+                    className="h-10 w-full gap-2 rounded-xl bg-gradient-to-r from-[#08B594] via-[#07AB8C] to-[#069D80] text-xs sm:text-sm font-bold text-white shadow-[0_3px_8px_rgba(8,169,130,0.35),inset_0_1px_1px_rgba(255,255,255,0.4)] hover:brightness-105 active:scale-[0.98] transition-all disabled:opacity-50"
                   >
                     {isSendingResponse ? (
                       <RefreshCw className="h-4 w-4 animate-spin" />
@@ -804,49 +803,52 @@ export default function Support() {
 
               {/* UPDATE STATUS */}
               <div>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-[#7186A0]">
                   Update Status
                 </p>
                 <div className="flex gap-2">
-                  <Button
-                    className={`h-9 flex-1 rounded-[10px] text-xs font-medium transition-all ${
+                  <button
+                    type="button"
+                    className={`h-9 flex-1 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center ${
                       selectedTicket.status === "open"
-                        ? "bg-red-600 text-white shadow-sm"
-                        : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+                        ? "bg-rose-500 text-white shadow-[0_3px_8px_rgba(239,68,68,0.35)] font-black"
+                        : "bg-white hover:bg-rose-50 text-[#475569] hover:text-rose-600 border border-[#DCE8E5] shadow-[1px_1px_3px_rgba(165,185,180,0.15)]"
                     }`}
                     onClick={() => updateStatus(selectedTicket.id, "open")}
                   >
                     Open
-                  </Button>
-                  <Button
-                    className={`h-9 flex-1 rounded-[10px] text-xs font-medium transition-all ${
+                  </button>
+                  <button
+                    type="button"
+                    className={`h-9 flex-1 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center ${
                       selectedTicket.status === "viewing"
-                        ? "bg-amber-500 text-white shadow-sm"
-                        : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+                        ? "bg-amber-500 text-white shadow-[0_3px_8px_rgba(245,158,11,0.35)] font-black"
+                        : "bg-white hover:bg-amber-50 text-[#475569] hover:text-amber-600 border border-[#DCE8E5] shadow-[1px_1px_3px_rgba(165,185,180,0.15)]"
                     }`}
                     onClick={() => updateStatus(selectedTicket.id, "viewing")}
                   >
                     Viewing
-                  </Button>
-                  <Button
-                    className={`h-9 flex-1 rounded-[10px] text-xs font-medium transition-all ${
+                  </button>
+                  <button
+                    type="button"
+                    className={`h-9 flex-1 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center ${
                       selectedTicket.status === "closed"
-                        ? "bg-emerald-600 text-white shadow-sm"
-                        : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+                        ? "bg-[#08B594] text-white shadow-[0_3px_8px_rgba(8,181,148,0.35)] font-black"
+                        : "bg-white hover:bg-emerald-50 text-[#475569] hover:text-[#08B594] border border-[#DCE8E5] shadow-[1px_1px_3px_rgba(165,185,180,0.15)]"
                     }`}
                     onClick={() => updateStatus(selectedTicket.id, "closed")}
                   >
                     Closed
-                  </Button>
+                  </button>
                 </div>
               </div>
             </div>
           )}
 
-          <DialogFooter className="mt-2 flex flex-row items-center justify-end gap-2 border-t border-border pt-4">
+          <DialogFooter className="mt-1 flex flex-row items-center justify-end gap-2 border-t border-[#E2ECE9] pt-3.5 shrink-0">
             <Button
               variant="outline"
-              className="h-10 w-full sm:w-auto px-6 rounded-[10px] border-border text-xs font-medium text-foreground hover:bg-muted hover:text-foreground hover:border-[#07AC7D] transition-colors"
+              className="h-9 px-6 rounded-xl border border-white/80 bg-white shadow-[2px_2px_6px_rgba(180,200,196,0.2),-2px_-2px_6px_rgba(255,255,255,0.9)] text-xs font-bold text-[#334155] hover:text-[#08B594] hover:bg-[#F8FAFC] transition-all"
               onClick={() => setIsViewOpen(false)}
             >
               Done

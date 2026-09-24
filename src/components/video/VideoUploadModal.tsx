@@ -984,12 +984,12 @@ export function VideoUploadModal({
           /* =================================================== */
           <div className="p-4 sm:p-5 space-y-3 flex-1 overflow-y-auto">
             <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground" />
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search master video library..."
                 value={librarySearch}
                 onChange={(e) => setLibrarySearch(e.target.value)}
-                className="pl-9 h-9 text-xs border-border bg-input text-foreground"
+                className="pl-10 h-9 text-xs border-border bg-input text-foreground"
               />
             </div>
 

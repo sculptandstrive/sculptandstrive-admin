@@ -18,7 +18,6 @@ import {
   Zap,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { DashboardLayout } from "@/components/DashboardLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -962,8 +961,8 @@ export default function Fitness() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* ── Categories ── */}
 
-        <Card className="border border-border rounded-2xl shadow-sm bg-card">
-          <CardHeader className="flex w-full md:flex-row flex-col md:justify-between md:items-center pb-3">
+        <Card className="bg-white border border-white/90 shadow-[6px_6px_20px_rgba(145,170,165,0.2),-4px_-4px_14px_rgba(255,255,255,0.95)] rounded-[28px] overflow-hidden h-fit self-start">
+          <CardHeader className="flex w-full md:flex-row flex-col md:justify-between md:items-center p-4 sm:p-5 pb-2">
             <CardTitle className="text-[20px] font-semibold text-foreground leading-snug">
               Categories
             </CardTitle>
@@ -1044,7 +1043,7 @@ export default function Fitness() {
               </DialogContent>
             </Dialog>
           </CardHeader>
-          <CardContent className="space-y-3 pt-1">
+          <CardContent className="space-y-2 p-4 sm:p-5 pt-0">
             {categories.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground text-sm">
                 No categories yet.
@@ -1052,48 +1051,44 @@ export default function Fitness() {
             ) : (
               groupedCategories.map((parent: any) => {
                 return (
-                  <div key={parent.id} className="py-2.5 border-b border-border last:border-b-0 space-y-1.5">
+                  <div key={parent.id} className="p-2.5 sm:p-3 rounded-2xl bg-[#F8FBFA] border border-[#E2ECE9]/80 shadow-[1.5px_1.5px_4px_rgba(165,185,180,0.12),-1px_-1px_3px_rgba(255,255,255,0.9)] space-y-1.5 overflow-hidden">
                     {/* Parent Category Row */}
-                    <div className="flex justify-between text-sm items-center">
-                      <span className="font-semibold text-foreground">
+                    <div className="flex items-center justify-between gap-1.5 min-w-0">
+                      <span className="font-bold text-[#0F172A] text-xs sm:text-sm truncate min-w-0 flex-1" title={parent.name}>
                         {parent.name}
                       </span>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-muted-foreground text-xs">
-                          {parent.count} {parent.count === 1 ? "exercise" : "exercises"}
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span className="text-[10px] font-semibold text-[#7186A0] bg-white px-1.5 py-0.5 rounded-md border border-[#DCE8E5] shadow-[1px_1px_2px_rgba(165,185,180,0.08)] whitespace-nowrap">
+                          {parent.count} {parent.count === 1 ? "ex" : "ex"}
                         </span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-[#2E9D7A] dark:text-emerald-400 hover:text-[#06966D] hover:bg-[#F1FAF6] dark:hover:bg-emerald-950/40 shrink-0 rounded-[6px]"
+                        <button
+                          type="button"
+                          className="h-6 w-6 text-[#08B594] hover:text-[#06966D] hover:bg-[#E6F7F3] shrink-0 rounded-lg flex items-center justify-center p-0 cursor-pointer transition-colors"
                           onClick={() => {
                             setEditCategoryId(parent.id);
                             setEditCategoryName(parent.name);
                             setIsEditCategoryOpen(true);
                           }}
                         >
-                          <SquarePen className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-[#EF4444] hover:text-[#DC2626] hover:bg-[#EF4444]/10 shrink-0 rounded-[6px]"
+                          <SquarePen className="w-3 h-3" />
+                        </button>
+                        <button
+                          type="button"
+                          className="h-6 w-6 text-[#EF4444] hover:text-[#DC2626] hover:bg-rose-50 shrink-0 rounded-lg flex items-center justify-center p-0 cursor-pointer transition-colors"
                           onClick={() => handledeleteCategory(parent.id)}
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+                          <Trash2 className="w-3 h-3" />
+                        </button>
                       </div>
                     </div>
 
-                    {/* Progress Bar */}
-                    <Progress
-                      value={
-                        allExercise.length > 0
-                          ? (parent.count / allExercise.length) * 100
-                          : 0
-                      }
-                      className="h-1.5 bg-muted mt-1 [&>div]:bg-[#07AC7D]"
-                    />
+                    {/* Progress Bar (only if items exist) */}
+                    {allExercise.length > 0 && parent.count > 0 && (
+                      <Progress
+                        value={(parent.count / allExercise.length) * 100}
+                        className="h-1.5 bg-[#E2ECE9] mt-1.5 [&>div]:bg-[#07AC7D]"
+                      />
+                    )}
 
                     {/* Subcategories (Indented underneath) */}
                     {parent.subcategories.length > 0 && (
@@ -1176,8 +1171,8 @@ export default function Fitness() {
         </Dialog>
 
         {/* ── Exercises List ── */}
-        <Card className="lg:col-span-2 border border-border rounded-2xl shadow-sm bg-card">
-          <CardHeader className="pb-3">
+        <Card className="lg:col-span-2 bg-white border border-white/90 shadow-[6px_6px_20px_rgba(145,170,165,0.2),-4px_-4px_14px_rgba(255,255,255,0.95)] rounded-[28px] overflow-hidden">
+          <CardHeader className="p-4 sm:p-5 pb-2">
             <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 justify-between items-start sm:items-center w-full">
               <CardTitle className="text-base sm:text-[20px] font-semibold text-foreground leading-snug">
                 {activeFilter} Exercises List
@@ -1187,7 +1182,7 @@ export default function Fitness() {
                   placeholder="Search exercises..."
                   value={exerciseSearchQuery}
                   onChange={(e) => setExerciseSearchQuery(e.target.value)}
-                  className="flex-1 sm:max-w-[220px] h-8 sm:h-9 text-xs border-border bg-background text-foreground placeholder:text-muted-foreground rounded-[8px] focus-visible:border-[#07AC7D] focus-visible:ring-[3px] focus-visible:ring-[#07AC7D]/[.12]"
+                  className="flex-1 sm:max-w-[220px] h-9 text-xs border-0 bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] placeholder:text-[#7186A0]/70 rounded-xl pl-3 font-medium"
                 />
                 <span className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider whitespace-nowrap">
                   {exercisesWithCategory.length} results
@@ -1195,40 +1190,49 @@ export default function Fitness() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-2.5 pt-1">
+          <CardContent className="space-y-2.5 p-4 sm:p-5 pt-0">
             {exercisesWithCategory.length > 0 ? (
               exercisesWithCategory.map((ex: any) => (
                 <div
                   key={ex.id}
-                  className="flex flex-row items-center justify-between gap-2 p-2.5 sm:p-3 rounded-xl bg-slate-50/80 dark:bg-secondary/40 hover:bg-slate-100/80 dark:hover:bg-secondary/70 border border-slate-200/60 dark:border-border/60 transition-colors group"
+                  className="flex flex-row items-center justify-between gap-2 p-3 sm:p-3.5 rounded-2xl bg-white border border-white/80 shadow-[2.5px_2.5px_6px_rgba(180,200,196,0.18),-2px_-2px_6px_rgba(255,255,255,0.95)] hover:shadow-[4px_4px_10px_rgba(180,200,196,0.25),-3px_-3px_8px_rgba(255,255,255,0.98)] transition-all group"
                 >
                   <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
-                    <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-[#07AC7D] flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-[#0CC194] to-[#079975] shadow-[0_2px_6px_rgba(8,169,130,0.3)] text-white flex items-center justify-center flex-shrink-0">
                       <Dumbbell className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-xs sm:text-sm font-semibold text-foreground truncate leading-tight">
                         {ex.name}
                       </p>
-                      <div className="flex flex-wrap items-center gap-1 mt-0.5 sm:mt-1">
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1">
                         {ex.category_name && (
                           <Badge
                             variant="outline"
-                            className="text-[9px] sm:text-[10px] bg-violet-50 dark:bg-violet-950/50 border-violet-200 dark:border-violet-800 text-violet-700 dark:text-violet-300 px-1 sm:px-1.5 py-0 font-semibold leading-4 h-3.5 sm:h-4"
+                            className="text-[10px] bg-[#F5F3FF] border-[#DDD6FE] text-[#7C3AED] px-2 py-0.5 font-bold uppercase tracking-wider rounded-full shadow-[1px_1px_2px_rgba(165,185,180,0.06)]"
                           >
                             {ex.category_name}
                           </Badge>
                         )}
                         {ex.sub_category && ex.sub_category !== "none" && (
-                          <Badge variant="outline" className="text-[9px] sm:text-[10px] bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 px-1 sm:px-1.5 py-0 font-semibold leading-4 h-3.5 sm:h-4">
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] bg-[#E6F7F3] border-[#BEE7DC] text-[#07AC7D] px-2 py-0.5 font-bold uppercase tracking-wider rounded-full shadow-[1px_1px_2px_rgba(165,185,180,0.06)]"
+                          >
                             {ex.sub_category}
                           </Badge>
                         )}
                         {ex.difficulty && (
-                          <Badge variant="outline" className={`text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0 font-semibold leading-4 h-3.5 sm:h-4 ${ex.difficulty === "Beginner" ? "bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300" :
-                            ex.difficulty === "Intermediate" ? "bg-amber-50 dark:bg-amber-950/50 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300" :
-                              "bg-red-50 dark:bg-red-950/50 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300"
-                            }`}>
+                          <Badge
+                            variant="outline"
+                            className={`text-[10px] px-2 py-0.5 font-bold uppercase tracking-wider rounded-full shadow-[1px_1px_2px_rgba(165,185,180,0.06)] ${
+                              ex.difficulty === "Beginner"
+                                ? "bg-[#E6F7F3] border-[#BEE7DC] text-[#07AC7D]"
+                                : ex.difficulty === "Intermediate"
+                                ? "bg-[#FFF7ED] border-[#FFEDD5] text-[#EA580C]"
+                                : "bg-[#FEF2F2] border-[#FECACA] text-[#DC2626]"
+                            }`}
+                          >
                             {ex.difficulty}
                           </Badge>
                         )}
@@ -1409,8 +1413,8 @@ export default function Fitness() {
         </Card>
 
         {/* ── Workout Plans ── */}
-        <Card className="lg:col-span-full border border-border rounded-2xl shadow-sm bg-card">
-          <CardHeader className="flex w-full flex-col md:flex-row md:justify-between md:items-center pb-3">
+        <Card className="lg:col-span-full bg-white border border-white/90 shadow-[6px_6px_18px_rgba(145,170,165,0.22),-4px_-4px_14px_rgba(255,255,255,0.95)] rounded-[26px] overflow-hidden">
+          <CardHeader className="flex w-full flex-col md:flex-row md:justify-between md:items-center p-4 sm:p-5 pb-2">
             <CardTitle className="text-[20px] font-semibold text-foreground leading-snug">
               Workout Plans
             </CardTitle>
@@ -1454,7 +1458,7 @@ export default function Fitness() {
             </Dialog>
           </CardHeader>
 
-          <CardContent className="pt-1">
+          <CardContent className="p-4 sm:p-5 pt-0">
             {allPlans.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground text-sm">
                 No workout plans yet.
@@ -1464,7 +1468,7 @@ export default function Fitness() {
                 {allPlans.map((plan) => (
                   <div
                     key={plan.id}
-                    className="flex flex-row items-center justify-between gap-2 p-2.5 sm:p-3 rounded-xl bg-slate-50/80 dark:bg-secondary/40 hover:bg-slate-100/80 dark:hover:bg-secondary/70 border border-slate-200/60 dark:border-border/60 transition-colors"
+                    className="flex flex-row items-center justify-between gap-2 p-3 sm:p-3.5 rounded-2xl bg-white border border-white/80 shadow-[2.5px_2.5px_6px_rgba(180,200,196,0.18),-2px_-2px_6px_rgba(255,255,255,0.95)] hover:shadow-[4px_4px_10px_rgba(180,200,196,0.25),-3px_-3px_8px_rgba(255,255,255,0.98)] transition-all"
                   >
                     <div className="flex items-center gap-2.5 min-w-0 flex-1">
                       <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-[#07AC7D] flex items-center justify-center flex-shrink-0">
@@ -1490,7 +1494,7 @@ export default function Fitness() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="gap-1 text-[#2E9D7A] dark:text-emerald-400 border-[#07AC7D]/40 hover:bg-[#F1FAF6] dark:hover:bg-emerald-950/40 rounded-[8px] h-8 text-xs font-semibold px-2.5"
+                            className="gap-1.5 text-[#08B594] bg-[#F0F7F5] border border-white shadow-[2px_2px_5px_rgba(180,200,196,0.2),-2px_-2px_5px_rgba(255,255,255,0.9)] hover:bg-[#E5F2EE] rounded-xl h-8.5 text-xs font-bold px-3 transition-all"
                             onClick={() => {
                               setActivePlan(plan);
                               fetchPlanExercises(plan.id);
@@ -1979,7 +1983,7 @@ export default function Fitness() {
                               setEditPlan({ id: plan.id, name: plan.name });
                               setIsEditPlanOpen(true);
                             }}
-                            className="text-[#4F7CFF] hover:bg-[#4F7CFF]/10 rounded-[8px] h-8 w-8"
+                            className="h-8.5 w-8.5 text-[#3182CE] hover:text-[#2B6CB0] hover:bg-[#E2EAF2] rounded-xl transition-all"
                           >
                             <SquarePen className="w-3.5 h-3.5" />
                           </Button>
@@ -2026,7 +2030,7 @@ export default function Fitness() {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleDeletePlan(plan.id)}
-                        className="text-[#EF4444] hover:text-[#DC2626] hover:bg-[#EF4444]/10 rounded-[8px] h-8 w-8"
+                        className="h-8.5 w-8.5 text-[#8899A6] hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
@@ -2039,8 +2043,8 @@ export default function Fitness() {
         </Card>
 
         {/* ── User Exercises (logged) ── */}
-        <Card className="lg:col-span-full border border-border rounded-2xl shadow-sm bg-card">
-          <CardHeader className="pb-3">
+        <Card className="lg:col-span-full bg-white border border-white/90 shadow-[6px_6px_18px_rgba(145,170,165,0.22),-4px_-4px_14px_rgba(255,255,255,0.95)] rounded-[26px] overflow-hidden">
+          <CardHeader className="p-4 sm:p-5 pb-2">
             <div className="flex flex-col md:flex-row gap-2 justify-between items-center">
               <CardTitle className="text-[20px] font-semibold text-foreground leading-snug">
                 {activeFilter} Exercises
@@ -2050,33 +2054,38 @@ export default function Fitness() {
               </span>
             </div>
           </CardHeader>
-          <CardContent className="space-y-2.5 pt-1">
+          <CardContent className="space-y-2.5 p-4 sm:p-5 pt-0">
             {filteredExercises.length > 0 ? (
               filteredExercises.map((ex) => (
                 <div
                   key={ex.id}
-                  className="flex flex-col md:flex-row items-center justify-between gap-3 p-3 rounded-xl bg-slate-50/80 dark:bg-secondary/40 hover:bg-slate-100/80 dark:hover:bg-secondary/70 border border-slate-200/60 dark:border-border/60 transition-colors group"
+                  className="flex items-center justify-between gap-3 p-3 sm:p-4 rounded-2xl bg-white border border-white/90 shadow-[3px_3px_8px_rgba(180,200,196,0.18),-2px_-2px_6px_rgba(255,255,255,0.95)] hover:shadow-[4px_4px_12px_rgba(180,200,196,0.25),-3px_-3px_10px_rgba(255,255,255,0.98)] transition-all group"
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="w-9 h-9 rounded-lg bg-[#07AC7D] flex items-center justify-center flex-shrink-0">
-                      <Dumbbell className="w-4.5 h-4.5 text-white" />
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0CC194] to-[#079975] shadow-[0_2px_6px_rgba(8,169,130,0.3)] text-white flex items-center justify-center shrink-0">
+                      <Dumbbell className="w-5 h-5 text-white" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-foreground truncate">
+                      <p className="text-sm font-bold text-[#0F172A] truncate">
                         {ex.name}
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        {ex.category || "General"} • {ex.sets} Sets
-                      </p>
+                      <div className="flex items-center gap-2 flex-wrap text-xs font-medium text-[#7186A0]">
+                        <span>{ex.category || "General"} • {ex.sets} Sets</span>
+                        <span className="inline-flex sm:hidden text-[10px] font-bold text-[#08B594] bg-[#E5F5F0] px-2 py-0.5 rounded-full border border-[#08B594]/20">
+                          {ex.full_name}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center justify-center">
-                    <p className="text-[#07AC7D] font-semibold text-sm">{ex.full_name}</p>
+                  <div className="hidden sm:flex items-center justify-center shrink-0">
+                    <span className="text-xs font-bold text-[#08B594] bg-[#E5F5F0] px-3 py-1 rounded-full border border-[#08B594]/20 shadow-[inset_1px_1px_2px_rgba(8,169,130,0.1)]">
+                      {ex.full_name}
+                    </span>
                   </div>
-                  <div className="flex items-center gap-4 text-right">
-                    <div>
-                      <p className="text-sm font-semibold text-[#07AC7D]">{ex.reps} reps</p>
-                      <p className="text-xs text-muted-foreground">
+                  <div className="flex items-center gap-3 text-right shrink-0">
+                    <div className="bg-[#E2ECE9] shadow-[inset_1.5px_1.5px_3px_rgba(165,185,180,0.4),inset_-1.5px_-1.5px_3px_rgba(255,255,255,0.8)] border border-white/60 px-2.5 sm:px-3 py-1 rounded-xl text-center min-w-[65px] sm:min-w-[70px]">
+                      <p className="text-xs font-extrabold text-[#08B594]">{ex.reps} reps</p>
+                      <p className="text-[10px] font-semibold text-[#7186A0]">
                         Total: {ex.sets * ex.reps}
                       </p>
                     </div>

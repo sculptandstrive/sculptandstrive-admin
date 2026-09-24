@@ -16,7 +16,6 @@ import {
   ChevronDown,
   Calculator as CalculatorIcon,
 } from "lucide-react";
-import { DashboardLayout } from "@/components/DashboardLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -528,13 +527,13 @@ export default function NutritionAdmin() {
         title="Nutrition Admin"
         description="Manage meal plans, nutrition metrics, and member assignments."
       >
-        <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end lg:w-auto">
+        <div className="flex w-full flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:justify-end lg:w-auto">
           <div className="relative order-2 w-full sm:order-1 sm:w-[220px] lg:w-[240px]">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7186A0]" />
             <Input
               placeholder="Search plans..."
               aria-label="Search meal plans"
-              className="h-10 w-full rounded-[10px] border-border bg-card pl-9 text-sm text-foreground placeholder:text-muted-foreground shadow-none focus-visible:border-[#07AC7D] focus-visible:ring-[#07AC7D]/15"
+              className="h-11 w-full rounded-2xl border border-white/80 bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] pl-10 text-sm font-semibold text-[#0F172A] placeholder:text-[#7186A0] focus-visible:ring-2 focus-visible:ring-[#08B594]/30"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -543,48 +542,48 @@ export default function NutritionAdmin() {
           <Button
             variant="outline"
             onClick={fetchAdminDashboardData}
-            className="order-3 h-10 w-full gap-2 rounded-[10px] border-border bg-card px-4 text-foreground shadow-none hover:border-[#07AC7D] hover:bg-muted sm:order-2 sm:w-auto"
+            className="order-3 h-11 w-full gap-2 rounded-2xl border border-white bg-white shadow-[4px_4px_10px_rgba(145,170,165,0.18),-3px_-3px_8px_rgba(255,255,255,0.95)] px-4 font-bold text-[#334155] hover:bg-[#F0F7F5] active:scale-95 transition-all sm:order-2 sm:w-auto"
           >
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-4 w-4 text-[#08B594] ${loading ? "animate-spin" : ""}`} />
             <span>Sync Data</span>
           </Button>
 
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="order-1 h-10 w-full gap-2 rounded-[10px] bg-[#07AC7D] px-4 text-white shadow-none hover:bg-[#06966D] sm:order-3 sm:w-auto">
-                <Plus className="h-4 w-4" />
+              <Button className="order-1 h-11 w-full gap-2 rounded-2xl bg-gradient-to-r from-[#08B594] via-[#07AB8C] to-[#069D80] px-5 font-bold text-white shadow-[0_4px_12px_rgba(8,169,130,0.35),inset_0_1px_1px_rgba(255,255,255,0.4)] hover:brightness-105 active:scale-95 transition-all sm:order-3 sm:w-auto">
+                <Plus className="h-4 w-4 stroke-[2.5]" />
                 <span>Create New Plan</span>
               </Button>
             </DialogTrigger>
 
-            <DialogContent className="max-h-[90vh] w-[calc(100%-1rem)] max-w-lg overflow-y-auto rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-xl">
+            <DialogContent className="max-h-[90vh] w-[calc(100%-1rem)] max-w-lg overflow-y-auto rounded-[26px] border border-white bg-white p-5 sm:p-7 shadow-[8px_8px_30px_rgba(145,170,165,0.25)]">
               <DialogHeader>
-                <DialogTitle className="text-[18px] font-semibold text-foreground">
+                <DialogTitle className="text-xl font-black text-[#0F172A]">
                   Add New Meal Plan
                 </DialogTitle>
               </DialogHeader>
 
               <div className="grid gap-4 py-2">
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-muted-foreground">
-                    Plan Title <span className="font-normal text-muted-foreground/80">(Max 20 chars)</span>
+                  <p className="text-xs font-bold uppercase tracking-wider text-[#7186A0]">
+                    Plan Title <span className="font-normal text-[#94A3B8]">(Max 20 chars)</span>
                   </p>
                   <Input
                     maxLength={20}
                     placeholder="e.g., Vegan Shred"
                     value={newPlan.name}
                     onChange={(e) => setNewPlan({ ...newPlan, name: e.target.value })}
-                    className="h-11 rounded-[10px] border-border bg-background text-foreground focus-visible:border-[#07AC7D] focus-visible:ring-[#07AC7D]/15"
+                    className="h-11 rounded-2xl border border-white/80 bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] px-3 text-sm font-semibold text-[#0F172A]"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-muted-foreground">Macro Input Mode</p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-[#7186A0]">Macro Input Mode</p>
                   <div className="relative w-full">
                     <button
                       type="button"
                       onClick={() => setMacroModeOpen((v) => !v)}
-                      className="flex h-11 w-full items-center justify-between rounded-[10px] border border-border bg-background px-3 text-sm font-medium text-foreground shadow-none transition-colors hover:border-[#07AC7D] focus:outline-none focus:ring-2 focus:ring-[#07AC7D]/15"
+                      className="flex h-11 w-full items-center justify-between rounded-2xl border border-white/80 bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] px-4 text-sm font-bold text-[#0F172A] transition-all"
                     >
                       <span>
                         {macroMode === "values"
@@ -592,13 +591,13 @@ export default function NutritionAdmin() {
                           : "Enter by Percentage (%)"}
                       </span>
                       <ChevronDown
-                        className={`h-4 w-4 text-muted-foreground transition-transform ${macroModeOpen ? "rotate-180" : ""
+                        className={`h-4 w-4 text-[#7186A0] transition-transform ${macroModeOpen ? "rotate-180" : ""
                           }`}
                       />
                     </button>
 
                     {macroModeOpen && (
-                      <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-[10px] border border-border bg-popover text-popover-foreground shadow-lg">
+                      <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-2xl border border-white bg-white shadow-[6px_6px_20px_rgba(145,170,165,0.2)] p-1">
                         {(["values", "percentage"] as MacroMode[]).map((mode) => (
                           <button
                             key={mode}
@@ -613,7 +612,7 @@ export default function NutritionAdmin() {
                                 carbs: mode === "percentage" ? "45" : "140",
                               }));
                             }}
-                            className={`flex w-full items-center justify-between px-3 py-3 text-left text-sm transition-colors hover:bg-muted ${macroMode === mode ? "bg-muted font-semibold text-emerald-500" : "text-foreground"
+                            className={`flex w-full items-center justify-between px-3.5 py-2.5 text-left text-xs font-bold rounded-xl transition-all ${macroMode === mode ? "bg-[#F0F7F5] text-[#08B594]" : "text-[#334155] hover:bg-[#F8FAFC]"
                               }`}
                           >
                             <span>
@@ -621,13 +620,13 @@ export default function NutritionAdmin() {
                                 ? "Enter by Value (grams)"
                                 : "Enter by Percentage (%)"}
                             </span>
-                            {macroMode === mode && <Check className="h-4 w-4 text-emerald-500" />}
+                            {macroMode === mode && <Check className="h-4 w-4 text-[#08B594]" />}
                           </button>
                         ))}
                       </div>
                     )}
                   </div>
-                  <p className="text-xs leading-5 text-muted-foreground">
+                  <p className="text-xs leading-5 font-semibold text-[#7186A0]">
                     {macroMode === "percentage"
                       ? "Enter macro split as % of total calories. Must sum to 100%."
                       : "Enter macro amounts directly in grams."}
@@ -636,15 +635,15 @@ export default function NutritionAdmin() {
 
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold text-muted-foreground">Assign To</p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-[#7186A0]">Assign To</p>
                     <Select
                       value={assignType}
                       onValueChange={(v) => setAssignType(v as "individual" | "group")}
                     >
-                      <SelectTrigger className="h-11 w-full rounded-[10px] border-border bg-background text-foreground">
+                      <SelectTrigger className="h-11 w-full rounded-2xl border border-white/80 bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] px-3 text-sm font-semibold text-[#0F172A]">
                         <SelectValue placeholder="Select assignment type" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="rounded-2xl border border-white bg-white shadow-[6px_6px_20px_rgba(145,170,165,0.2)]">
                         <SelectItem value="individual">Individual</SelectItem>
                         <SelectItem value="group">Group</SelectItem>
                       </SelectContent>
@@ -653,12 +652,12 @@ export default function NutritionAdmin() {
 
                   {assignType === "individual" ? (
                     <div className="space-y-2">
-                      <p className="text-xs font-semibold text-muted-foreground">Select User</p>
+                      <p className="text-xs font-bold uppercase tracking-wider text-[#7186A0]">Select User</p>
                       <Select value={selectedUserForPlan} onValueChange={setSelectedUserForPlan}>
-                        <SelectTrigger className="h-11 w-full rounded-[10px] border-border bg-background text-foreground">
+                        <SelectTrigger className="h-11 w-full rounded-2xl border border-white/80 bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] px-3 text-sm font-semibold text-[#0F172A]">
                           <SelectValue placeholder="Choose a user..." />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="rounded-2xl border border-white bg-white shadow-[6px_6px_20px_rgba(145,170,165,0.2)] max-h-56">
                           {users.map((u) => (
                             <SelectItem key={u.id} value={u.id}>
                               {u.full_name}
@@ -669,12 +668,12 @@ export default function NutritionAdmin() {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      <p className="text-xs font-semibold text-muted-foreground">Select Group</p>
+                      <p className="text-xs font-bold uppercase tracking-wider text-[#7186A0]">Select Group</p>
                       <Select value={selectedGroupForPlan} onValueChange={setSelectedGroupForPlan}>
-                        <SelectTrigger className="h-11 w-full rounded-[10px] border-border bg-background text-foreground">
+                        <SelectTrigger className="h-11 w-full rounded-2xl border border-white/80 bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] px-3 text-sm font-semibold text-[#0F172A]">
                           <SelectValue placeholder="Choose a group..." />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="rounded-2xl border border-white bg-white shadow-[6px_6px_20px_rgba(145,170,165,0.2)] max-h-56">
                           {groups.length === 0 ? (
                             <SelectItem value="none" disabled>
                               No groups available
@@ -694,21 +693,21 @@ export default function NutritionAdmin() {
 
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold text-muted-foreground">Daily Calories</p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-[#7186A0]">Daily Calories</p>
                     <Input
                       type="number"
                       value={newPlan.calories}
                       onChange={(e) => setNewPlan({ ...newPlan, calories: e.target.value })}
-                      className="h-11 rounded-[10px] border-border bg-background text-foreground"
+                      className="h-11 rounded-2xl border border-white/80 bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] px-3 text-sm font-semibold text-[#0F172A]"
                     />
                   </div>
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold text-muted-foreground">Water (ml)</p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-[#7186A0]">Water (ml)</p>
                     <Input
                       type="number"
                       value={newPlan.water}
                       onChange={(e) => setNewPlan({ ...newPlan, water: e.target.value })}
-                      className="h-11 rounded-[10px] border-border bg-background text-foreground"
+                      className="h-11 rounded-2xl border border-white/80 bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] px-3 text-sm font-semibold text-[#0F172A]"
                     />
                   </div>
                 </div>
@@ -720,23 +719,23 @@ export default function NutritionAdmin() {
                     { key: "carbs", label: "Carbs" },
                   ].map(({ key, label }) => (
                     <div key={key} className="space-y-2">
-                      <p className="text-xs font-semibold text-muted-foreground">
+                      <p className="text-xs font-bold uppercase tracking-wider text-[#7186A0]">
                         {label} {macroMode === "percentage" ? "(%)" : "(g)"}
                       </p>
                       <Input
                         type="number"
                         value={newPlan[key as keyof typeof newPlan] as string | number}
                         onChange={(e) => setNewPlan({ ...newPlan, [key]: e.target.value })}
-                        className="h-11 rounded-[10px] border-border bg-background text-foreground"
+                        className="h-11 rounded-2xl border border-white/80 bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] px-3 text-sm font-semibold text-[#0F172A]"
                       />
                       {macroMode === "percentage" && key === "protein" && previewProteinG !== null && (
-                        <p className="text-xs text-muted-foreground">≈ {previewProteinG}g</p>
+                        <p className="text-xs font-semibold text-[#08B594]">≈ {previewProteinG}g</p>
                       )}
                       {macroMode === "percentage" && key === "fats" && previewFatsG !== null && (
-                        <p className="text-xs text-muted-foreground">≈ {previewFatsG}g</p>
+                        <p className="text-xs font-semibold text-[#08B594]">≈ {previewFatsG}g</p>
                       )}
                       {macroMode === "percentage" && key === "carbs" && previewCarbsG !== null && (
-                        <p className="text-xs text-muted-foreground">≈ {previewCarbsG}g</p>
+                        <p className="text-xs font-semibold text-[#08B594]">≈ {previewCarbsG}g</p>
                       )}
                     </div>
                   ))}
@@ -744,37 +743,27 @@ export default function NutritionAdmin() {
 
                 {macroMode === "percentage" && (
                   <div
-                    className={`flex items-center justify-between rounded-[10px] border px-3 py-2.5 text-sm font-medium ${pctTotal === 100
-                      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-500"
-                      : pctTotal > 100
-                        ? "border-red-500/40 bg-red-500/10 text-red-500"
-                        : "border-amber-500/40 bg-amber-500/10 text-amber-500"
+                    className={`rounded-2xl p-3 border text-xs font-bold ${pctTotal === 100
+                      ? "border-emerald-500/30 bg-[#E2ECE9] text-[#08B594] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.35)]"
+                      : "border-destructive/30 bg-destructive/10 text-destructive shadow-[inset_2px_2px_4px_rgba(239,68,68,0.2)]"
                       }`}
                   >
-                    <span>Total</span>
-                    <span>
-                      {pctTotal}%{" "}
-                      {pctTotal === 100
-                        ? "✓"
-                        : pctTotal > 100
-                          ? "— exceeds 100%"
-                          : `— ${100 - pctTotal}% remaining`}
-                    </span>
+                    Total: {pctTotal}% {pctTotal !== 100 ? "(Must equal 100%)" : "✓ Balanced"}
                   </div>
                 )}
               </div>
 
-              <DialogFooter className="flex-col gap-2 sm:flex-row">
+              <DialogFooter className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   onClick={() => setIsDialogOpen(false)}
-                  className="h-10 w-full rounded-[10px] border-border sm:w-auto"
+                  className="h-11 w-full rounded-2xl border border-white bg-white shadow-[2px_2px_6px_rgba(180,200,196,0.2)] font-bold text-[#7186A0] hover:bg-[#F0F7F5] sm:w-auto px-5"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleCreatePlan}
-                  className="h-10 w-full rounded-[10px] bg-[#07AC7D] text-white hover:bg-[#06966D] sm:w-auto"
+                  className="h-11 w-full rounded-2xl bg-gradient-to-r from-[#08B594] via-[#07AB8C] to-[#069D80] px-6 font-bold text-white shadow-[0_4px_12px_rgba(8,169,130,0.35),inset_0_1px_1px_rgba(255,255,255,0.4)] hover:brightness-105 active:scale-95 transition-all sm:w-auto"
                 >
                   Save Plan
                 </Button>
@@ -787,104 +776,97 @@ export default function NutritionAdmin() {
       {/* KPI cards */}
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: "Live Meal Plans", value: mealPlans.length, icon: Utensils, iconClass: "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400" },
-          { label: "Total Recipes", value: recipeCount, icon: Apple, iconClass: "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400" },
-          { label: "Global Avg Cals", value: globalAvgCals, icon: Flame, iconClass: "bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400" },
-          { label: "Water Intake Avg", value: `${globalWaterAvg}%`, icon: Droplets, iconClass: "bg-blue-100 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400" },
+          { label: "Live Meal Plans", value: mealPlans.length, icon: Utensils, iconClass: "bg-emerald-500/10 text-[#08B594] border-emerald-500/20" },
+          { label: "Total Recipes", value: recipeCount, icon: Apple, iconClass: "bg-emerald-500/10 text-[#08B594] border-emerald-500/20" },
+          { label: "Global Avg Cals", value: globalAvgCals, icon: Flame, iconClass: "bg-amber-500/10 text-amber-500 border-amber-500/20" },
+          { label: "Water Intake Avg", value: `${globalWaterAvg}%`, icon: Droplets, iconClass: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
         ].map(({ label, value, icon: Icon, iconClass }) => (
-          <Card
+          <div
             key={label}
-            className="rounded-2xl border border-border bg-card shadow-sm"
+            className="rounded-[22px] border border-white/80 bg-white p-5 shadow-[6px_6px_16px_rgba(145,170,165,0.18),-4px_-4px_12px_rgba(255,255,255,0.95)] transition-all hover:shadow-[8px_8px_20px_rgba(145,170,165,0.22),-4px_-4px_14px_rgba(255,255,255,1)] flex items-center justify-between"
           >
-            <CardContent className="flex items-center justify-between p-5">
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-muted-foreground">
-                  {label}
-                </p>
-                <p className="text-2xl font-semibold text-foreground tracking-tight leading-none mt-1.5">
-                  {value}
-                </p>
-              </div>
-              <div className={`ml-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${iconClass}`}>
-                <Icon className="h-5 w-5" strokeWidth={2} />
-              </div>
-            </CardContent>
-          </Card>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-bold uppercase tracking-wider text-[#7186A0]">
+                {label}
+              </p>
+              <p className="text-2xl font-black text-[#0F172A] tracking-tight leading-none mt-1.5">
+                {value}
+              </p>
+            </div>
+            <div className={`ml-3 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border shadow-[inset_1.5px_1.5px_3px_rgba(255,255,255,0.9),2px_2px_6px_rgba(0,0,0,0.06)] ${iconClass}`}>
+              <Icon className="h-5 w-5" strokeWidth={2.2} />
+            </div>
+          </div>
         ))}
       </div>
 
       {/* Meal plans */}
       <section className="mt-8">
-        <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="flex items-center gap-2 text-[20px] font-semibold text-foreground">
-              <Utensils className="h-5 w-5 text-emerald-500" />
+            <h2 className="flex items-center gap-2 text-xl font-black text-[#0F172A]">
+              <Utensils className="h-5 w-5 text-[#08B594]" />
               Active Meal Plans
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-xs font-semibold text-[#7186A0]">
               Review nutrition targets and manage member access.
             </p>
           </div>
-          <Badge className="w-fit rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-emerald-500 hover:bg-emerald-500/15">
-            {filteredPlans.length} {filteredPlans.length === 1 ? "plan" : "plans"}
+          <Badge className="w-fit rounded-full border border-emerald-500/20 bg-[#E2ECE9] shadow-[inset_1px_1px_2px_rgba(165,185,180,0.4),inset_-1px_-1px_2px_rgba(255,255,255,0.8)] px-3.5 py-1 text-xs font-black tracking-wider text-[#08B594]">
+            {filteredPlans.length} {filteredPlans.length === 1 ? "PLAN" : "PLANS"}
           </Badge>
         </div>
 
         {loading ? (
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
             {[1, 2].map((item) => (
-              <Card
+              <div
                 key={item}
-                className="rounded-2xl border border-border bg-card shadow-sm"
+                className="rounded-[26px] border border-white/80 bg-white p-6 shadow-[6px_6px_20px_rgba(145,170,165,0.16)] space-y-5"
               >
-                <CardContent className="space-y-5 p-5 sm:p-6">
-                  <div className="h-6 w-1/2 animate-pulse rounded bg-muted" />
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                    {Array.from({ length: 6 }).map((_, index) => (
-                      <div key={index} className="h-20 animate-pulse rounded-xl bg-muted" />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                <div className="h-6 w-1/2 animate-pulse rounded-xl bg-[#E2ECE9]" />
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <div key={index} className="h-20 animate-pulse rounded-2xl bg-[#E2ECE9]" />
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         ) : filteredPlans.length === 0 ? (
-          <Card className="rounded-2xl border border-dashed border-border bg-card shadow-sm">
-            <CardContent className="flex flex-col items-center justify-center px-6 py-12 text-center">
-              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
-                <Utensils className="h-5 w-5" />
-              </div>
-              <h4 className="text-[18px] font-semibold text-foreground">No meal plans found</h4>
-              <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-                Try a different search or create a new nutrition plan.
-              </p>
-            </CardContent>
-          </Card>
+          <div className="rounded-[26px] border border-dashed border-white/90 bg-white p-12 shadow-[6px_6px_20px_rgba(145,170,165,0.16),-4px_-4px_14px_rgba(255,255,255,0.98)] text-center flex flex-col items-center justify-center">
+            <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0CC194]/15 via-[#08B594]/20 to-[#069D80]/25 border border-white/80 shadow-[inset_1.5px_1.5px_3px_rgba(255,255,255,0.9),2px_2px_5px_rgba(8,169,130,0.12)] text-[#08B594]">
+              <Utensils className="h-6 w-6" />
+            </div>
+            <h4 className="text-lg font-black text-[#0F172A]">No meal plans found</h4>
+            <p className="mt-1 max-w-sm text-xs font-semibold text-[#7186A0]">
+              Try a different search or create a new nutrition plan.
+            </p>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
             {filteredPlans.map((plan) => (
-              <Card
+              <div
                 key={plan.id}
-                className="group overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow duration-150 hover:shadow-md"
+                className="group rounded-[26px] border border-white/90 bg-white p-5 sm:p-6 shadow-[6px_6px_20px_rgba(145,170,165,0.18),-4px_-4px_14px_rgba(255,255,255,0.98)] transition-all hover:shadow-[8px_8px_24px_rgba(145,170,165,0.22),-4px_-4px_16px_rgba(255,255,255,1)] flex flex-col justify-between"
               >
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex flex-col gap-4 border-b border-border pb-5">
+                <div>
+                  <div className="flex flex-col gap-4 border-b border-[#E2ECE9] pb-5">
                     <div className="flex min-w-0 items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <div className="flex min-w-0 items-center gap-2">
-                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
-                            <Utensils className="h-4 w-4" />
+                        <div className="flex min-w-0 items-center gap-3">
+                          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0CC194]/15 via-[#08B594]/20 to-[#069D80]/25 border border-white/80 shadow-[inset_1.5px_1.5px_3px_rgba(255,255,255,0.9),2px_2px_5px_rgba(8,169,130,0.12)] text-[#08B594]">
+                            <Utensils className="h-5 w-5" />
                           </span>
-                          <h4 className="min-w-0 break-words text-[18px] font-semibold leading-snug text-foreground">
+                          <h4 className="min-w-0 break-words text-lg font-black leading-snug text-[#0F172A]">
                             {plan.name}
                           </h4>
                         </div>
-                        <Badge
-                          variant="secondary"
-                          className="mt-2 rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground"
-                        >
-                          ID: {plan.id.slice(0, 8)}
-                        </Badge>
+                        <div className="mt-2.5">
+                          <span className="rounded-full bg-[#E2ECE9] shadow-[inset_1px_1px_2px_rgba(165,185,180,0.4),inset_-1px_-1px_2px_rgba(255,255,255,0.8)] border border-white/50 text-[10px] font-mono font-bold text-[#7186A0] px-2.5 py-0.5">
+                            ID: {plan.id.slice(0, 8).toUpperCase()}
+                          </span>
+                        </div>
                       </div>
 
                       <Button
@@ -892,31 +874,31 @@ export default function NutritionAdmin() {
                         size="icon"
                         aria-label={`Delete ${plan.name}`}
                         title="Delete meal plan"
-                        className="h-8 w-8 shrink-0 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        className="h-9 w-9 shrink-0 rounded-xl text-[#94A3B8] hover:text-[#EF4444] hover:bg-rose-50 border border-white/60 bg-white/50 shadow-[2px_2px_5px_rgba(180,200,196,0.15),-2px_-2px_5px_rgba(255,255,255,0.8)] transition-all"
                         onClick={() => handleDeletePlan(plan.id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
                             variant="outline"
-                            className="h-9 w-full justify-center gap-2 rounded-[8px] border-emerald-500/30 bg-emerald-500/10 px-3 text-emerald-500 hover:bg-emerald-500/20"
+                            className="h-10 w-full justify-center gap-2 rounded-xl border border-white bg-[#F0F7F5] shadow-[2px_2px_6px_rgba(180,200,196,0.25),-2px_-2px_6px_rgba(255,255,255,0.95)] hover:bg-[#E6F2EE] px-3 font-bold text-[#08B594] transition-all active:scale-95"
                           >
-                            <UserMinus className="h-4 w-4" strokeWidth={2} />
+                            <UserMinus className="h-4 w-4" strokeWidth={2.2} />
                             <span>Revoke</span>
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-[min(280px,calc(100vw-32px))] rounded-xl border border-border bg-popover p-1 shadow-lg">
-                          <DropdownMenuLabel className="px-3 py-2 text-xs font-semibold text-muted-foreground">
+                        <DropdownMenuContent align="end" className="w-[min(280px,calc(100vw-32px))] rounded-2xl border border-white bg-white p-2 shadow-[6px_6px_20px_rgba(145,170,165,0.2)]">
+                          <DropdownMenuLabel className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#7186A0]">
                             Revoke User Access
                           </DropdownMenuLabel>
                           <div className="max-h-[300px] overflow-y-auto">
                             {users.filter((u) => u.active_plan_name === plan.name).length === 0 ? (
-                              <div className="px-3 py-3 text-sm text-muted-foreground">
+                              <div className="px-3 py-3 text-xs font-semibold text-[#7186A0]">
                                 No users are assigned to this plan.
                               </div>
                             ) : (
@@ -926,7 +908,7 @@ export default function NutritionAdmin() {
                                   <DropdownMenuItem
                                     key={u.id}
                                     onClick={() => handleRemovePlan(u.id, plan.id)}
-                                    className="rounded-[8px] px-3 py-2.5 focus:bg-muted focus:text-foreground"
+                                    className="rounded-xl px-3 py-2 text-xs font-bold text-[#334155] hover:bg-[#F0F7F5] hover:text-[#08B594] transition-colors cursor-pointer"
                                   >
                                     <span className="truncate">{u.full_name}</span>
                                   </DropdownMenuItem>
@@ -939,15 +921,14 @@ export default function NutritionAdmin() {
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
-                            variant="outline"
-                            className="h-9 w-full justify-center gap-2 rounded-[8px] border-border bg-card px-3 text-foreground hover:border-[#07AC7D] hover:bg-muted"
+                            className="h-10 w-full justify-center gap-2 rounded-xl bg-gradient-to-r from-[#08B594] via-[#07AB8C] to-[#069D80] px-3 font-bold text-white shadow-[0_3px_10px_rgba(8,169,130,0.35),inset_0_1px_1px_rgba(255,255,255,0.4)] hover:brightness-105 active:scale-95 transition-all"
                           >
                             <UserPlus className="h-4 w-4" />
                             <span>Assign</span>
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-[min(280px,calc(100vw-32px))] rounded-xl border border-border bg-popover p-1 shadow-lg">
-                          <DropdownMenuLabel className="px-3 py-2 text-xs font-semibold text-muted-foreground">
+                        <DropdownMenuContent align="end" className="w-[min(280px,calc(100vw-32px))] rounded-2xl border border-white bg-white p-2 shadow-[6px_6px_20px_rgba(145,170,165,0.2)]">
+                          <DropdownMenuLabel className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#7186A0]">
                             Assign User
                           </DropdownMenuLabel>
                           <div className="max-h-[300px] overflow-y-auto">
@@ -955,11 +936,11 @@ export default function NutritionAdmin() {
                               <DropdownMenuItem
                                 key={u.id}
                                 onClick={() => handleAssignPlan(u.id, plan.id)}
-                                className="rounded-[8px] px-3 py-2.5 focus:bg-muted focus:text-foreground"
+                                className="rounded-xl px-3 py-2 text-xs font-bold text-[#334155] hover:bg-[#F0F7F5] hover:text-[#08B594] transition-colors cursor-pointer"
                               >
                                 <span className="min-w-0 flex-1 truncate">{u.full_name}</span>
                                 {u.active_plan_name === plan.name && (
-                                  <Check className="ml-2 h-4 w-4 shrink-0 text-[#10B981]" />
+                                  <Check className="ml-2 h-4 w-4 shrink-0 text-[#08B594]" />
                                 )}
                               </DropdownMenuItem>
                             ))}
@@ -969,44 +950,54 @@ export default function NutritionAdmin() {
                     </div>
                   </div>
 
-                  <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                  <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
                     {[
-                      { label: "Calories", value: `${plan.calories}`, unit: "kcal", tone: "bg-muted/70 text-foreground" },
-                      { label: "Protein", value: `${plan.protein}`, unit: "g", tone: "bg-muted/70 text-foreground" },
-                      { label: "Fats", value: `${plan.fats}`, unit: "g", tone: "bg-muted/70 text-foreground" },
-                      { label: "Carbs", value: `${plan.carbs}`, unit: "g", tone: "bg-muted/70 text-foreground" },
-                      { label: "Water", value: `${plan.water}`, unit: "ml", tone: "bg-muted/70 text-foreground" },
-                      { label: "Active Users", value: `${plan.members}`, unit: "members", tone: "bg-emerald-500/10 text-emerald-500" },
-                    ].map(({ label, value, unit, tone }) => (
+                      { label: "Calories", value: `${plan.calories}`, unit: "kcal", isSpecial: false },
+                      { label: "Protein", value: `${plan.protein}`, unit: "g", isSpecial: false },
+                      { label: "Fats", value: `${plan.fats}`, unit: "g", isSpecial: false },
+                      { label: "Carbs", value: `${plan.carbs}`, unit: "g", isSpecial: false },
+                      { label: "Water", value: `${plan.water}`, unit: "ml", isSpecial: false },
+                      { label: "Active Users", value: `${plan.members}`, unit: "members", isSpecial: true },
+                    ].map(({ label, value, unit, isSpecial }) => (
                       <div
                         key={label}
-                        className={`min-w-0 rounded-xl border border-border p-3 ${tone}`}
+                        className={`min-w-0 rounded-2xl p-3.5 border border-white/70 ${
+                          isSpecial
+                            ? "bg-gradient-to-br from-[#E2ECE9] to-[#D5E5E0] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)]"
+                            : "bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)]"
+                        }`}
                       >
-                        <p className="truncate text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        <p className="truncate text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#7186A0]">
                           {label}
                         </p>
-                        <div className="mt-1 flex min-w-0 items-baseline gap-1">
-                          <p className="truncate text-sm font-semibold leading-tight">{value}</p>
-                          <span className="shrink-0 text-xs font-medium opacity-70">{unit}</span>
+                        <div className="mt-1.5 flex min-w-0 items-baseline gap-1">
+                          <p className={`truncate text-base sm:text-lg font-black tracking-tight leading-none ${
+                            isSpecial ? "text-[#08B594]" : "text-[#0F172A]"
+                          }`}>
+                            {value}
+                          </p>
+                          <span className={`shrink-0 text-xs font-semibold ${isSpecial ? "text-[#08B594]/80" : "text-[#7186A0]"}`}>
+                            {unit}
+                          </span>
                         </div>
                       </div>
                     ))}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ))}
           </div>
         )}
       </section>
 
       {/* Calculators — sitting seamlessly on the dark surface */}
-      <section className="mt-8 pb-6">
-        <div className="mb-5">
-          <h3 className="flex items-center gap-2 text-[20px] font-semibold text-foreground leading-snug">
-            <CalculatorIcon className="h-5 w-5 text-emerald-500" />
+      <section className="mt-10 pb-8">
+        <div className="mb-3">
+          <h3 className="flex items-center gap-2 text-xl font-black text-[#0F172A]">
+            <CalculatorIcon className="h-5 w-5 text-[#08B594]" />
             Nutrition Calculators
           </h3>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-xs font-semibold text-[#7186A0]">
             BMR, macro, and calorie tools for quick member reference.
           </p>
         </div>

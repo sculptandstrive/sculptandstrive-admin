@@ -24,4 +24,8 @@ dist-ssr
 *.sw?
 .env
 .env.*
-scratch/
+scratch/
+*.zip
+.zip
+supabase/.temp/
+tsc_output.txt

@@ -227,7 +227,7 @@ export default function Groups() {
         onOpenChange={setIsCreateDialogOpen}
       >
         <DialogTrigger asChild>
-          <Button className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-sm">
+          <Button className="gap-2 bg-gradient-to-r from-[#08B594] via-[#07AB8C] to-[#069D80] text-white shadow-[0_4px_12px_rgba(8,169,130,0.35),inset_0_1px_1px_rgba(255,255,255,0.5)] hover:brightness-105 active:scale-95 rounded-2xl h-10 px-4 font-bold transition-all">
             <Plus className="w-4 h-4" /> Create Group
           </Button>
         </DialogTrigger>
@@ -297,12 +297,12 @@ export default function Groups() {
 
     {/* Search Bar */}
     <div className="relative">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7186A0] pointer-events-none" />
       <Input
         placeholder="Search groups by name or coach..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        className="pl-10 bg-card border border-input text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 shadow-sm rounded-xl"
+        className="pl-10 h-11 bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] border-0 text-[#0F172A] font-medium placeholder:text-[#7186A0]/70 rounded-2xl"
       />
     </div>
 
@@ -324,42 +324,42 @@ export default function Groups() {
             key={group.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-card rounded-2xl border border-border shadow-sm hover:border-primary/40 hover:shadow-md transition-all duration-200 overflow-hidden"
+            className="bg-white rounded-[24px] border border-white/90 shadow-[6px_6px_18px_rgba(130,155,151,0.14),-4px_-4px_14px_rgba(255,255,255,0.95)] hover:shadow-[8px_8px_24px_rgba(130,155,151,0.22),-6px_-6px_20px_rgba(255,255,255,0.98)] transition-all duration-300 overflow-hidden"
           >
             <div className="p-5">
               {/* Header */}
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-2.5">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
-                    <Users className="w-4 h-4 text-primary" />
+                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#0CC194]/15 via-[#08B594]/20 to-[#069D80]/25 border border-white/80 shadow-[inset_1.5px_1.5px_3px_rgba(255,255,255,0.9),2px_2px_5px_rgba(8,169,130,0.12)] flex items-center justify-center flex-shrink-0">
+                    <Users className="w-5 h-5 text-[#08B594]" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-[18px] font-semibold text-foreground truncate">
+                    <h3 className="text-[18px] font-bold text-[#0F172A] truncate">
                       {group.name}
                     </h3>
                   </div>
                 </div>
-                <Badge className="bg-muted text-muted-foreground border border-border text-xs font-semibold px-2.5 py-1 rounded-lg">
-                  {group.member_count} {group.member_count === 1 ? 'member' : 'members'}
-                </Badge>
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#7186A0] bg-[#E2ECE9] shadow-[inset_1px_1px_2px_rgba(165,185,180,0.4),inset_-1px_-1px_2px_rgba(255,255,255,0.8)] border border-white/60 px-2.5 py-1 rounded-full">
+                  {group.member_count} {group.member_count === 1 ? 'MEMBER' : 'MEMBERS'}
+                </span>
               </div>
 
               {/* Coach */}
-              <p className="text-sm text-muted-foreground mb-4">
-                Coach: <span className="font-medium text-foreground">{group.coach_name}</span>
+              <p className="text-xs text-[#7186A0] mb-4 font-medium">
+                Coach: <span className="font-bold text-[#0F172A]">{group.coach_name}</span>
               </p>
 
               {/* Actions */}
-              <div className="flex items-center justify-between pt-3 border-t border-border">
-                <span className="text-xs text-muted-foreground">
+              <div className="flex items-center justify-between pt-3 border-t border-white/80">
+                <span className="text-xs font-semibold text-[#7186A0]">
                   {new Date(group.created_at).toLocaleDateString()}
                 </span>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1.5">
                   <NavLink to={`/admin/groups/${group.id}`}>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-7 px-3 text-xs font-medium rounded-lg border-border text-foreground hover:bg-muted"
+                      className="h-8.5 px-3.5 text-xs font-bold bg-[#F0F7F5] border border-white shadow-[2px_2px_5px_rgba(180,200,196,0.2),-2px_-2px_5px_rgba(255,255,255,0.9)] hover:bg-[#E6F2EE] text-[#08B594] rounded-xl transition-all"
                     >
                       View
                       <ChevronRight className="w-3.5 h-3.5 ml-1" />
@@ -368,10 +368,10 @@ export default function Groups() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-7 w-7 rounded-lg transition-colors"
+                    className="text-[#8899A6] hover:text-red-500 hover:bg-red-50 h-8.5 w-8.5 rounded-xl transition-colors"
                     onClick={() => handleDeleteGroup(group.id)}
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               </div>

@@ -1,0 +1,12 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  SECRETS_SCAN_ENABLED = "false"
+  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_PUBLISHABLE_KEY,VITE_SUPABASE_ANON_KEY,VITE_GOOGLE_CLIENT_ID,VITE_RAZORPAY_KEY_ID"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
