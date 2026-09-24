@@ -2327,13 +2327,13 @@ export default function Sessions() {
                         </div>
                       </div>
 
-                      <CardContent className="p-4 flex-1 flex flex-col justify-between">
+                      <CardContent className="p-4 sm:p-5 pt-4 sm:pt-5 flex-1 flex flex-col justify-between">
                         <div>
-                          <div className="flex items-center gap-2 mb-2">
-                            <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-[10px] font-semibold px-2 py-0.5">
-                              {pl.category || "Cardio"}
+                          <div className="flex items-center gap-2 mb-2.5 sm:mb-3">
+                            <Badge variant="secondary" className="bg-[#E6F7F3] text-[#07AC7D] border border-[#BEE7DC] text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shadow-[1px_1px_2px_rgba(165,185,180,0.08)]">
+                              {pl.category || "General"}
                             </Badge>
-                            <Badge variant="outline" className="text-[10px] border-border text-muted-foreground font-medium px-2 py-0.5">
+                            <Badge variant="outline" className="text-[10px] border-[#DCE8E5] text-[#7186A0] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white shadow-[1px_1px_2px_rgba(165,185,180,0.08)]">
                               {pl.level || "Beginner"}
                             </Badge>
                           </div>
