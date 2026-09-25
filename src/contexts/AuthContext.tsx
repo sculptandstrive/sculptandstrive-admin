@@ -34,22 +34,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
 
-    const checkUserRole = async (session: Session | null) => {
-      if (!session?.user) {
+    const checkUserRole = async (currentSession: Session | null) => {
+      if (!currentSession?.user) {
+        if (!isMounted) return;
         setSession(null);
         setUser(null);
         setLoading(false);
         return;
       }
 
+      const cachedRole = sessionStorage.getItem(`admin_role_${currentSession.user.id}`);
+      if (cachedRole === "admin") {
+        if (!isMounted) return;
+        setSession(currentSession);
+        setUser(currentSession.user);
+        setLoading(false);
+      }
+
       const { data: profileData, error } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", session.user.id)
+        .eq("user_id", currentSession.user.id)
         .maybeSingle();
 
+      if (!isMounted) return;
+
       if (error || !profileData || profileData.role !== "admin") {
+        sessionStorage.removeItem(`admin_role_${currentSession.user.id}`);
         try {
           await supabase.auth.signOut();
         } catch {
@@ -62,15 +75,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      setSession(session);
-      setUser(session.user);
+      sessionStorage.setItem(`admin_role_${currentSession.user.id}`, "admin");
+      setSession(currentSession);
+      setUser(currentSession.user);
       setLoading(false);
     };
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESH_FAILED') {
+    } = supabase.auth.onAuthStateChange((event, newSession) => {
+      if (event === "SIGNED_OUT" || event === "TOKEN_REFRESH_FAILED") {
         clearAuthTokens();
         setSession(null);
         setUser(null);
@@ -78,27 +92,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      checkUserRole(session);
+      checkUserRole(newSession);
     });
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
+    supabase.auth
+      .getSession()
+      .then(({ data: { session: existingSession }, error }) => {
+        if (error) {
+          clearAuthTokens();
+          if (isMounted) {
+            setSession(null);
+            setUser(null);
+            setLoading(false);
+          }
+          return;
+        }
+        if (existingSession) {
+          checkUserRole(existingSession);
+        } else if (isMounted) {
+          setLoading(false);
+        }
+      })
+      .catch(() => {
         clearAuthTokens();
-        setSession(null);
-        setUser(null);
-        setLoading(false);
-        return;
-      }
-      checkUserRole(session);
-    }).catch(() => {
-      clearAuthTokens();
-      setSession(null);
-      setUser(null);
-      setLoading(false);
-    });
+        if (isMounted) {
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+        }
+      });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {

@@ -12,8 +12,34 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
-   build: {
-    sourcemap: true, 
+  build: {
+    sourcemap: false,
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "vendor-react": ["react", "react-dom", "react-router-dom"],
+          "vendor-recharts": ["recharts"],
+          "vendor-motion": ["framer-motion"],
+          "vendor-supabase": ["@supabase/supabase-js"],
+          "vendor-ui": [
+            "lucide-react",
+            "class-variance-authority",
+            "clsx",
+            "tailwind-merge",
+            "sonner",
+            "@radix-ui/react-dialog",
+            "@radix-ui/react-dropdown-menu",
+            "@radix-ui/react-select",
+            "@radix-ui/react-tabs",
+            "@radix-ui/react-tooltip",
+            "@radix-ui/react-popover",
+            "@radix-ui/react-toast",
+            "@radix-ui/react-slot",
+          ],
+        },
+      },
+    },
   },
   optimizeDeps: {
     include: [

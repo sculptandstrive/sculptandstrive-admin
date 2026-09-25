@@ -17,6 +17,7 @@ import {
   ChevronRight,
   Sparkles,
   PlayCircle,
+  Video,
 } from "lucide-react";
 import {
   AreaChart,
