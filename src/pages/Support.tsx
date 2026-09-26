@@ -419,13 +419,13 @@ export default function Support() {
         title="Admin Support Dashboard"
         description="Monitor and respond to live member support tickets."
       >
-        <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end lg:w-auto">
-          <div className="relative order-2 w-full sm:order-1 sm:w-[220px] lg:w-[240px]">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <div className="flex items-center gap-2 w-full max-w-full">
+          <div className="relative flex-1 min-w-0">
+            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 -translate-y-1/2 text-[#7186A0]" />
             <Input
               placeholder="Search tickets..."
               aria-label="Search support tickets"
-              className="h-10 w-full rounded-xl border-0 bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] pl-10 text-sm font-medium text-[#0F172A] placeholder:text-[#7186A0]/70"
+              className="h-9 sm:h-10 w-full rounded-xl border-0 bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] pl-8 sm:pl-9 text-xs sm:text-sm font-medium text-[#0F172A] placeholder:text-[#7186A0]/70"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -435,16 +435,17 @@ export default function Support() {
             variant="outline"
             onClick={fetchData}
             disabled={loading}
-            className="order-3 h-10 w-full gap-2 rounded-xl border border-white bg-[#F0F7F5] shadow-[2px_2px_5px_rgba(180,200,196,0.2),-2px_-2px_5px_rgba(255,255,255,0.9)] px-4 text-xs font-bold text-[#0F172A] hover:bg-[#E6F2EE] sm:order-2 sm:w-auto transition-all"
+            title="Sync Data"
+            className="h-9 w-9 sm:h-10 sm:w-auto p-0 sm:px-3.5 sm:gap-1.5 rounded-xl border border-white bg-[#F0F7F5] shadow-[2px_2px_5px_rgba(180,200,196,0.2),-2px_-2px_5px_rgba(255,255,255,0.9)] text-xs font-bold text-[#0F172A] hover:bg-[#E6F2EE] shrink-0 transition-all flex items-center justify-center"
           >
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-            <span>Sync Data</span>
+            <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#08B594] ${loading ? "animate-spin" : ""}`} />
+            <span className="hidden sm:inline">Sync Data</span>
           </Button>
         </div>
       </PageHeader>
 
       {/* KPI Cards */}
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      <div className="mt-4 sm:mt-6 grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
         {[
           {
             label: "Open Tickets",
@@ -482,25 +483,25 @@ export default function Support() {
           <Card
             key={label}
             onClick={() => setActiveFilter(filter)}
-            className={`cursor-pointer rounded-2xl border border-white/90 bg-white transition-all duration-200 ${
+            className={`cursor-pointer rounded-[18px] sm:rounded-2xl border border-white/90 bg-white transition-all duration-200 ${
               activeFilter === filter
                 ? "shadow-[5px_5px_14px_rgba(8,181,148,0.25),-3px_-3px_10px_rgba(255,255,255,0.98)] ring-2 ring-[#08B594] -translate-y-0.5"
                 : "shadow-[3px_3px_8px_rgba(180,200,196,0.2),-2px_-2px_6px_rgba(255,255,255,0.95)] hover:shadow-[5px_5px_14px_rgba(160,185,180,0.28),-3px_-3px_10px_rgba(255,255,255,0.98)] hover:-translate-y-0.5"
             }`}
           >
-            <CardContent className="flex items-center justify-between p-4 sm:p-5">
+            <CardContent className="flex items-center justify-between p-3 sm:p-5 gap-2">
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-bold text-[#7186A0] truncate">
+                <p className="text-[10px] min-[400px]:text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#7186A0] break-normal hyphens-none line-clamp-2 leading-tight min-h-[24px] sm:min-h-0">
                   {label}
                 </p>
-                <p className="text-xl sm:text-2xl font-extrabold text-[#0F172A] tracking-tight leading-none mt-1.5">
+                <p className="text-lg sm:text-2xl font-black text-[#0F172A] tracking-tight leading-none mt-1 sm:mt-1.5">
                   {value}
                 </p>
               </div>
               <div
-                className={`ml-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/80 shadow-[inset_1.5px_1.5px_3px_rgba(255,255,255,0.9),2px_2px_5px_rgba(0,0,0,0.06)] ${iconClass}`}
+                className={`flex h-8 w-8 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl border shadow-sm ${iconClass}`}
               >
-                <Icon className="h-5 w-5" strokeWidth={2} />
+                <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
             </CardContent>
           </Card>
@@ -524,7 +525,7 @@ export default function Support() {
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex flex-wrap items-center bg-[#E1EDE9] shadow-[inset_2px_2px_4px_rgba(165,188,183,0.5),inset_-2px_-2px_4px_rgba(255,255,255,0.9)] p-1 rounded-2xl gap-1">
+            <div className="flex items-center overflow-x-auto no-scrollbar scrollbar-none max-w-full shrink-0 min-w-0 bg-[#E1EDE9] shadow-[inset_2px_2px_4px_rgba(165,188,183,0.5),inset_-2px_-2px_4px_rgba(255,255,255,0.9)] p-1 rounded-2xl gap-1">
               <button
                 onClick={() => setActiveFilter("active")}
                 className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${

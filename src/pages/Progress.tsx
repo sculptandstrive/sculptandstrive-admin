@@ -7,8 +7,10 @@ import {
   Users,
   LineChart,
   Target,
+  Activity,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import { StatCard } from "@/components/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -265,31 +267,40 @@ export default function ProgressPage() {
         description="Global member analytics and growth tracking synced from Supabase."
       />
 
-      {/* Aggregate Cards */}
-      <div className="mb-8 grid grid-cols-1 gap-5 sm:grid-cols-2">
-        {stats.map((stat) => (
-          <div
-            key={stat.title}
-            className="bg-white border border-white/90 shadow-[6px_6px_18px_rgba(145,170,165,0.2),-4px_-4px_14px_rgba(255,255,255,0.95)] rounded-[24px] p-5 sm:p-6"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#7186A0]">{stat.title}</p>
-                <p className="text-2xl sm:text-3xl font-black text-[#0F172A] tracking-tight leading-none mt-2">
-                  {stat.value.toLocaleString()}
-                </p>
-                {stat.change && (
-                  <p className="text-xs font-bold text-[#08B594] mt-2.5 flex items-center gap-1">
-                    <span>↑ {stat.change}</span>
-                  </p>
-                )}
-              </div>
-              <div className="w-12 h-12 rounded-2xl bg-[#E2ECE9] text-[#08B594] border border-white/60 shadow-[inset_1.5px_1.5px_3px_rgba(165,185,180,0.45),inset_-1.5px_-1.5px_3px_rgba(255,255,255,0.85)] flex items-center justify-center shrink-0">
-                <stat.icon className="h-6 w-6 text-[#08B594]" />
-              </div>
-            </div>
-          </div>
-        ))}
+      {/* Aggregate Cards: 2-col on mobile, 4-col on laptop/desktop */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-5 mb-6 sm:mb-8">
+        <StatCard
+          title="Total Members"
+          value={memberGrowthStats.total}
+          percentage={`${memberGrowthStats.growthRate}%`}
+          trendLabel="growth"
+          icon={Users}
+          theme="emerald"
+        />
+        <StatCard
+          title="New This Month"
+          value={memberGrowthStats.thisMonth}
+          caption={`${memberGrowthStats.thisWeek} this week`}
+          icon={TrendingUp}
+          theme="teal"
+        />
+        <StatCard
+          title="Active This Week"
+          value={memberGrowthStats.thisWeek}
+          percentage="100%"
+          trendLabel="retention"
+          icon={Activity}
+          theme="blue"
+        />
+        <StatCard
+          title="Growth Velocity"
+          value={memberGrowthStats.growthRate}
+          unit="%"
+          percentage="MoM"
+          trendLabel="trend"
+          icon={Target}
+          theme="violet"
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -486,7 +497,7 @@ export default function ProgressPage() {
         </Card>
       </div>
 
-      {/* Additional Stats Row */}
+      {/* Additional Stats Row: 2-column balanced on laptop */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mt-6">
         <Card className="bg-white border border-white/90 shadow-[6px_6px_20px_rgba(145,170,165,0.2),-4px_-4px_14px_rgba(255,255,255,0.95)] rounded-[28px] overflow-hidden">
           <CardHeader className="p-4 sm:p-5 pb-3 border-b border-[#E2ECE9]/60">
@@ -506,7 +517,7 @@ export default function ProgressPage() {
             <div className="space-y-3">
               {allMembers.length === 0 ? (
                 <div className="text-center py-8 rounded-2xl bg-[#F8FBFA] border border-[#E2ECE9] text-[#7186A0] text-xs font-semibold">
-                  No records found in progress_records table.
+                  No records found in current_measurements.
                 </div>
               ) : (
                 allMembers.slice(0, 5).map((member) => {
@@ -551,6 +562,80 @@ export default function ProgressPage() {
                   );
                 })
               )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Member Engagement & Retention Health Card to fill laptop space */}
+        <Card className="bg-white border border-white/90 shadow-[6px_6px_20px_rgba(145,170,165,0.2),-4px_-4px_14px_rgba(255,255,255,0.95)] rounded-[28px] overflow-hidden">
+          <CardHeader className="p-4 sm:p-5 pb-3 border-b border-[#E2ECE9]/60">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#EFF6FF] to-[#DBEAFE] text-[#2563EB] border border-[#BFDBFE] shadow-[2px_2px_5px_rgba(165,185,180,0.18),-1.5px_-1.5px_4px_rgba(255,255,255,0.9)] flex items-center justify-center shrink-0">
+                  <Activity className="w-4 h-4 text-[#2563EB]" />
+                </div>
+                <div>
+                  <CardTitle className="text-[17px] font-bold text-[#0F172A]">Engagement & Retention</CardTitle>
+                  <p className="text-[11px] font-semibold text-[#7186A0]">Cohort pulse & onboarding health</p>
+                </div>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-5 pt-4 space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3.5 rounded-2xl bg-[#F8FBFA] border border-[#E2ECE9] shadow-[1.5px_1.5px_4px_rgba(165,185,180,0.1)]">
+                <p className="text-[11px] font-bold text-[#7186A0] uppercase tracking-wide">Measurement Health</p>
+                <div className="flex items-baseline gap-1 mt-1">
+                  <span className="text-xl font-black text-[#0F172A]">
+                    {allMembers.length}
+                  </span>
+                  <span className="text-[11px] font-bold text-[#08B594]">logged</span>
+                </div>
+                <p className="text-[10px] text-[#7186A0] font-semibold mt-0.5">Active body metric sync</p>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-[#F8FBFA] border border-[#E2ECE9] shadow-[1.5px_1.5px_4px_rgba(165,185,180,0.1)]">
+                <p className="text-[11px] font-bold text-[#7186A0] uppercase tracking-wide">New Registrations</p>
+                <div className="flex items-baseline gap-1 mt-1">
+                  <span className="text-xl font-black text-[#0F172A]">
+                    {memberGrowthStats.thisMonth}
+                  </span>
+                  <span className="text-[11px] font-bold text-[#0D9488]">this month</span>
+                </div>
+                <p className="text-[10px] text-[#7186A0] font-semibold mt-0.5">+{memberGrowthStats.growthRate}% monthly velocity</p>
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-1">
+              <div>
+                <div className="flex justify-between text-xs font-bold mb-1.5">
+                  <span className="text-[#0F172A]">Weekly Active Rate</span>
+                  <span className="text-[#08B594]">
+                    {userRoles.length > 0 ? Math.round((memberGrowthStats.thisWeek / userRoles.length) * 100) : 100}%
+                  </span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-[#E2ECE9] overflow-hidden p-0.5 shadow-[inset_1px_1px_2px_rgba(165,185,180,0.3)]">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#0CC194] to-[#08B594]"
+                    style={{ width: `${userRoles.length > 0 ? Math.min(100, Math.round((memberGrowthStats.thisWeek / userRoles.length) * 100)) : 100}%` }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between text-xs font-bold mb-1.5">
+                  <span className="text-[#0F172A]">Metric Tracking Compliance</span>
+                  <span className="text-[#2563EB]">
+                    {userRoles.length > 0 ? Math.min(100, Math.round((allMembers.length / userRoles.length) * 100)) : 100}%
+                  </span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-[#E2ECE9] overflow-hidden p-0.5 shadow-[inset_1px_1px_2px_rgba(165,185,180,0.3)]">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#3B82F6] to-[#2563EB]"
+                    style={{ width: `${userRoles.length > 0 ? Math.min(100, Math.round((allMembers.length / userRoles.length) * 100)) : 100}%` }}
+                  />
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>

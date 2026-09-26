@@ -245,8 +245,8 @@ export default function Dashboard() {
         </button>
       </PageHeader>
 
-      {/* 3D Neumorphic KPI Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+      {/* 3D Neumorphic KPI Stat Cards - 3 in one horizontal row */}
+      <div className="grid grid-cols-3 gap-2.5 sm:gap-4 md:gap-5">
         <StatCard
           title="Subscribed Members"
           value={loading ? "..." : memberCount.user.toLocaleString()}

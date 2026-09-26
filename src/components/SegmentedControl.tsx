@@ -32,11 +32,11 @@ const SegmentedControl = ({
   const isRounded = shape === "rounded";
 
   const sizeClasses = {
-    sm: `h-9 text-xs p-1 gap-1 ${isRounded ? "rounded-[14px]" : "rounded-full"}`,
-    md: `h-10 sm:h-11 text-xs sm:text-[13px] p-1.5 gap-1.5 ${isRounded ? "rounded-[16px]" : "rounded-full"}`,
-    lg: `h-11 sm:h-12 text-xs sm:text-sm p-1.5 gap-2 ${isRounded ? "rounded-[18px]" : "rounded-full"}`,
-    xl: `h-12 sm:h-14 text-xs sm:text-sm p-2 gap-2 ${isRounded ? "rounded-[20px]" : "rounded-full"}`,
-    hero: `h-14 sm:h-16 text-sm sm:text-base p-2 gap-2.5 ${isRounded ? "rounded-[22px]" : "rounded-full"}`,
+    sm: `h-8 sm:h-9 text-[10px] min-[400px]:text-[11px] sm:text-xs p-0.5 sm:p-1 gap-0.5 sm:gap-1 ${isRounded ? "rounded-[12px]" : "rounded-full"}`,
+    md: `h-9 sm:h-10 text-[10.5px] min-[400px]:text-xs sm:text-[13px] p-0.5 sm:p-1.5 gap-0.5 sm:gap-1.5 ${isRounded ? "rounded-[14px]" : "rounded-full"}`,
+    lg: `h-10 sm:h-12 text-[10.5px] min-[380px]:text-[11.5px] sm:text-[13.5px] p-1 sm:p-1.5 gap-0.5 sm:gap-2 ${isRounded ? "rounded-[16px]" : "rounded-full"}`,
+    xl: `h-11 sm:h-14 text-xs sm:text-sm p-1 sm:p-2 gap-1 sm:gap-2 ${isRounded ? "rounded-[18px]" : "rounded-full"}`,
+    hero: `h-12 sm:h-16 text-xs sm:text-base p-1.5 sm:p-2 gap-1.5 sm:gap-2.5 ${isRounded ? "rounded-[20px]" : "rounded-full"}`,
   };
 
   const variantClasses = {
@@ -47,11 +47,11 @@ const SegmentedControl = ({
   };
 
   const buttonSizeClasses = {
-    sm: `text-xs py-1 px-3 font-bold ${isRounded ? "rounded-[10px]" : "rounded-full"}`,
-    md: `text-xs sm:text-[13px] py-1.5 px-3.5 sm:px-4 font-bold ${isRounded ? "rounded-[12px]" : "rounded-full"}`,
-    lg: `text-xs sm:text-sm py-2 px-4 sm:px-5 font-bold ${isRounded ? "rounded-[13px]" : "rounded-full"}`,
-    xl: `text-xs sm:text-sm py-2.5 px-5 sm:px-6 font-bold ${isRounded ? "rounded-[15px]" : "rounded-full"}`,
-    hero: `text-sm sm:text-base py-3 px-6 sm:px-7 font-bold ${isRounded ? "rounded-[17px]" : "rounded-full"}`,
+    sm: `text-[10px] min-[400px]:text-[11px] sm:text-xs py-1 px-1 sm:px-3 font-bold ${isRounded ? "rounded-[9px]" : "rounded-full"}`,
+    md: `text-[10.5px] min-[400px]:text-xs sm:text-[13px] py-1 px-1 min-[400px]:px-2 sm:px-4 font-bold ${isRounded ? "rounded-[11px]" : "rounded-full"}`,
+    lg: `text-[10.5px] min-[380px]:text-[11.5px] sm:text-[13.5px] py-1 px-1 min-[360px]:px-1.5 min-[400px]:px-2.5 sm:px-5 font-bold ${isRounded ? "rounded-[12px]" : "rounded-full"}`,
+    xl: `text-xs sm:text-sm py-1.5 px-2 sm:px-6 font-bold ${isRounded ? "rounded-[14px]" : "rounded-full"}`,
+    hero: `text-xs sm:text-base py-2 px-3 sm:px-7 font-bold ${isRounded ? "rounded-[16px]" : "rounded-full"}`,
   };
 
   const activeVariants = {
@@ -63,20 +63,20 @@ const SegmentedControl = ({
 
   const activeRadiusClass = isRounded
     ? size === "sm"
-      ? "rounded-[10px]"
+      ? "rounded-[9px]"
       : size === "md"
-      ? "rounded-[12px]"
+      ? "rounded-[11px]"
       : size === "lg"
-      ? "rounded-[13px]"
+      ? "rounded-[12px]"
       : size === "xl"
-      ? "rounded-[15px]"
-      : "rounded-[17px]"
+      ? "rounded-[14px]"
+      : "rounded-[16px]"
     : "rounded-full";
 
   return (
     <div
       className={cn(
-        "relative inline-flex w-full items-center transition-all",
+        "relative inline-flex w-full items-center transition-all overflow-x-auto scrollbar-none",
         sizeClasses[size],
         variantClasses[variant],
         className
@@ -107,7 +107,7 @@ const SegmentedControl = ({
             )}
             <span
               className={cn(
-                "relative z-10 flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap transition-colors duration-200",
+                "relative z-10 flex items-center justify-center gap-1 sm:gap-1.5 md:gap-2 whitespace-nowrap transition-colors duration-200 min-w-0",
                 isActive
                   ? variant === "ghost"
                     ? "text-[#08B594]"
@@ -116,11 +116,14 @@ const SegmentedControl = ({
               )}
             >
               {option.icon && (
-                <span className={cn("flex-shrink-0 [&>svg]:w-3.5 [&>svg]:h-3.5 sm:[&>svg]:w-4 sm:[&>svg]:h-4", size === "hero" && "[&>svg]:w-4.5 [&>svg]:h-4.5 sm:[&>svg]:w-5 sm:[&>svg]:h-5")}>
+                <span className={cn(
+                  "flex-shrink-0 [&>svg]:w-3 [&>svg]:h-3 min-[400px]:[&>svg]:w-3.5 min-[400px]:[&>svg]:h-3.5 sm:[&>svg]:w-4 sm:[&>svg]:h-4",
+                  size === "hero" && "[&>svg]:w-4 [&>svg]:h-4 sm:[&>svg]:w-5 sm:[&>svg]:h-5"
+                )}>
                   {option.icon}
                 </span>
               )}
-              <span>{option.label}</span>
+              <span className="truncate">{option.label}</span>
             </span>
           </button>
         );

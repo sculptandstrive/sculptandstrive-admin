@@ -701,26 +701,28 @@ export default function Users() {
   return (
     <>
       <PageHeader title="User Management" description="Real-time access control & member role directory.">
-        <div className="flex w-full flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-end lg:w-auto">
-          <div className="relative w-full sm:w-[280px]">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="relative flex-1 sm:w-[280px]">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#7186A0]" />
             <Input
               placeholder="Search name, email, or role..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-11 w-full rounded-2xl border border-white/80 bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] pl-10 text-sm font-semibold text-[#0F172A] placeholder:text-[#7186A0] focus-visible:ring-2 focus-visible:ring-[#08B594]/30"
+              className="h-10 sm:h-11 w-full rounded-xl sm:rounded-2xl border border-white/80 bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] pl-9 sm:pl-10 text-xs sm:text-sm font-semibold text-[#0F172A] placeholder:text-[#7186A0] focus-visible:ring-2 focus-visible:ring-[#08B594]/30"
             />
           </div>
           <Button
             variant="outline"
             onClick={fetchUsers}
-            className="h-11 gap-2 rounded-2xl border border-white bg-white shadow-[4px_4px_10px_rgba(145,170,165,0.18),-3px_-3px_8px_rgba(255,255,255,0.95)] px-4 font-bold text-[#334155] hover:bg-[#F0F7F5] active:scale-95 transition-all"
+            title="Refresh Users"
+            className="h-9 w-9 sm:h-11 sm:w-auto p-0 sm:px-4 sm:gap-1.5 rounded-xl sm:rounded-2xl border border-white bg-white shadow-[4px_4px_10px_rgba(145,170,165,0.18),-3px_-3px_8px_rgba(255,255,255,0.95)] font-bold text-[#334155] hover:bg-[#F0F7F5] active:scale-95 transition-all shrink-0 flex items-center justify-center"
           >
-            <RefreshCw className={`h-4 w-4 text-[#08B594] ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#08B594] ${loading ? "animate-spin" : ""}`} />
             <span className="hidden sm:inline">Refresh</span>
           </Button>
-          <div className="flex h-11 items-center px-4 rounded-2xl border border-white/80 bg-[#E2ECE9] shadow-[inset_1px_1px_2px_rgba(165,185,180,0.4),inset_-1px_-1px_2px_rgba(255,255,255,0.8)] text-xs font-black text-[#08B594] tracking-wider uppercase shrink-0">
-            {filteredUsers.length} {filteredUsers.length === 1 ? "Member" : "Members"}
+          <div className="flex h-10 sm:h-11 items-center px-2.5 sm:px-4 rounded-xl sm:rounded-2xl border border-white/80 bg-[#E2ECE9] shadow-[inset_1px_1px_2px_rgba(165,185,180,0.4),inset_-1px_-1px_2px_rgba(255,255,255,0.8)] text-[11px] sm:text-xs font-black text-[#08B594] tracking-wider uppercase shrink-0">
+            <span>{filteredUsers.length}</span>
+            <span className="hidden min-[380px]:inline ml-1">{filteredUsers.length === 1 ? "Member" : "Members"}</span>
           </div>
         </div>
       </PageHeader>

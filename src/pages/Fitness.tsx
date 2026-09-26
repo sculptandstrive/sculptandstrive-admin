@@ -778,8 +778,8 @@ export default function Fitness() {
           onOpenChange={setIsExerciseDialogOpen}
         >
           <DialogTrigger asChild>
-            <Button className="gap-2 bg-[#07AC7D] hover:bg-[#06966D] text-white h-11 px-4 rounded-[10px] transition-colors duration-150 font-semibold text-sm shadow-sm">
-              <Plus className="w-4 h-4" /> Add Exercise
+            <Button className="gap-1.5 bg-[#07AC7D] hover:bg-[#06966D] text-white h-10 sm:h-11 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition-all shrink-0">
+              <Plus className="w-4 h-4" /> <span>Add Exercise</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="rounded-2xl border border-border bg-card text-foreground shadow-xl">
@@ -903,10 +903,10 @@ export default function Fitness() {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="min-w-[120px] border-border rounded-[10px] text-foreground bg-card hover:bg-muted h-11 font-medium">
-              <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
-              {activeFilter === "All" ? "Filter View" : activeFilter}
-              <ChevronDown className="w-4 h-4 ml-2 opacity-50" />
+            <Button variant="outline" className="min-w-[110px] sm:min-w-[120px] border-border rounded-xl text-foreground bg-card hover:bg-muted h-10 sm:h-11 px-3 text-xs sm:text-sm font-semibold shrink-0">
+              <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 text-muted-foreground" />
+              <span>{activeFilter === "All" ? "Filter View" : activeFilter}</span>
+              <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1.5 sm:ml-2 opacity-50" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52 sm:w-56 max-h-[260px] sm:max-h-[300px] overflow-y-auto bg-popover text-popover-foreground border-border shadow-lg">

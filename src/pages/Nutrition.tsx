@@ -17,6 +17,7 @@ import {
   Calculator as CalculatorIcon,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import { StatCard } from "@/components/StatCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -527,13 +528,13 @@ export default function NutritionAdmin() {
         title="Nutrition Admin"
         description="Manage meal plans, nutrition metrics, and member assignments."
       >
-        <div className="flex w-full flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:justify-end lg:w-auto">
-          <div className="relative order-2 w-full sm:order-1 sm:w-[220px] lg:w-[240px]">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="relative flex-1 sm:w-[220px] lg:w-[240px]">
             <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7186A0]" />
             <Input
               placeholder="Search plans..."
               aria-label="Search meal plans"
-              className="h-11 w-full rounded-2xl border border-white/80 bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] pl-10 text-sm font-semibold text-[#0F172A] placeholder:text-[#7186A0] focus-visible:ring-2 focus-visible:ring-[#08B594]/30"
+              className="h-10 sm:h-11 w-full rounded-xl sm:rounded-2xl border border-white/80 bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] pl-9 sm:pl-10 text-xs sm:text-sm font-semibold text-[#0F172A] placeholder:text-[#7186A0] focus-visible:ring-2 focus-visible:ring-[#08B594]/30"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -542,17 +543,19 @@ export default function NutritionAdmin() {
           <Button
             variant="outline"
             onClick={fetchAdminDashboardData}
-            className="order-3 h-11 w-full gap-2 rounded-2xl border border-white bg-white shadow-[4px_4px_10px_rgba(145,170,165,0.18),-3px_-3px_8px_rgba(255,255,255,0.95)] px-4 font-bold text-[#334155] hover:bg-[#F0F7F5] active:scale-95 transition-all sm:order-2 sm:w-auto"
+            title="Sync Data"
+            className="h-9 w-9 sm:h-11 sm:w-auto p-0 sm:px-4 sm:gap-1.5 rounded-xl sm:rounded-2xl border border-white bg-white shadow-[4px_4px_10px_rgba(145,170,165,0.18),-3px_-3px_8px_rgba(255,255,255,0.95)] font-bold text-[#334155] hover:bg-[#F0F7F5] active:scale-95 transition-all shrink-0 flex items-center justify-center"
           >
-            <RefreshCw className={`h-4 w-4 text-[#08B594] ${loading ? "animate-spin" : ""}`} />
-            <span>Sync Data</span>
+            <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#08B594] ${loading ? "animate-spin" : ""}`} />
+            <span className="hidden sm:inline">Sync Data</span>
           </Button>
 
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="order-1 h-11 w-full gap-2 rounded-2xl bg-gradient-to-r from-[#08B594] via-[#07AB8C] to-[#069D80] px-5 font-bold text-white shadow-[0_4px_12px_rgba(8,169,130,0.35),inset_0_1px_1px_rgba(255,255,255,0.4)] hover:brightness-105 active:scale-95 transition-all sm:order-3 sm:w-auto">
+              <Button className="h-10 sm:h-11 px-3 sm:px-5 gap-1.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-[#08B594] via-[#07AB8C] to-[#069D80] font-bold text-white shadow-[0_4px_12px_rgba(8,169,130,0.35),inset_0_1px_1px_rgba(255,255,255,0.4)] hover:brightness-105 active:scale-95 transition-all text-xs sm:text-sm shrink-0">
                 <Plus className="h-4 w-4 stroke-[2.5]" />
-                <span>Create New Plan</span>
+                <span className="hidden min-[380px]:inline">New Plan</span>
+                <span className="min-[380px]:hidden">Plan</span>
               </Button>
             </DialogTrigger>
 
@@ -773,31 +776,37 @@ export default function NutritionAdmin() {
         </div>
       </PageHeader>
 
-      {/* KPI cards */}
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          { label: "Live Meal Plans", value: mealPlans.length, icon: Utensils, iconClass: "bg-emerald-500/10 text-[#08B594] border-emerald-500/20" },
-          { label: "Total Recipes", value: recipeCount, icon: Apple, iconClass: "bg-emerald-500/10 text-[#08B594] border-emerald-500/20" },
-          { label: "Global Avg Cals", value: globalAvgCals, icon: Flame, iconClass: "bg-amber-500/10 text-amber-500 border-amber-500/20" },
-          { label: "Water Intake Avg", value: `${globalWaterAvg}%`, icon: Droplets, iconClass: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
-        ].map(({ label, value, icon: Icon, iconClass }) => (
-          <div
-            key={label}
-            className="rounded-[22px] border border-white/80 bg-white p-5 shadow-[6px_6px_16px_rgba(145,170,165,0.18),-4px_-4px_12px_rgba(255,255,255,0.95)] transition-all hover:shadow-[8px_8px_20px_rgba(145,170,165,0.22),-4px_-4px_14px_rgba(255,255,255,1)] flex items-center justify-between"
-          >
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold uppercase tracking-wider text-[#7186A0]">
-                {label}
-              </p>
-              <p className="text-2xl font-black text-[#0F172A] tracking-tight leading-none mt-1.5">
-                {value}
-              </p>
-            </div>
-            <div className={`ml-3 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border shadow-[inset_1.5px_1.5px_3px_rgba(255,255,255,0.9),2px_2px_6px_rgba(0,0,0,0.06)] ${iconClass}`}>
-              <Icon className="h-5 w-5" strokeWidth={2.2} />
-            </div>
-          </div>
-        ))}
+      {/* KPI cards - 2 on mobile, 4 on desktop */}
+      <div className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+        <StatCard
+          title="Live Meal Plans"
+          value={mealPlans.length}
+          percentage="8%"
+          icon={Utensils}
+          theme="emerald"
+        />
+        <StatCard
+          title="Total Recipes"
+          value={recipeCount}
+          percentage="12%"
+          icon={Apple}
+          theme="teal"
+        />
+        <StatCard
+          title="Global Avg Cals"
+          value={globalAvgCals}
+          percentage="5%"
+          icon={Flame}
+          theme="amber"
+        />
+        <StatCard
+          title="Water Intake Avg"
+          value={globalWaterAvg}
+          unit="%"
+          percentage="10%"
+          icon={Droplets}
+          theme="blue"
+        />
       </div>
 
       {/* Meal plans */}

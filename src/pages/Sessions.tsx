@@ -39,13 +39,13 @@ function SessionStatCard({ title, value, icon: Icon, theme }: { title: string; v
   const iconColor = isEmerald ? "text-[#08B594]" : isTeal ? "text-[#0D9488]" : "text-[#475569]";
   const iconBg = isEmerald ? "bg-[#E2ECE9]" : isTeal ? "bg-[#E6F7F3]" : "bg-[#E2ECE9]";
   return (
-    <div className="rounded-[24px] border border-white/90 bg-white p-4 sm:p-5 shadow-[5px_5px_16px_rgba(130,155,151,0.14),-3px_-3px_10px_rgba(255,255,255,0.98)] hover:shadow-[7px_7px_20px_rgba(130,155,151,0.18)] flex items-center justify-between gap-3 transition-all">
+    <div className="rounded-[18px] sm:rounded-[24px] border border-white/90 bg-white p-3 sm:p-5 shadow-[4px_4px_14px_rgba(130,155,151,0.14),-3px_-3px_10px_rgba(255,255,255,0.98)] hover:shadow-[7px_7px_20px_rgba(130,155,151,0.18)] flex items-center justify-between gap-2 sm:gap-3 transition-all">
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-bold uppercase tracking-wider text-[#7186A0] truncate">{title}</p>
-        <p className="text-2xl sm:text-3xl font-black text-[#0F172A] tracking-tight leading-none mt-1.5">{value}</p>
+        <p className="text-[9.5px] sm:text-xs font-bold uppercase tracking-wider text-[#7186A0] truncate">{title}</p>
+        <p className="text-base sm:text-3xl font-black text-[#0F172A] tracking-tight leading-none mt-1 sm:mt-1.5">{value}</p>
       </div>
-      <div className={`w-11 h-11 rounded-2xl ${iconBg} ${iconColor} border border-white/60 shadow-[inset_1.5px_1.5px_3px_rgba(165,185,180,0.45),inset_-1.5px_-1.5px_3px_rgba(255,255,255,0.85)] flex items-center justify-center shrink-0`}>
-        <Icon className="w-5 h-5" />
+      <div className={`w-7 h-7 sm:w-11 sm:h-11 rounded-lg sm:rounded-2xl ${iconBg} ${iconColor} border border-white/60 shadow-[inset_1.5px_1.5px_3px_rgba(165,185,180,0.45),inset_-1.5px_-1.5px_3px_rgba(255,255,255,0.85)] flex items-center justify-center shrink-0`}>
+        <Icon className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
       </div>
     </div>
   );
@@ -1611,7 +1611,7 @@ export default function Sessions() {
 
         {/* Tab 1: Live Sessions */}
         <TabsContent value="live" className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 md:gap-5">
             <SessionStatCard
               title="Live Now"
               value={sessions.filter((s) => getLiveStatus(s.scheduled_at, s.type)).length}

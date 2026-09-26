@@ -1,6 +1,9 @@
 import * as React from "react";
 import { LucideIcon } from "lucide-react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { AnimatedCounter } from "@/components/motion/AnimatedCounter";
+import { MotionSparkline } from "@/components/motion/MotionSparkline";
 
 export type StatCardThemeKey =
   | "emerald"
@@ -103,46 +106,6 @@ export const STAT_CARD_THEMES: Record<StatCardThemeKey, StatCardTheme> = {
   },
 };
 
-export function MiniSparkline({
-  theme,
-  className,
-}: {
-  theme: StatCardTheme;
-  className?: string;
-}) {
-  return (
-    <svg
-      viewBox="0 0 112 44"
-      className={cn("w-16 sm:w-24 h-6 sm:h-9", className)}
-      preserveAspectRatio="none"
-    >
-      <defs>
-        <linearGradient id={theme.sparkGradientId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={theme.sparkStartColor} stopOpacity="0.25" />
-          <stop
-            offset="100%"
-            stopColor={theme.sparkStartColor}
-            stopOpacity="0.0"
-          />
-        </linearGradient>
-      </defs>
-      <path
-        d={theme.sparkArea}
-        fill={`url(#${theme.sparkGradientId})`}
-        stroke="none"
-      />
-      <path
-        d={theme.sparkPath}
-        fill="none"
-        stroke={theme.sparkStroke}
-        strokeWidth="2.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 export interface StatCardProps {
   title: string;
   value: string | number;
@@ -182,86 +145,99 @@ export function StatCard({
   const trendText = percentage || change;
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -3, scale: 1.01 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
       className={cn(
-        "bg-white border border-white/90 rounded-[24px] shadow-[6px_6px_18px_rgba(145,170,165,0.2),-4px_-4px_14px_rgba(255,255,255,0.95)] hover:shadow-[8px_8px_22px_rgba(145,170,165,0.26),-4px_-4px_14px_rgba(255,255,255,0.98)] transition-all duration-200 flex flex-col justify-between h-full relative overflow-hidden group p-4 sm:p-5",
-        compact && "p-3 sm:p-4",
+        "bg-gradient-to-b from-white to-[#F9FBFA] border border-white/90 rounded-[18px] sm:rounded-[24px] shadow-[4px_4px_14px_rgba(145,170,165,0.16),-3px_-3px_10px_rgba(255,255,255,0.98)] hover:shadow-[6px_6px_20px_rgba(145,170,165,0.22),-3px_-3px_12px_rgba(255,255,255,0.98)] transition-all duration-300 flex flex-col justify-between h-full relative overflow-hidden group p-2.5 sm:p-5",
+        compact && "p-2 sm:p-4",
         className
       )}
     >
       <div>
         {/* Top Header: 3D Recessed Icon Box + Mobile Trend Badge */}
-        <div className="flex items-center justify-between gap-2">
-          <div
+        <div className="flex items-center justify-between gap-1.5 sm:gap-2">
+          <motion.div
             className={cn(
-              "w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
-              compact && "w-9 h-9 rounded-xl",
+              "w-7 h-7 min-[400px]:w-8 min-[400px]:h-8 sm:w-11 sm:h-11 rounded-lg min-[400px]:rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0 shadow-sm",
+              compact && "w-6 h-6 sm:w-7 sm:h-7 rounded-lg",
               resolvedIconBg
             )}
+            whileHover={{ rotate: [0, -8, 8, 0], scale: 1.08 }}
+            transition={{ duration: 0.35 }}
           >
             <Icon
               className={cn(
-                "w-5 h-5 shrink-0",
-                compact && "w-4.5 h-4.5",
+                "w-3.5 h-3.5 min-[400px]:w-4 min-[400px]:h-4 sm:w-5 sm:h-5 shrink-0",
+                compact && "w-3 h-3 sm:w-3.5 sm:h-3.5",
                 resolvedIconColor
               )}
             />
-          </div>
+          </motion.div>
 
           {/* Mobile Trend Badge */}
           {trendText && (
             <div
               className={cn(
-                "sm:hidden inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black shadow-sm",
+                "inline-flex sm:hidden items-center gap-0.5 px-1 py-0.5 rounded-full text-[7.5px] min-[400px]:text-[8.5px] font-black shadow-sm shrink-0 whitespace-nowrap",
                 resolvedIconBg
               )}
             >
-              <span>↑ {trendText}</span>
+              <span>↑{trendText}</span>
             </div>
           )}
         </div>
 
-        {/* Title */}
-        <p className="text-xs font-bold uppercase tracking-wider text-[#7186A0] truncate mt-3.5">
+        {/* Title - Clean wrapping without awkward mid-word breaks */}
+        <p
+          className="text-[8.5px] min-[400px]:text-[9.5px] sm:text-xs font-bold uppercase tracking-wide text-[#7186A0] leading-tight sm:leading-snug mt-1.5 sm:mt-3 line-clamp-2 min-h-[22px] sm:min-h-0 break-normal hyphens-none"
+          title={title}
+        >
           {title}
         </p>
 
-        {/* Value + Unit */}
-        <div className="flex items-baseline gap-1 mt-1">
-          <span className="text-2xl sm:text-3xl font-black text-[#0F172A] tracking-tight leading-none">
-            {value}
+        {/* Value + Unit with Animated Motion Counter */}
+        <div className="flex items-baseline gap-0.5 sm:gap-1 mt-0.5 sm:mt-1.5 min-w-0">
+          <span className="text-base min-[400px]:text-lg sm:text-3xl font-black text-[#0F172A] tracking-tight leading-none truncate">
+            <AnimatedCounter value={value} />
           </span>
           {unit && (
-            <span className="text-xs font-bold text-[#7186A0]">
+            <span className="text-[9px] sm:text-sm font-bold text-[#7186A0] shrink-0">
               {unit}
             </span>
           )}
         </div>
       </div>
 
-      {/* Bottom: Desktop Trend + Sparkline */}
-      <div className="flex items-end justify-between pt-2 mt-auto">
+      {/* Bottom: Desktop Trend + Animated Motion Sparkline */}
+      <div className="flex items-end justify-between pt-1 sm:pt-2 mt-auto">
         {trendText ? (
           <div className="hidden sm:flex items-center gap-1.5 text-xs font-bold leading-none">
-            <span className={cn(t.trendColor, "font-black flex items-center gap-0.5")}>
+            <motion.span
+              className={cn(t.trendColor, "font-black flex items-center gap-0.5")}
+              animate={{ y: [0, -2, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            >
               ↑ {trendText}
-            </span>
+            </motion.span>
             <span className="text-[#7186A0] font-semibold text-[11px]">
               {trendLabel}
             </span>
           </div>
         ) : caption ? (
-          <p className="text-[11px] text-[#7186A0] font-semibold">{caption}</p>
+          <p className="text-[8.5px] sm:text-[11px] text-[#7186A0] font-semibold truncate">{caption}</p>
         ) : (
           <div />
         )}
 
         {showSparkline && (
-          <div className="shrink-0 -mb-1 ml-auto">
-            <MiniSparkline theme={t} />
+          <div className="hidden sm:block shrink-0 -mb-1 ml-auto scale-90 sm:scale-100 origin-bottom-right">
+            <MotionSparkline theme={t} />
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
