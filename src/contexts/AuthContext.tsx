@@ -51,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(currentSession);
         setUser(currentSession.user);
         setLoading(false);
+        return;
       }
 
       const { data: profileData, error } = await supabase
@@ -92,7 +93,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      checkUserRole(newSession);
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION") {
+        checkUserRole(newSession);
+      }
     });
 
     supabase.auth
@@ -158,12 +161,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    return { error: error as Error | null };
+      if (error) {
+        return { error: error as Error };
+      }
+
+      if (!data?.user) {
+        return { error: new Error("Authentication failed") };
+      }
+
+      // Fast check for cached role or instant verification
+      const cached = sessionStorage.getItem(`admin_role_${data.user.id}`);
+      if (cached === "admin") {
+        setUser(data.user);
+        setSession(data.session);
+        setLoading(false);
+        return { error: null };
+      }
+
+      // Verify admin role immediately before returning
+      const { data: roleData, error: roleError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", data.user.id)
+        .maybeSingle();
+
+      if (roleError || !roleData || roleData.role !== "admin") {
+        try {
+          await supabase.auth.signOut();
+        } catch {}
+        clearAuthTokens();
+        sessionStorage.removeItem(`admin_role_${data.user.id}`);
+        setUser(null);
+        setSession(null);
+        setLoading(false);
+        return { error: new Error("Access denied. Admin privileges required.") };
+      }
+
+      // Validated Admin
+      sessionStorage.setItem(`admin_role_${data.user.id}`, "admin");
+      setUser(data.user);
+      setSession(data.session);
+      setLoading(false);
+
+      return { error: null };
+    } catch (err: any) {
+      return { error: err || new Error("Failed to sign in") };
+    }
   };
 
   return (
