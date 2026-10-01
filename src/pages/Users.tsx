@@ -9,8 +9,15 @@ import {
   RefreshCw, 
   Loader2, 
   UserPlus, 
-  Trash2
+  Trash2,
+  ChevronDown
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -673,8 +680,15 @@ export default function Users() {
     }
     setDeleting(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("Admin session expired. Please log in again to perform deletions.");
+      }
       const { error } = await supabase.functions.invoke("delete-user", {
         body: { user_id: deleteDialog.user.user_id },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
       if (error) {
        
@@ -849,43 +863,51 @@ export default function Users() {
           )}
         </div>
 
-        {/* ── Desktop Table (hidden on mobile) ── */}
-        <div className="hidden md:block overflow-x-auto">
-          <Table className="min-w-full table-fixed border-collapse">
+        {/* ── Desktop & Tablet Responsive Table (No Horizontal Scroll) ── */}
+        <div className="hidden md:block w-full overflow-hidden">
+          <Table className="w-full border-collapse">
             <TableHeader className="bg-[#F4F9F7] border-b border-[#E2ECE9]">
               <TableRow className="border-none hover:bg-transparent">
-                <TableHead className="w-[190px] py-4 pl-6 text-xs font-black uppercase tracking-wider text-[#7186A0]">Member Name</TableHead>
-                <TableHead className="w-[230px] py-4 text-xs font-black uppercase tracking-wider text-[#7186A0]">Email Address</TableHead>
-                <TableHead className="w-[190px] py-4 text-center text-xs font-black uppercase tracking-wider text-[#7186A0]">Current Role & Coaches</TableHead>
-                <TableHead className="w-[500px] py-4 text-right pr-6 text-xs font-black uppercase tracking-wider text-[#7186A0]">Management</TableHead>
+                <TableHead className="py-3.5 pl-5 sm:pl-6 text-xs font-black uppercase tracking-wider text-[#7186A0] w-[32%] sm:w-[35%]">
+                  Member Details
+                </TableHead>
+                <TableHead className="py-3.5 text-center text-xs font-black uppercase tracking-wider text-[#7186A0] w-[22%] sm:w-[20%]">
+                  Role & Coaches
+                </TableHead>
+                <TableHead className="py-3.5 pr-5 sm:pr-6 text-right text-xs font-black uppercase tracking-wider text-[#7186A0] w-[46%] sm:w-[45%]">
+                  Management
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredUsers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="py-12 text-center text-sm font-semibold text-[#7186A0]">
+                  <TableCell colSpan={3} className="py-12 text-center text-sm font-semibold text-[#7186A0]">
                     No members found matching your search.
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredUsers.map((user) => (
                   <TableRow key={user.id} className="hover:bg-[#F8FAFC] border-b border-[#E2ECE9] last:border-0 transition-colors">
-                    <TableCell className="py-4 pl-6">
-                      <div className="flex items-center gap-3">
+                    {/* Member Details */}
+                    <TableCell className="py-3.5 pl-5 sm:pl-6">
+                      <div className="flex items-center gap-3 min-w-0">
                         <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[#0CC194]/15 via-[#08B594]/20 to-[#069D80]/25 border border-white shadow-[inset_1.5px_1.5px_3px_rgba(255,255,255,0.9),2px_2px_5px_rgba(8,169,130,0.12)] flex items-center justify-center text-xs font-black text-[#08B594] shrink-0">
                           {(user.full_name?.[0] || user.email?.[0] || "U").toUpperCase()}
                         </div>
-                        <span className="text-sm font-bold text-[#0F172A] truncate block max-w-[130px]" title={user.full_name || ""}>
-                          {user.full_name || "New Member"}
-                        </span>
+                        <div className="min-w-0 flex-1">
+                          <span className="text-sm font-bold text-[#0F172A] truncate block" title={user.full_name || ""}>
+                            {user.full_name || "New Member"}
+                          </span>
+                          <span className="text-xs font-semibold text-[#7186A0] truncate block" title={user.email || user.user_id || ""}>
+                            {user.email || (user.user_id ? (user.user_id.includes('@') ? user.user_id : `ID: ${user.user_id.slice(0, 10)}...`) : "not set")}
+                          </span>
+                        </div>
                       </div>
                     </TableCell>
-                    <TableCell className="py-4 text-xs font-semibold text-[#7186A0]">
-                      <span className="truncate block max-w-[200px]" title={user.email || user.user_id || ""}>
-                        {user.email || (user.user_id ? (user.user_id.includes('@') ? user.user_id : `ID: ${user.user_id.slice(0, 12)}...`) : "not set")}
-                      </span>
-                    </TableCell>
-                    <TableCell className="py-4 text-center">
+
+                    {/* Role & Coaches */}
+                    <TableCell className="py-3.5 text-center">
                       <div className="flex flex-col items-center justify-center gap-1">
                         <span className={`inline-flex items-center justify-center text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-white/60 shadow-[inset_1px_1px_2px_rgba(165,185,180,0.35)] ${
                           user.role === 'admin'
@@ -901,15 +923,15 @@ export default function Users() {
                         {user.role === 'user' && (
                           user.coach_name && user.secondary_coach_name ? (
                             <div className="flex flex-col gap-0.5 items-center mt-0.5">
-                              <span className="inline-flex items-center justify-center text-[9px] font-bold bg-purple-50 text-purple-600 border border-purple-200/60 h-4 px-2 rounded-md truncate max-w-[135px]" title={`Primary: ${user.coach_name}`}>
+                              <span className="inline-flex items-center justify-center text-[9px] font-bold bg-purple-50 text-purple-600 border border-purple-200/60 h-4 px-1.5 rounded-md truncate max-w-[125px]" title={`Primary: ${user.coach_name}`}>
                                 1° {user.coach_name}
                               </span>
-                              <span className="inline-flex items-center justify-center text-[9px] font-bold bg-teal-50 text-teal-600 border border-teal-200/60 h-4 px-2 rounded-md truncate max-w-[135px]" title={`Secondary: ${user.secondary_coach_name}`}>
+                              <span className="inline-flex items-center justify-center text-[9px] font-bold bg-teal-50 text-teal-600 border border-teal-200/60 h-4 px-1.5 rounded-md truncate max-w-[125px]" title={`Secondary: ${user.secondary_coach_name}`}>
                                 2° {user.secondary_coach_name}
                               </span>
                             </div>
                           ) : user.coach_name ? (
-                            <span className="inline-flex items-center justify-center text-[9px] font-bold bg-purple-50 text-purple-600 border border-purple-200/60 h-4 px-2 rounded-md truncate max-w-[135px] mt-0.5" title={`Coach: ${user.coach_name}`}>
+                            <span className="inline-flex items-center justify-center text-[9px] font-bold bg-purple-50 text-purple-600 border border-purple-200/60 h-4 px-1.5 rounded-md truncate max-w-[125px] mt-0.5" title={`Coach: ${user.coach_name}`}>
                               {user.coach_name}
                             </span>
                           ) : (
@@ -920,68 +942,116 @@ export default function Users() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="py-4 text-right pr-6">
-                      <div className="flex items-center gap-2 justify-end">
-                        {user.role !== 'admin' ? (
+
+                    {/* Management Actions (Responsive without horizontal scroll) */}
+                    <TableCell className="py-3.5 pr-5 sm:pr-6 text-right">
+                      <div className="flex items-center gap-1.5 sm:gap-2 justify-end">
+                        {/* Full Buttons on large screens (xl+) */}
+                        <div className="hidden xl:flex items-center gap-2">
+                          {user.role !== 'admin' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 px-2.5 text-xs font-bold bg-[#F5F3FF] border border-white shadow-[2px_2px_5px_rgba(180,200,196,0.2),-2px_-2px_5px_rgba(255,255,255,0.9)] hover:bg-[#EDE9FE] text-[#7C3AED] rounded-xl flex items-center justify-center gap-1.5 whitespace-nowrap transition-all active:scale-95 shrink-0"
+                              onClick={() => {
+                                setSelectedUserForCoach(user);
+                                setPrimaryCoachSelection(user.coach_id || "none");
+                                setSecondaryCoachSelection(user.secondary_coach_id || "none");
+                                setIsAssignCoachOpen(true);
+                              }}
+                            >
+                              <ShieldCheck className="w-3.5 h-3.5 text-[#7C3AED] shrink-0" />
+                              <span>Coaches</span>
+                            </Button>
+                          )}
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-8 px-3 text-xs font-bold bg-[#F5F3FF] border border-white shadow-[2px_2px_6px_rgba(180,200,196,0.22),-2px_-2px_6px_rgba(255,255,255,0.9)] hover:bg-[#EDE9FE] text-[#7C3AED] rounded-xl flex items-center justify-center gap-1.5 whitespace-nowrap transition-all active:scale-95 shrink-0"
-                            onClick={() => {
-                              setSelectedUserForCoach(user);
-                              setPrimaryCoachSelection(user.coach_id || "none");
-                              setSecondaryCoachSelection(user.secondary_coach_id || "none");
-                              setIsAssignCoachOpen(true);
-                            }}
+                            className="h-8 px-2.5 text-xs font-bold bg-[#F0FDF4] border border-white shadow-[2px_2px_5px_rgba(180,200,196,0.2),-2px_-2px_5px_rgba(255,255,255,0.9)] hover:bg-[#DCFCE7] text-[#16A34A] rounded-xl flex items-center justify-center gap-1.5 whitespace-nowrap transition-all active:scale-95 shrink-0"
+                            onClick={() => { setSelectedUserId(user.user_id); setIsAssignGroupOpen(true); }}
                           >
-                            <ShieldCheck className="w-3.5 h-3.5 text-[#7C3AED] shrink-0" />
-                            <span>Assign Coaches</span>
+                            <UsersIcon className="w-3.5 h-3.5 text-[#16A34A] shrink-0" />
+                            <span>Group</span>
                           </Button>
-                        ) : (
-                          <div className="w-[120px] shrink-0" />
-                        )}
+                        </div>
+
+                        {/* Tablet Dropdown (< xl) for Assigning Coaches / Group */}
+                        <div className="xl:hidden">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 px-2.5 text-xs font-bold bg-[#F8FAFC] border border-white shadow-[2px_2px_5px_rgba(180,200,196,0.18)] hover:bg-[#E2ECE9] text-[#0F172A] rounded-xl flex items-center gap-1 shrink-0"
+                              >
+                                <span>Assign</span>
+                                <ChevronDown className="w-3.5 h-3.5 text-[#7186A0]" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="rounded-2xl border border-white/90 bg-white p-1.5 shadow-[6px_6px_22px_rgba(145,170,165,0.25)] min-w-[150px]">
+                              {user.role !== 'admin' && (
+                                <DropdownMenuItem
+                                  className="text-xs font-bold text-[#7C3AED] py-2 px-3 rounded-xl cursor-pointer hover:bg-purple-50 flex items-center gap-2"
+                                  onClick={() => {
+                                    setSelectedUserForCoach(user);
+                                    setPrimaryCoachSelection(user.coach_id || "none");
+                                    setSecondaryCoachSelection(user.secondary_coach_id || "none");
+                                    setIsAssignCoachOpen(true);
+                                  }}
+                                >
+                                  <ShieldCheck className="w-3.5 h-3.5" />
+                                  <span>Assign Coaches</span>
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem
+                                className="text-xs font-bold text-[#16A34A] py-2 px-3 rounded-xl cursor-pointer hover:bg-emerald-50 flex items-center gap-2"
+                                onClick={() => { setSelectedUserId(user.user_id); setIsAssignGroupOpen(true); }}
+                              >
+                                <UsersIcon className="w-3.5 h-3.5" />
+                                <span>Assign Group</span>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+
+                        {/* View Profile */}
                         <Button
                           variant="outline"
                           size="sm"
-                          className="h-8 px-3 text-xs font-bold bg-[#F0FDF4] border border-white shadow-[2px_2px_6px_rgba(180,200,196,0.22),-2px_-2px_6px_rgba(255,255,255,0.9)] hover:bg-[#DCFCE7] text-[#16A34A] rounded-xl flex items-center justify-center gap-1.5 whitespace-nowrap transition-all active:scale-95 shrink-0"
-                          onClick={() => { setSelectedUserId(user.user_id); setIsAssignGroupOpen(true); }}
-                        >
-                          <UsersIcon className="w-3.5 h-3.5 text-[#16A34A] shrink-0" />
-                          <span>Assign Group</span>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 px-3 text-xs font-bold bg-white border border-white shadow-[2px_2px_6px_rgba(180,200,196,0.22),-2px_-2px_6px_rgba(255,255,255,0.9)] hover:bg-[#F8FAFC] text-[#334155] rounded-xl flex items-center justify-center whitespace-nowrap transition-all active:scale-95 shrink-0"
+                          className="h-8 px-2.5 sm:px-3 text-xs font-bold bg-white border border-white shadow-[2px_2px_5px_rgba(180,200,196,0.18),-2px_-2px_5px_rgba(255,255,255,0.9)] hover:bg-[#F8FAFC] text-[#334155] rounded-xl flex items-center justify-center whitespace-nowrap transition-all active:scale-95 shrink-0"
                           onClick={() => { setSelectedProfileUser(user); setProfileDialogOpen(true); fetchClientProfile(user.user_id); }}
                         >
-                          View Profile
+                          Profile
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8 shrink-0 text-[#94A3B8] hover:text-[#EF4444] hover:bg-rose-50 border border-white/80 bg-white shadow-[2px_2px_6px_rgba(180,200,196,0.18),-2px_-2px_6px_rgba(255,255,255,0.85)] rounded-xl transition-all flex items-center justify-center"
-                          onClick={() => setDeleteDialog({ open: true, user })}
-                          disabled={user.role === 'admin' || user.user_id === currentUser?.id}
-                          title="Delete User"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+
+                        {/* Role Select Dropdown */}
                         <Select
                           value={user.role}
                           onValueChange={(val: AppRole) => handleRoleChange(user, val)}
                           disabled={user.role === 'admin' || user.user_id === currentUser?.id || updating}
                         >
-                          <SelectTrigger className="h-8 w-[98px] px-2.5 text-xs font-bold bg-[#E2ECE9] shadow-[inset_1.5px_1.5px_3px_rgba(165,185,180,0.4),inset_-1.5px_-1.5px_3px_rgba(255,255,255,0.8)] border border-white/60 text-[#0F172A] rounded-xl disabled:opacity-75 disabled:cursor-not-allowed transition-all shrink-0 justify-between">
+                          <SelectTrigger className="h-8 w-[88px] sm:w-[94px] px-2 text-xs font-bold bg-[#E2ECE9] shadow-[inset_1.5px_1.5px_3px_rgba(165,185,180,0.4),inset_-1.5px_-1.5px_3px_rgba(255,255,255,0.8)] border border-white/60 text-[#0F172A] rounded-xl disabled:opacity-75 disabled:cursor-not-allowed transition-all shrink-0 justify-between">
                             <SelectValue placeholder="Role" />
                           </SelectTrigger>
-                          <SelectContent className="rounded-2xl border border-white/90 bg-white p-1.5 shadow-[6px_6px_22px_rgba(145,170,165,0.25)] min-w-[130px]">
+                          <SelectContent className="rounded-2xl border border-white/90 bg-white p-1.5 shadow-[6px_6px_22px_rgba(145,170,165,0.25)] min-w-[120px]">
                             <SelectItem value="admin" className="text-xs font-bold text-rose-600 py-2 px-3 rounded-xl focus:bg-rose-50" disabled>ADMIN</SelectItem>
                             <SelectItem value="user" className="text-xs font-bold text-[#0F172A] py-2 px-3 rounded-xl focus:bg-[#E2ECE9]/50">USER</SelectItem>
                             <SelectItem value="trial_user" className="text-xs font-bold text-[#08B594] py-2 px-3 rounded-xl focus:bg-emerald-50">TRIAL</SelectItem>
                             <SelectItem value="coach" className="text-xs font-bold text-purple-600 py-2 px-3 rounded-xl focus:bg-purple-50">COACH</SelectItem>
                           </SelectContent>
                         </Select>
+
+                        {/* Delete Button */}
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 shrink-0 text-[#94A3B8] hover:text-[#EF4444] hover:bg-rose-50 border border-white/80 bg-white shadow-[2px_2px_5px_rgba(180,200,196,0.18),-2px_-2px_5px_rgba(255,255,255,0.85)] rounded-xl transition-all flex items-center justify-center"
+                          onClick={() => setDeleteDialog({ open: true, user })}
+                          disabled={user.role === 'admin' || user.user_id === currentUser?.id}
+                          title="Delete User"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
