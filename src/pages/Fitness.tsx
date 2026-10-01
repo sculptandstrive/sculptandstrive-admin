@@ -205,78 +205,14 @@ export default function Fitness() {
 
   const fetchAllExercises = async () => {
     const { data, error } = await supabase.from("exercises_list").select("*");
-    // console.log(data);
-    setAllExercise(data);
+    if (data) setAllExercise(data);
     if (error) {
       toast({ title: "Exercise Server error", variant: "destructive" });
     }
   };
 
-  const fetchFitnessData = async () => {
-    try {
-      setLoading(true);
-      const [ExerciseData, profilesRes, assignmentsRes] = await Promise.all([
-        supabase
-          .from("exercises")
-          .select("*")
-          .order("created_at", { ascending: false }),
-        (supabase as any).from("profiles").select("user_id, full_name, email"),
-        (supabase as any)
-          .from("client_workout_assignments")
-          .select("client_id, plan_id"),
-      ]);
-
-      // Enrich exercises with user full_name
-      if (ExerciseData.data) {
-        const enriched = await Promise.all(
-          ExerciseData.data.map(async (data: any) => {
-            const { data: user } = await supabase
-              .from("profiles")
-              .select("full_name")
-              .eq("user_id", data.user_id)
-              .maybeSingle();
-            return {
-              ...data,
-              full_name: user?.full_name?.split(" ")[0] || null,
-            };
-          }),
-        );
-        setExercises(enriched);
-      }
-
-      // Build users list with their active plan name
-      const assignments: any[] = assignmentsRes.data || [];
-      if (profilesRes.data) {
-        const formattedUsers = (profilesRes.data as any[]).map((profile) => {
-          // A user may have multiple plan assignments; grab the first for display
-          const userAssignment = assignments.find(
-            (a) => a.client_id === profile.user_id,
-          );
-          const activePlanEntry = allPlans.find(
-            (p) => p.id === userAssignment?.plan_id,
-          );
-          return {
-            id: profile.user_id,
-            full_name: profile.full_name || "Unknown User",
-            email: profile.email || "No Email",
-            active_plan_name: activePlanEntry ? activePlanEntry.name : null,
-          };
-        });
-        setUsers(formattedUsers);
-      }
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Fetch Error",
-        description: error.message,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const fetchCategories = async () => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("exercise_category")
       .select("*");
 
@@ -291,6 +227,82 @@ export default function Fitness() {
     }));
 
     setAllCategories([...dbCats, ...staticCats] as any);
+  };
+
+  const fetchFitnessData = async () => {
+    try {
+      setLoading(true);
+      // Fast single parallel batch - 0 sequential waterfalls
+      const [ExerciseData, profilesRes, assignmentsRes, categoriesRes, exercisesListRes, plansRes] = await Promise.all([
+        supabase
+          .from("exercises")
+          .select("*")
+          .order("created_at", { ascending: false }),
+        supabase.from("profiles").select("user_id, full_name, email"),
+        supabase.from("client_workout_assignments").select("client_id, plan_id"),
+        supabase.from("exercise_category").select("*"),
+        supabase.from("exercises_list").select("*"),
+        supabase.from("workout_plans").select("*").order("created_at", { ascending: false }),
+      ]);
+
+      const plans = plansRes.data || allPlans;
+      if (plansRes.data) setAllPlans(plansRes.data);
+
+      const profiles = profilesRes.data || [];
+      const profileMap = new Map<string, string>();
+      profiles.forEach((p: any) => {
+        if (p.user_id) profileMap.set(p.user_id, p.full_name || p.email?.split("@")[0] || "User");
+      });
+
+      // 1. Enrich exercises instantly via in-memory Map (eliminates all N+1 queries)
+      if (ExerciseData.data) {
+        const enriched = ExerciseData.data.map((data: any) => ({
+          ...data,
+          full_name: profileMap.get(data.user_id)?.split(" ")[0] || null,
+        }));
+        setExercises(enriched);
+      }
+
+      // 2. Build users list with their active plan name instantly
+      const assignments: any[] = assignmentsRes.data || [];
+      if (profiles.length > 0) {
+        const formattedUsers = profiles.map((profile: any) => {
+          const userAssignment = assignments.find((a) => a.client_id === profile.user_id);
+          const activePlanEntry = plans.find((p: any) => p.id === userAssignment?.plan_id);
+          return {
+            id: profile.user_id,
+            full_name: profile.full_name || "Unknown User",
+            email: profile.email || "No Email",
+            active_plan_name: activePlanEntry ? activePlanEntry.name : null,
+          };
+        });
+        setUsers(formattedUsers);
+      }
+
+      // 3. Process categories
+      const dbCats = categoriesRes.data ?? [];
+      const dbCatNames = new Set(dbCats.map((c: any) => c.name?.toLowerCase()));
+      const staticCats = EXERCISE_CATEGORIES.filter(
+        (cat) => !dbCatNames.has(cat.name.toLowerCase())
+      ).map((cat) => ({
+        id: `static-${cat.id}`,
+        name: cat.name,
+      }));
+      setAllCategories([...dbCats, ...staticCats] as any);
+
+      // 4. Process exercises list
+      if (exercisesListRes.data) {
+        setAllExercise(exercisesListRes.data);
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Fetch Error",
+        description: error.message,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handledeleteCategory = async (categoryId: string) => {
@@ -578,15 +590,7 @@ export default function Fitness() {
 
   useEffect(() => {
     fetchFitnessData();
-    fetchCategories();
-    fetchAllExercises();
-    fetchPlans();
   }, []);
-
-  // Re-run fetchFitnessData once allPlans is populated so active_plan_name resolves
-  useEffect(() => {
-    if (allPlans.length > 0) fetchFitnessData();
-  }, [allPlans.length]);
 
   const filteredExercises = useMemo(() => {
     return activeFilter === "All"
