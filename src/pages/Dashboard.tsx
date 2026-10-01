@@ -362,7 +362,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-3 gap-2.5 sm:gap-4 md:gap-5">
         <StatCard
           title="Subscribed Members"
-          value={loading ? "..." : memberCount.user.toLocaleString()}
+          value={memberCount.user}
           percentage="12%"
           trendLabel="vs last week"
           icon={Users}
@@ -370,7 +370,7 @@ export default function Dashboard() {
         />
         <StatCard
           title="Trial Members"
-          value={loading ? "..." : memberCount.trial_user.toLocaleString()}
+          value={memberCount.trial_user}
           percentage="8%"
           trendLabel="vs last week"
           icon={Users}
@@ -378,7 +378,7 @@ export default function Dashboard() {
         />
         <StatCard
           title="Total Sessions"
-          value={loading ? "..." : sessionCount.toLocaleString()}
+          value={sessionCount}
           percentage="18%"
           trendLabel="vs last week"
           icon={Activity}

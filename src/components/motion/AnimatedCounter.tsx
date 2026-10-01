@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useEffect, useRef } from "react";
-import { useInView, useMotionValue, useSpring } from "framer-motion";
+import { useMotionValue, useSpring } from "framer-motion";
 
 interface AnimatedCounterProps {
   value: string | number;
@@ -10,11 +10,10 @@ interface AnimatedCounterProps {
 
 export function AnimatedCounter({
   value,
-  duration = 1.2,
+  duration = 0.8,
   className,
 }: AnimatedCounterProps) {
   const ref = useRef<HTMLSpanElement>(null);
-  const isInView = useInView(ref, { once: true, margin: "0px" });
 
   const numValue =
     typeof value === "number"
@@ -23,26 +22,26 @@ export function AnimatedCounter({
 
   const isNumeric = !isNaN(numValue) && isFinite(numValue);
 
-  const motionValue = useMotionValue(0);
+  const motionValue = useMotionValue(isNumeric ? numValue : 0);
   const springValue = useSpring(motionValue, {
-    damping: 30,
-    stiffness: 100,
+    damping: 25,
+    stiffness: 120,
     duration: duration * 1000,
   });
 
   useEffect(() => {
-    if (isInView && isNumeric) {
+    if (isNumeric) {
       motionValue.set(numValue);
+      if (ref.current) {
+        ref.current.textContent = numValue.toLocaleString();
+      }
+    } else if (ref.current) {
+      ref.current.textContent = String(value);
     }
-  }, [isInView, numValue, isNumeric, motionValue]);
+  }, [numValue, isNumeric, value, motionValue]);
 
   useEffect(() => {
-    if (!isNumeric) {
-      if (ref.current) {
-        ref.current.textContent = String(value);
-      }
-      return;
-    }
+    if (!isNumeric) return;
 
     const unsubscribe = springValue.on("change", (latest) => {
       if (ref.current) {
@@ -63,13 +62,9 @@ export function AnimatedCounter({
     return () => unsubscribe();
   }, [springValue, value, isNumeric]);
 
-  if (!isNumeric) {
-    return <span className={className}>{value}</span>;
-  }
-
   return (
     <span ref={ref} className={className}>
-      0
+      {isNumeric ? numValue.toLocaleString() : String(value)}
     </span>
   );
 }
