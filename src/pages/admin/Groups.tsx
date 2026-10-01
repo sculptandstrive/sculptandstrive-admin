@@ -328,18 +328,18 @@ export default function Groups() {
           >
             <div className="p-5">
               {/* Header */}
-              <div className="flex items-center justify-between mb-2.5">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#0CC194]/15 via-[#08B594]/20 to-[#069D80]/25 border border-white/80 shadow-[inset_1.5px_1.5px_3px_rgba(255,255,255,0.9),2px_2px_5px_rgba(8,169,130,0.12)] flex items-center justify-center flex-shrink-0">
+              <div className="flex items-center justify-between gap-2.5 mb-2.5">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#0CC194]/15 via-[#08B594]/20 to-[#069D80]/25 border border-white/80 shadow-[inset_1.5px_1.5px_3px_rgba(255,255,255,0.9),2px_2px_5px_rgba(8,169,130,0.12)] flex items-center justify-center shrink-0">
                     <Users className="w-5 h-5 text-[#08B594]" />
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="text-[18px] font-bold text-[#0F172A] truncate">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-[17px] font-bold text-[#0F172A] truncate" title={group.name}>
                       {group.name}
                     </h3>
                   </div>
                 </div>
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#7186A0] bg-[#E2ECE9] shadow-[inset_1px_1px_2px_rgba(165,185,180,0.4),inset_-1px_-1px_2px_rgba(255,255,255,0.8)] border border-white/60 px-2.5 py-1 rounded-full">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#7186A0] bg-[#E2ECE9] shadow-[inset_1px_1px_2px_rgba(165,185,180,0.4),inset_-1px_-1px_2px_rgba(255,255,255,0.8)] border border-white/60 px-2.5 py-1 rounded-full whitespace-nowrap shrink-0">
                   {group.member_count} {group.member_count === 1 ? 'MEMBER' : 'MEMBERS'}
                 </span>
               </div>
