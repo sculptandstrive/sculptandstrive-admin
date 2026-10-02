@@ -196,7 +196,7 @@ export default function Auth() {
                 <input
                   id="email"
                   type="email"
-                  placeholder="admin@sculptandstrive.com"
+                  placeholder="sculptandstrive@gmail.com"
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
                   className="bg-transparent border-none text-sm font-medium text-[#0F1C32] placeholder:text-[#94A3B8] focus:outline-none w-full"

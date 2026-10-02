@@ -51,7 +51,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
     user?.user_metadata?.full_name ||
     user?.email?.split("@")[0] ||
     "Admin";
-  const displayEmail = user?.email || "admin@sculptandstrive.com";
+  const displayEmail = user?.email || "sculptandstrive@gmail.com";
   const userInitials = displayName
     .split(" ")
     .map((n: string) => n[0])
