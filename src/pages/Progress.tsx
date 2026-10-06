@@ -13,6 +13,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import MemberActivity from "@/components/MemberActivity";
 import {
   LineChart as RechartsLineChart,
   Line,
@@ -647,6 +648,7 @@ export default function ProgressPage() {
 
       {/* ── Client Progress 3D Cards Grid (Full Measurements & Photos) ── */}
       <div className="pt-2">
+        <MemberActivity />
         <AdminClientProgress />
       </div>
     </div>
