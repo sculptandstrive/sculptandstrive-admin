@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -217,7 +217,7 @@ export default function Dashboard() {
       }
     }
 
-    const fetchWeeklyTrend = useCallback(async (tf: "7d" | "14d" | "30d" = timeframe) => {
+    async function fetchWeeklyTrend(tf: "7d" | "14d" | "30d" = timeframe) {
       try {
         setTrendLoading(true);
 
@@ -312,7 +312,7 @@ export default function Dashboard() {
       } finally {
         setTrendLoading(false);
       }
-    }, [timeframe]);
+    }
 
     async function fetchUpcomingSessions() {
       try {
