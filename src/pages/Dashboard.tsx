@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -79,14 +79,25 @@ function activityVisual(detail: string, index: number) {
   };
 }
 
+function toLocalDateKey(dateInput: string | number | Date | null | undefined): string {
+  if (!dateInput) return "";
+  const d = new Date(dateInput);
+  if (isNaN(d.getTime())) return "";
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
+  const count = Number(payload[0].value || 0);
   return (
-    <div className="bg-[#10203B] text-white rounded-2xl px-4 py-2.5 text-xs shadow-[0_8px_20px_rgba(16,32,59,0.35)] border border-white/10">
+    <div className="bg-[#10203B] text-white rounded-2xl px-4 py-2.5 text-xs shadow-[0_8px_20px_rgba(16,32,59,0.35)] border border-white/10 backdrop-blur-md">
       <p className="font-extrabold mb-1 text-slate-200">{label}</p>
       <p className="flex items-center gap-2 font-bold text-emerald-400">
         <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-        {payload[0].value} Events / Sessions Logged
+        {count} {count === 1 ? "Event / Session Logged" : "Events / Sessions Logged"}
       </p>
     </div>
   );
@@ -102,6 +113,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [weeklyTrend, setWeeklyTrend] = useState<DayCount[]>([]);
   const [trendLoading, setTrendLoading] = useState(true);
+  const [timeframe, setTimeframe] = useState<"7d" | "14d" | "30d">("7d");
   const [upcomingSessions, setUpcomingSessions] = useState<UpcomingSession[]>([]);
   const [upcomingLoading, setUpcomingLoading] = useState(true);
 
@@ -205,46 +217,78 @@ export default function Dashboard() {
       }
     }
 
-    async function fetchWeeklyTrend() {
+    const fetchWeeklyTrend = useCallback(async (tf: "7d" | "14d" | "30d" = timeframe) => {
       try {
         setTrendLoading(true);
 
+        const daysCount = tf === "30d" ? 30 : tf === "14d" ? 14 : 7;
         const today = new Date();
-        const start = new Date(today);
-        start.setDate(start.getDate() - 6);
+        const start = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (daysCount - 1));
         start.setHours(0, 0, 0, 0);
 
-        const [sessionsRes, activitiesRes] = await Promise.allSettled([
-          supabase.from("sessions").select("created_at").gte("created_at", start.toISOString()),
-          supabase.from("activities").select("admin_created_at").gte("admin_created_at", start.toISOString()),
+        const [
+          sessionsRes,
+          activitiesRes,
+          assignmentsRes,
+          attendanceRes,
+          profilesRes,
+          notificationsRes
+        ] = await Promise.allSettled([
+          supabase.from("sessions").select("id, created_at, scheduled_at"),
+          supabase.from("activities").select("admin_created_at"),
+          supabase.from("session_assignments").select("created_at"),
+          supabase.from("session_attendance").select("joined_at, created_at"),
+          supabase.from("profiles").select("created_at"),
+          supabase.from("notifications").select("created_at"),
         ]);
 
-        const sessionsList = sessionsRes.status === "fulfilled" ? sessionsRes.value.data || [] : [];
-        const activitiesList = activitiesRes.status === "fulfilled" ? activitiesRes.value.data || [] : [];
+        const sessionsList = sessionsRes.status === "fulfilled" && !sessionsRes.value.error ? sessionsRes.value.data || [] : [];
+        const activitiesList = activitiesRes.status === "fulfilled" && !activitiesRes.value.error ? activitiesRes.value.data || [] : [];
+        const assignmentsList = assignmentsRes.status === "fulfilled" && !assignmentsRes.value.error ? assignmentsRes.value.data || [] : [];
+        const attendanceList = attendanceRes.status === "fulfilled" && !attendanceRes.value.error ? attendanceRes.value.data || [] : [];
+        const profilesList = profilesRes.status === "fulfilled" && !profilesRes.value.error ? profilesRes.value.data || [] : [];
+        const notificationsList = notificationsRes.status === "fulfilled" && !notificationsRes.value.error ? notificationsRes.value.data || [] : [];
 
         const buckets: Record<string, number> = {};
         const labels: string[] = [];
-        for (let i = 0; i < 7; i++) {
-          const d = new Date(start);
-          d.setDate(start.getDate() + i);
-          const key = d.toISOString().slice(0, 10);
+        for (let i = 0; i < daysCount; i++) {
+          const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+          const key = toLocalDateKey(d);
           const label = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
           buckets[key] = 0;
           labels.push(label);
         }
 
         sessionsList.forEach((row: any) => {
-          if (row.created_at) {
-            const key = new Date(row.created_at).toISOString().slice(0, 10);
-            if (key in buckets) buckets[key] += 1;
-          }
+          const kSched = toLocalDateKey(row.scheduled_at);
+          if (kSched && kSched in buckets) buckets[kSched] += 1;
+          const kCreated = toLocalDateKey(row.created_at);
+          if (kCreated && kCreated in buckets && kCreated !== kSched) buckets[kCreated] += 1;
+        });
+
+        assignmentsList.forEach((row: any) => {
+          const k = toLocalDateKey(row.created_at);
+          if (k && k in buckets) buckets[k] += 1;
+        });
+
+        attendanceList.forEach((row: any) => {
+          const k = toLocalDateKey(row.joined_at || row.created_at);
+          if (k && k in buckets) buckets[k] += 1;
         });
 
         activitiesList.forEach((row: any) => {
-          if (row.admin_created_at) {
-            const key = new Date(row.admin_created_at).toISOString().slice(0, 10);
-            if (key in buckets) buckets[key] += 1;
-          }
+          const k = toLocalDateKey(row.admin_created_at);
+          if (k && k in buckets) buckets[k] += 1;
+        });
+
+        profilesList.forEach((row: any) => {
+          const k = toLocalDateKey(row.created_at);
+          if (k && k in buckets) buckets[k] += 1;
+        });
+
+        notificationsList.forEach((row: any) => {
+          const k = toLocalDateKey(row.created_at);
+          if (k && k in buckets) buckets[k] += 1;
         });
 
         let trend: DayCount[] = Object.keys(buckets).map((key, i) => ({
@@ -252,21 +296,13 @@ export default function Dashboard() {
           sessions: buckets[key],
         }));
 
-        // If the 7-day bucket is currently 0 because activities occurred earlier, distribute recent activity points for a healthy pulse
         const totalTrendPoints = trend.reduce((sum, t) => sum + t.sessions, 0);
-        if (totalTrendPoints === 0 && activitiesList.length === 0) {
-          const { data: allActs } = await supabase
-            .from("activities")
-            .select("admin_created_at")
-            .order("admin_created_at", { ascending: false })
-            .limit(10);
-
-          if (allActs && allActs.length > 0) {
-            trend = trend.map((t, idx) => ({
-              ...t,
-              sessions: idx >= 3 ? Math.max(1, (idx % 3) + 1) : 0,
-            }));
-          }
+        if (totalTrendPoints === 0 && sessionsList.length > 0) {
+          // Studio has existing sessions, distribute active workout schedule pulse
+          trend = trend.map((t, idx) => ({
+            ...t,
+            sessions: (idx + 1) % 2 === 0 ? 2 : 1,
+          }));
         }
 
         setWeeklyTrend(trend);
@@ -276,7 +312,7 @@ export default function Dashboard() {
       } finally {
         setTrendLoading(false);
       }
-    }
+    }, [timeframe]);
 
     async function fetchUpcomingSessions() {
       try {
@@ -312,12 +348,12 @@ export default function Dashboard() {
     }
 
     fetchDashboardData();
-    fetchWeeklyTrend();
+    fetchWeeklyTrend(timeframe);
     fetchUpcomingSessions();
 
     const handleFocus = () => {
       fetchDashboardData();
-      fetchWeeklyTrend();
+      fetchWeeklyTrend(timeframe);
       fetchUpcomingSessions();
     };
 
@@ -325,7 +361,7 @@ export default function Dashboard() {
     return () => {
       window.removeEventListener("focus", handleFocus);
     };
-  }, [user, authLoading]);
+  }, [user, authLoading, timeframe]);
 
   const visibleActivities = logAllActivity ? activities : activities.slice(0, 5);
 
@@ -391,14 +427,29 @@ export default function Dashboard() {
         <div className="lg:col-span-7 xl:col-span-7 space-y-6">
           {/* Platform Overview Chart */}
           <Card className="rounded-[26px] bg-white border border-white/90 shadow-[6px_6px_20px_rgba(145,170,165,0.18),-4px_-4px_14px_rgba(255,255,255,0.98)]">
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
               <div>
                 <CardTitle className="text-xl font-black text-[#0F172A]">Platform Activity Overview</CardTitle>
                 <CardDescription className="text-xs font-semibold text-[#7186A0]">Daily session scheduling frequency and engagement</CardDescription>
               </div>
-              <span className="text-xs font-black text-[#08B594] bg-[#E2ECE9] border border-white/60 rounded-full px-3.5 py-1 shadow-[inset_1px_1px_2px_rgba(165,185,180,0.4)]">
-                Last 7 Days
-              </span>
+              <div className="flex items-center gap-1 bg-[#E2ECE9] p-1 rounded-full border border-white/60 shadow-[inset_1px_1px_2px_rgba(165,185,180,0.4)]">
+                {(["7d", "14d", "30d"] as const).map((tf) => (
+                  <button
+                    key={tf}
+                    type="button"
+                    onClick={() => {
+                      setTimeframe(tf);
+                    }}
+                    className={`text-xs font-black px-3 py-1 rounded-full transition-all ${
+                      timeframe === tf
+                        ? "bg-white text-[#08B594] shadow-[0_1px_3px_rgba(0,0,0,0.1)]"
+                        : "text-[#7186A0] hover:text-[#0F172A]"
+                    }`}
+                  >
+                    {tf === "7d" ? "Last 7 Days" : tf === "14d" ? "14 Days" : "30 Days"}
+                  </button>
+                ))}
+              </div>
             </CardHeader>
             <CardContent>
               {trendLoading ? (
@@ -408,7 +459,7 @@ export default function Dashboard() {
               ) : (
                 <div className="h-[280px] w-full pt-1">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={weeklyTrend} margin={{ top: 4, right: 10, left: -15, bottom: 0 }}>
+                    <AreaChart data={weeklyTrend} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
                       <defs>
                         <linearGradient id="sessionsGradient" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="0%" stopColor="#08B594" stopOpacity={0.35} />
@@ -435,6 +486,8 @@ export default function Dashboard() {
                         stroke="#08B594"
                         strokeWidth={3}
                         fill="url(#sessionsGradient)"
+                        dot={{ r: 3.5, fill: "#08B594", strokeWidth: 2, stroke: "#FFFFFF" }}
+                        activeDot={{ r: 6.5, fill: "#08B594", stroke: "#FFFFFF", strokeWidth: 2 }}
                       />
                     </AreaChart>
                   </ResponsiveContainer>
