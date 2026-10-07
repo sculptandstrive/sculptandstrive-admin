@@ -63,11 +63,6 @@ export function AdminClientProgress() {
   const [profileData, setProfileData] = useState<{
     healthHistory: any;
     checkins: any[];
-    workoutsSummary: {
-      totalCount: number;
-      completedCount: number;
-      totalCalories: number;
-    };
     coaches: Array<{ name: string; role: string }>;
   } | null>(null);
 
@@ -146,8 +141,6 @@ export function AdminClientProgress() {
       const [
         healthRes,
         checkinsRes,
-        workoutsRes,
-        progressRes,
         measurementRes,
         photoRowsRes,
         coachClientsRes,
@@ -162,14 +155,6 @@ export function AdminClientProgress() {
           .select("*")
           .eq("user_id", client.user_id)
           .order("checkin_date", { ascending: false }),
-        supabase
-          .from("workouts")
-          .select("id, completed, calories_burned")
-          .eq("user_id", client.user_id),
-        supabase
-          .from("workout_progress")
-          .select("id, status")
-          .eq("user_id", client.user_id),
         supabase
           .from("current_measurements")
           .select("weight_kg, chest_cm, waist_cm, hips_cm, arms_cm, thighs_cm, created_at")
@@ -186,17 +171,6 @@ export function AdminClientProgress() {
           .or(`client_id.eq.${client.profile_id || client.user_id},client_id.eq.${client.user_id}`)
           .order("created_at", { ascending: true }),
       ]);
-
-      const workouts = workoutsRes.data || [];
-      const progressLogs = progressRes.data || [];
-      const completedProgressLogs = progressLogs.filter((p: any) => p.status === "completed");
-
-      const completedCount = completedProgressLogs.length > 0
-        ? completedProgressLogs.length
-        : workouts.filter((w: any) => w.completed).length;
-
-      const totalCount = Math.max(workouts.length, progressLogs.length);
-      const calories = workouts.reduce((sum: number, w: any) => sum + (w.calories_burned || 0), 0);
 
       // Resolve coaches if any
       const coachRows = coachClientsRes.data || [];
@@ -219,11 +193,6 @@ export function AdminClientProgress() {
       setProfileData({
         healthHistory: healthRes.data || null,
         checkins: checkinsRes.data || [],
-        workoutsSummary: {
-          totalCount,
-          completedCount,
-          totalCalories: calories,
-        },
         coaches: coachesList,
       });
 
@@ -376,30 +345,6 @@ export function AdminClientProgress() {
             </div>
           ) : (
             <div className="flex-1 overflow-y-auto space-y-6 pt-2 pr-1">
-              {/* Stats Summary Panel */}
-              {profileData && (
-                <div className="grid grid-cols-3 gap-3 p-4 rounded-2xl bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] border border-white/60">
-                  <div className="text-center">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#7186A0] block mb-1">Workouts Assigned</span>
-                    <span className="text-2xl font-black text-[#0F172A] tracking-tight leading-none">
-                      {profileData.workoutsSummary.totalCount}
-                    </span>
-                  </div>
-                  <div className="text-center border-x border-white/60">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#7186A0] block mb-1">Sessions Done</span>
-                    <span className="text-2xl font-black text-[#08B594] tracking-tight leading-none">
-                      {profileData.workoutsSummary.completedCount}
-                    </span>
-                  </div>
-                  <div className="text-center">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#7186A0] block mb-1">Est. Kcal Burned</span>
-                    <span className="text-2xl font-black text-amber-500 tracking-tight leading-none">
-                      {profileData.workoutsSummary.totalCalories.toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              )}
-
               {/* 2-Column Grid: Health Questionnaire & Weekly Check-ins */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {/* Column 1: Health History */}

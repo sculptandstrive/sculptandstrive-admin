@@ -59,7 +59,7 @@ export default function ProgressPage() {
             .order("created_at", { ascending: false }),
           supabase
             .from("profiles")
-            .select("id, user_id, full_name, email, created_at")
+            .select("id, user_id, full_name, email, created_at, role")
             .order("created_at", { ascending: true }),
           supabase
             .from("user_roles")
