@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import {
   Calendar as CalendarIcon, Video, Users as UsersIcon,
-  Clock, Plus, Trash2, RefreshCw, Search, Play, Edit3, Image as ImageIcon, Upload
+  Clock, Plus, Trash2, RefreshCw, Search, Play, Edit3, Image as ImageIcon, Upload,
+  UserCheck, AlertCircle, Bell
 } from "lucide-react";
 import { useGoogleLogin } from '@react-oauth/google';
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +27,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import SegmentedControl from "@/components/SegmentedControl";
 import { VideoUploadModal } from "@/components/video/VideoUploadModal";
 import { StatCard } from "@/components/StatCard";
+import { AttendanceTracker } from "@/components/sessions/AttendanceTracker";
 
 const isValidUUID = (str: any): boolean => {
   if (typeof str !== "string") return false;
@@ -56,7 +58,7 @@ export default function Sessions() {
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"live" | "tutorials" | "tutorial">("live");
+  const [activeTab, setActiveTab] = useState<"live" | "attendance" | "tutorials" | "tutorial">("live");
   const [searchTerm, setSearchTerm] = useState("");
   const [isPublishing, setIsPublishing] = useState(false);
   const [sessionType, setSessionType] = useState<"individual" | "group">("individual");
@@ -1595,10 +1597,11 @@ export default function Sessions() {
 
       {/* Tabs Navigation */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="space-y-6">
-        <div className="w-full max-w-[360px] sm:max-w-[390px]">
+        <div className="w-full max-w-[540px]">
           <SegmentedControl
             options={[
               { label: "Live Sessions", value: "live", icon: <Video className="w-4 h-4" /> },
+              { label: "Missed & Attendance", value: "attendance", icon: <UserCheck className="w-4 h-4" /> },
               { label: "Video Tutorials", value: "tutorials", icon: <Play className="w-4 h-4" /> },
             ]}
             value={activeTab === "tutorial" ? "tutorials" : activeTab}
@@ -1801,6 +1804,11 @@ export default function Sessions() {
                 )}
             </div>
           </div>
+        </TabsContent>
+
+        {/* Tab: Missed Sessions & Attendance Tracker */}
+        <TabsContent value="attendance" className="space-y-6">
+          <AttendanceTracker />
         </TabsContent>
 
         {/* Tab 2: Video Tutorials (Playlist Architecture) */}

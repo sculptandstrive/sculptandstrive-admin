@@ -10,8 +10,15 @@ import {
   Loader2, 
   UserPlus, 
   Trash2,
-  ChevronDown
+  ChevronDown,
+  Calendar,
+  Sparkles,
+  AlertCircle,
+  CheckCircle2,
+  XCircle,
+  Video
 } from "lucide-react";
+import { findNextSessionForUser } from "@/lib/missedSessionService";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -144,6 +151,11 @@ export default function Users() {
       completedCount: number;
       totalCalories: number;
     };
+    sessionsSummary?: {
+      attendedCount: number;
+      missedCount: number;
+      nextSession: any;
+    };
   } | null>(null);
 
   const fetchClientProfile = async (userId: string) => {
@@ -151,7 +163,7 @@ export default function Users() {
       setProfileLoading(true);
       setProfileData(null);
 
-      const [healthRes, checkinsRes, workoutsRes, progressRes] = await Promise.all([
+      const [healthRes, checkinsRes, workoutsRes, progressRes, assignmentsRes, nextSession] = await Promise.all([
         supabase
           .from("health_history")
           .select("*")
@@ -170,6 +182,11 @@ export default function Users() {
           .from("workout_progress")
           .select("id, status")
           .eq("user_id", userId),
+        supabase
+          .from("session_assignments")
+          .select("status, session_id")
+          .or(`client_id.eq.${userId},user_id.eq.${userId}`),
+        findNextSessionForUser(userId, new Date()),
       ]);
 
       const workouts = workoutsRes.data || [];
@@ -183,6 +200,10 @@ export default function Users() {
       const totalCount = Math.max(workouts.length, progressLogs.length);
       const calories = workouts.reduce((sum: number, w: any) => sum + (w.calories_burned || 0), 0);
 
+      const assignments = assignmentsRes.data || [];
+      const attendedCount = assignments.filter((a: any) => a.status === "attended").length;
+      const missedCount = assignments.filter((a: any) => a.status === "missed").length;
+
       setProfileData({
         healthHistory: healthRes.data || null,
         checkins: checkinsRes.data || [],
@@ -190,6 +211,11 @@ export default function Users() {
           totalCount,
           completedCount,
           totalCalories: calories,
+        },
+        sessionsSummary: {
+          attendedCount,
+          missedCount,
+          nextSession,
         },
       });
     } catch (err: any) {
@@ -1340,20 +1366,46 @@ export default function Users() {
           ) : (
             <div className="flex-1 overflow-y-auto space-y-6 pt-3 pr-1">
               {/* Stats Summary Panel */}
-              <div className="grid grid-cols-3 gap-3 p-4 rounded-2xl bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] border border-white/60">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-[#E2ECE9] shadow-[inset_2px_2px_4px_rgba(165,185,180,0.45),inset_-2px_-2px_4px_rgba(255,255,255,0.85)] border border-white/60">
                 <div className="text-center">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#7186A0] block mb-1">Workouts Assigned</span>
-                  <span className="text-xl font-black text-[#0F172A] tracking-tight leading-none">{profileData.workoutsSummary.totalCount}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#7186A0] block mb-1">Workouts Done</span>
+                  <span className="text-xl font-black text-[#0F172A] tracking-tight leading-none">{profileData.workoutsSummary.completedCount}</span>
                 </div>
-                <div className="text-center border-x border-white/60">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#7186A0] block mb-1">Sessions Done</span>
-                  <span className="text-xl font-black text-[#08B594] tracking-tight leading-none">{profileData.workoutsSummary.completedCount}</span>
+                <div className="text-center border-l border-white/60">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#7186A0] block mb-1">Attended Live</span>
+                  <span className="text-xl font-black text-[#08B594] tracking-tight leading-none">{profileData.sessionsSummary?.attendedCount || 0}</span>
                 </div>
-                <div className="text-center">
+                <div className="text-center border-l border-white/60">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#7186A0] block mb-1">Missed Live</span>
+                  <span className="text-xl font-black text-rose-600 tracking-tight leading-none">{profileData.sessionsSummary?.missedCount || 0}</span>
+                </div>
+                <div className="text-center border-l border-white/60">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-[#7186A0] block mb-1">Est. Kcal Burned</span>
                   <span className="text-xl font-black text-amber-500 tracking-tight leading-none">{profileData.workoutsSummary.totalCalories.toLocaleString()}</span>
                 </div>
               </div>
+
+              {/* Next Session Status Banner */}
+              {profileData.sessionsSummary?.nextSession && (
+                <div className="bg-emerald-50/80 border border-emerald-200/90 rounded-2xl p-3.5 flex items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-700 shrink-0">
+                      <Calendar className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 block">
+                        Next Scheduled Live Session ({profileData.sessionsSummary.nextSession.isSameMonth ? "This Month" : "Next Month"})
+                      </span>
+                      <p className="font-extrabold text-[#10203B]">
+                        {profileData.sessionsSummary.nextSession.formattedDate} at {profileData.sessionsSummary.nextSession.formattedTime}
+                      </p>
+                    </div>
+                  </div>
+                  <Badge className="bg-emerald-600 text-white font-bold text-[10px]">
+                    {profileData.sessionsSummary.nextSession.title || "Live Coaching"}
+                  </Badge>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {/* Column 1: Health History */}
