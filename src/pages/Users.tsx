@@ -19,6 +19,7 @@ import {
   Video
 } from "lucide-react";
 import { findNextSessionForUser } from "@/lib/missedSessionService";
+import { createOrRenewSubscription, scanAndProcessSubscriptionExpiries } from "@/lib/subscriptionExpiryService";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -649,9 +650,13 @@ export default function Users() {
     try {
       let newExpiry: string | null = null;
       if (roleChangeDialog.newRole === 'user') {
-        const d = new Date();
-        d.setDate(d.getDate() + 29);
-        newExpiry = d.toISOString();
+        const sub = await createOrRenewSubscription({
+          userId: roleChangeDialog.user.user_id,
+          durationMonths: 1,
+          customerName: roleChangeDialog.user.full_name,
+          customerEmail: roleChangeDialog.user.email,
+        });
+        newExpiry = sub.end_date;
       }
       else if (roleChangeDialog.newRole === 'trial_user') {
         const d = new Date();

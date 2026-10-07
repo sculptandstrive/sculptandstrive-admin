@@ -16,6 +16,11 @@ import {
   TrendingUp,
   Activity,
   Zap,
+  Video,
+  Play,
+  Upload,
+  Sparkles,
+  ExternalLink,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/PageHeader";
@@ -71,7 +76,11 @@ export default function Fitness() {
     details: "",
     category_id: "",
     sub_category: "",
-    difficulty: ""
+    difficulty: "",
+    video_url: "",
+    thumbnail_url: "",
+    instructions: "",
+    is_other_exercise: false,
   });
   const [allExercise, setAllExercise] = useState<any>([]);
   const [isEditExerciseOpen, setIsEditExerciseOpen] = useState(false);
@@ -81,8 +90,16 @@ export default function Fitness() {
     category_id: "",
     details: "",
     sub_category: "",
-    difficulty: ""
+    difficulty: "",
+    video_url: "",
+    thumbnail_url: "",
+    instructions: "",
+    is_other_exercise: false,
   });
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [previewVideoUrl, setPreviewVideoUrl] = useState<string | null>(null);
+  const [previewExerciseTitle, setPreviewExerciseTitle] = useState<string>("");
   // ------------------------- Plan States
   const [allPlans, setAllPlans] = useState<any[]>([]);
   const [isPlanDialogOpen, setIsPlanDialogOpen] = useState(false);
@@ -129,6 +146,48 @@ export default function Fitness() {
     };
   }, [exercises]);
 
+  const uploadExerciseVideo = async (file: File): Promise<{ videoUrl: string; thumbnailUrl: string } | null> => {
+    try {
+      setUploadingVideo(true);
+      setUploadProgress(15);
+      const timestamp = Date.now();
+      const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+      const videoFileName = `exercise_videos/${timestamp}_${cleanName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("tutorials")
+        .upload(videoFileName, file, {
+          upsert: true,
+          contentType: file.type || "video/mp4",
+        });
+
+      if (uploadError) {
+        throw new Error(uploadError.message || "Failed to upload video to storage");
+      }
+
+      setUploadProgress(75);
+      const { data: publicData } = supabase.storage
+        .from("tutorials")
+        .getPublicUrl(videoFileName);
+
+      setUploadProgress(100);
+      return {
+        videoUrl: publicData.publicUrl,
+        thumbnailUrl: "",
+      };
+    } catch (err: any) {
+      toast({
+        title: "Video Upload Error",
+        description: err.message || "Could not upload video.",
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setUploadingVideo(false);
+      setUploadProgress(0);
+    }
+  };
+
   const handleAddExercise = async () => {
     if (addExercise.name.length < 3 || addExercise.name.length > 100) {
       toast({
@@ -151,13 +210,17 @@ export default function Fitness() {
       category_id: addExercise.category_id,
       name: addExercise.name,
       sub_category: addExercise.sub_category || null,
-      difficulty: addExercise.difficulty || null
+      difficulty: addExercise.difficulty || null,
+      video_url: addExercise.video_url || null,
+      thumbnail_url: addExercise.thumbnail_url || null,
+      instructions: addExercise.instructions || null,
+      is_other_exercise: Boolean(addExercise.is_other_exercise),
     });
 
     if (error) {
       toast({
         title: "Server Error",
-        description: "Please try again",
+        description: error.message || "Please try again",
         variant: "destructive",
       });
       setIsExerciseDialogOpen(false);
@@ -165,6 +228,17 @@ export default function Fitness() {
     }
 
     toast({ title: "Exercise Added Successfully" });
+    setAddExercise({
+      name: "",
+      details: "",
+      category_id: "",
+      sub_category: "",
+      difficulty: "",
+      video_url: "",
+      thumbnail_url: "",
+      instructions: "",
+      is_other_exercise: false,
+    });
     fetchAllExercises();
     setIsExerciseDialogOpen(false);
   };
@@ -185,7 +259,11 @@ export default function Fitness() {
         name: editExercise.name,
         category_id: editExercise.category_id,
         sub_category: editExercise.sub_category || null,
-        difficulty: editExercise.difficulty || null
+        difficulty: editExercise.difficulty || null,
+        video_url: editExercise.video_url || null,
+        thumbnail_url: editExercise.thumbnail_url || null,
+        instructions: editExercise.instructions || null,
+        is_other_exercise: Boolean(editExercise.is_other_exercise),
       })
       .eq("id", editExercise.id);
 
@@ -607,7 +685,11 @@ export default function Fitness() {
     }));
 
     let result = mapped;
-    if (activeFilter !== "All") {
+    if (activeFilter === "Other Exercises") {
+      result = result.filter((ex: any) => ex.is_other_exercise || ex.category_name?.toLowerCase().includes("other"));
+    } else if (activeFilter === "With Videos") {
+      result = result.filter((ex: any) => Boolean(ex.video_url));
+    } else if (activeFilter !== "All") {
       result = result.filter((ex: any) => ex.category_name === activeFilter);
     }
 
@@ -616,7 +698,8 @@ export default function Fitness() {
       result = result.filter((ex: any) =>
         ex.name?.toLowerCase().includes(q) ||
         ex.category_name?.toLowerCase().includes(q) ||
-        (ex.sub_category && ex.sub_category.toLowerCase().includes(q))
+        (ex.sub_category && ex.sub_category.toLowerCase().includes(q)) ||
+        (ex.instructions && ex.instructions.toLowerCase().includes(q))
       );
     }
 
@@ -885,6 +968,101 @@ export default function Fitness() {
                   </SelectContent>
                 </Select>
               </div>
+              {/* Video URL & Direct Upload */}
+              <div className="space-y-2 p-3 bg-muted/40 rounded-xl border border-border/80">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                    <Video className="w-3.5 h-3.5 text-[#07AC7D]" /> Workout Video (Optional)
+                  </p>
+                  {uploadingVideo && (
+                    <span className="text-[10px] text-[#07AC7D] font-bold animate-pulse">
+                      Uploading {uploadProgress}%...
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="url"
+                    placeholder="https://... (MP4, Cloudflare, YouTube, etc.)"
+                    value={addExercise.video_url}
+                    className="flex-1 h-9 text-xs border-border bg-background text-foreground rounded-[8px] focus-visible:border-[#07AC7D]"
+                    onChange={(e) =>
+                      setAddExercise({ ...addExercise, video_url: e.target.value })
+                    }
+                  />
+                  <label className="cursor-pointer">
+                    <input
+                      type="file"
+                      accept="video/mp4,video/webm,video/quicktime,video/mkv"
+                      className="hidden"
+                      disabled={uploadingVideo}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const res = await uploadExerciseVideo(file);
+                          if (res?.videoUrl) {
+                            setAddExercise((prev) => ({
+                              ...prev,
+                              video_url: res.videoUrl,
+                            }));
+                            toast({ title: "Video Uploaded Successfully" });
+                          }
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={uploadingVideo}
+                      className="h-9 px-2.5 text-xs font-bold border-border bg-card hover:bg-muted text-foreground flex items-center gap-1"
+                      asChild
+                    >
+                      <span>
+                        <Upload className="w-3.5 h-3.5 text-[#07AC7D]" />
+                        <span>{uploadingVideo ? "Uploading..." : "Upload MP4"}</span>
+                      </span>
+                    </Button>
+                  </label>
+                </div>
+
+                {addExercise.video_url && (
+                  <p className="text-[10px] text-emerald-600 truncate font-medium">
+                    Attached: {addExercise.video_url}
+                  </p>
+                )}
+              </div>
+
+              {/* Form Instructions / Form Cues */}
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-muted-foreground">Form Instructions / Cues (Optional)</p>
+                <Textarea
+                  placeholder="e.g. Keep spine neutral, lower bar to mid-chest, drive through heels..."
+                  value={addExercise.instructions}
+                  rows={2}
+                  className="border-border bg-background text-foreground rounded-[8px] focus-visible:border-[#07AC7D] text-xs"
+                  onChange={(e) =>
+                    setAddExercise({ ...addExercise, instructions: e.target.value })
+                  }
+                />
+              </div>
+
+              {/* Other Exercises Checkbox / Flag */}
+              <div className="flex items-center justify-between p-2.5 bg-background rounded-lg border border-border">
+                <div>
+                  <p className="text-xs font-bold text-foreground">Separate as "Other Exercise"</p>
+                  <p className="text-[10px] text-muted-foreground">Places this into the dedicated Other Exercises category</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={addExercise.is_other_exercise}
+                  onChange={(e) =>
+                    setAddExercise({ ...addExercise, is_other_exercise: e.target.checked })
+                  }
+                  className="w-4 h-4 text-[#07AC7D] rounded border-border focus:ring-[#07AC7D] cursor-pointer"
+                />
+              </div>
             </div>
             <DialogFooter>
               <Button
@@ -897,9 +1075,9 @@ export default function Fitness() {
               <Button
                 onClick={handleAddExercise}
                 className="bg-[#07AC7D] hover:bg-[#06966D] text-white rounded-[10px] disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={!addExercise.name || !addExercise.category_id}
+                disabled={!addExercise.name || !addExercise.category_id || uploadingVideo}
               >
-                Save
+                Save Exercise
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -916,6 +1094,12 @@ export default function Fitness() {
           <DropdownMenuContent align="end" className="w-52 sm:w-56 max-h-[260px] sm:max-h-[300px] overflow-y-auto bg-popover text-popover-foreground border-border shadow-lg">
             <DropdownMenuItem onClick={() => setActiveFilter("All")}>
               All Categories
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setActiveFilter("Other Exercises")} className="font-bold text-[#7C3AED]">
+              ⭐ Other Exercises
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setActiveFilter("With Videos")} className="font-bold text-[#07AC7D]">
+              🎬 Exercises with Videos
             </DropdownMenuItem>
             {categories.map((cat) => (
               <DropdownMenuItem
@@ -1239,10 +1423,40 @@ export default function Fitness() {
                             {ex.difficulty}
                           </Badge>
                         )}
+                        {ex.is_other_exercise && (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] bg-[#FAF5FF] border-[#E9D5FF] text-[#9333EA] px-2 py-0.5 font-bold uppercase tracking-wider rounded-full shadow-[1px_1px_2px_rgba(165,185,180,0.06)]"
+                          >
+                            Other Exercise
+                          </Badge>
+                        )}
+                        {ex.video_url && (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] bg-[#ECFDF5] border-[#A7F3D0] text-[#059669] px-2 py-0.5 font-bold uppercase tracking-wider rounded-full flex items-center gap-1 shadow-[1px_1px_2px_rgba(165,185,180,0.06)]"
+                          >
+                            <Video className="w-3 h-3" /> Has Video
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
+                  <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
+                    {ex.video_url && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setPreviewVideoUrl(ex.video_url);
+                          setPreviewExerciseTitle(ex.name);
+                        }}
+                        className="text-[#07AC7D] hover:text-[#06966D] hover:bg-[#E6F7F3] rounded-[8px] h-8 w-8"
+                        title="Watch Exercise Video"
+                      >
+                        <Play className="w-4 h-4 fill-current" />
+                      </Button>
+                    )}
                     <Dialog
                       open={isEditExerciseOpen && editExercise.id === ex.id}
                       onOpenChange={(open) => {
@@ -1261,6 +1475,10 @@ export default function Fitness() {
                               details: ex.description || "",
                               sub_category: ex.sub_category || "",
                               difficulty: ex.difficulty || "",
+                              video_url: ex.video_url || "",
+                              thumbnail_url: ex.thumbnail_url || "",
+                              instructions: ex.instructions || "",
+                              is_other_exercise: Boolean(ex.is_other_exercise),
                             });
                             setIsEditExerciseOpen(true);
                           }}
@@ -1269,7 +1487,7 @@ export default function Fitness() {
                           <SquarePen className="w-4 h-4 text-[#4F7CFF]" />
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="rounded-2xl border border-border bg-card text-foreground shadow-xl">
+                      <DialogContent className="rounded-2xl border border-border bg-card text-foreground shadow-xl max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                           <DialogTitle className="text-[18px] font-semibold text-foreground">Edit Exercise</DialogTitle>
                         </DialogHeader>
@@ -1375,6 +1593,111 @@ export default function Fitness() {
                               </SelectContent>
                             </Select>
                           </div>
+
+                          {/* Video Upload & URL in Edit */}
+                          <div className="space-y-2 p-3 bg-muted/40 rounded-xl border border-border/80">
+                            <div className="flex items-center justify-between">
+                              <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                                <Video className="w-3.5 h-3.5 text-[#07AC7D]" /> Workout Video
+                              </p>
+                              {uploadingVideo && (
+                                <span className="text-[10px] text-[#07AC7D] font-bold animate-pulse">
+                                  Uploading {uploadProgress}%...
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <Input
+                                type="url"
+                                placeholder="https://... (MP4, YouTube, etc.)"
+                                value={editExercise.video_url}
+                                className="flex-1 h-9 text-xs border-border bg-background text-foreground rounded-[8px] focus-visible:border-[#07AC7D]"
+                                onChange={(e) =>
+                                  setEditExercise({ ...editExercise, video_url: e.target.value })
+                                }
+                              />
+                              <label className="cursor-pointer">
+                                <input
+                                  type="file"
+                                  accept="video/mp4,video/webm,video/quicktime,video/mkv"
+                                  className="hidden"
+                                  disabled={uploadingVideo}
+                                  onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      const res = await uploadExerciseVideo(file);
+                                      if (res?.videoUrl) {
+                                        setEditExercise((prev) => ({
+                                          ...prev,
+                                          video_url: res.videoUrl,
+                                        }));
+                                        toast({ title: "Video Uploaded Successfully" });
+                                      }
+                                    }
+                                  }}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={uploadingVideo}
+                                  className="h-9 px-2.5 text-xs font-bold border-border bg-card hover:bg-muted text-foreground flex items-center gap-1"
+                                  asChild
+                                >
+                                  <span>
+                                    <Upload className="w-3.5 h-3.5 text-[#07AC7D]" />
+                                    <span>{uploadingVideo ? "Uploading..." : "Upload MP4"}</span>
+                                  </span>
+                                </Button>
+                              </label>
+                            </div>
+
+                            {editExercise.video_url && (
+                              <div className="flex items-center justify-between text-[10px] text-emerald-600 font-medium">
+                                <span className="truncate max-w-[280px]">Attached: {editExercise.video_url}</span>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 text-[10px] text-rose-500 hover:text-rose-600 px-1.5"
+                                  onClick={() => setEditExercise((prev) => ({ ...prev, video_url: "" }))}
+                                >
+                                  Remove
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Form Instructions / Form Cues */}
+                          <div className="space-y-2">
+                            <p className="text-sm font-semibold text-muted-foreground">Form Instructions / Cues</p>
+                            <Textarea
+                              placeholder="e.g. Keep spine neutral, lower bar to mid-chest, drive through heels..."
+                              value={editExercise.instructions}
+                              rows={2}
+                              className="border-border bg-background text-foreground rounded-[8px] focus-visible:border-[#07AC7D] text-xs"
+                              onChange={(e) =>
+                                setEditExercise({ ...editExercise, instructions: e.target.value })
+                              }
+                            />
+                          </div>
+
+                          {/* Other Exercises Checkbox / Flag */}
+                          <div className="flex items-center justify-between p-2.5 bg-background rounded-lg border border-border">
+                            <div>
+                              <p className="text-xs font-bold text-foreground">Separate as "Other Exercise"</p>
+                              <p className="text-[10px] text-muted-foreground">Places this into the dedicated Other Exercises category</p>
+                            </div>
+                            <input
+                              type="checkbox"
+                              checked={editExercise.is_other_exercise}
+                              onChange={(e) =>
+                                setEditExercise({ ...editExercise, is_other_exercise: e.target.checked })
+                              }
+                              className="w-4 h-4 text-[#07AC7D] rounded border-border focus:ring-[#07AC7D] cursor-pointer"
+                            />
+                          </div>
                         </div>
                         <DialogFooter>
                           <Button
@@ -1388,7 +1711,7 @@ export default function Fitness() {
                             onClick={handleEditExercise}
                             className="bg-[#07AC7D] hover:bg-[#07AC7D] text-white rounded-[10px] disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={
-                              !editExercise.name || !editExercise.category_id
+                              !editExercise.name || !editExercise.category_id || uploadingVideo
                             }
                           >
                             Save Changes
@@ -2101,6 +2424,65 @@ export default function Fitness() {
           </CardContent>
         </Card>
       </div>
+
+      {/* ── Exercise Video Preview Modal (Admin) ── */}
+      <Dialog
+        open={Boolean(previewVideoUrl)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPreviewVideoUrl(null);
+            setPreviewExerciseTitle("");
+          }
+        }}
+      >
+        <DialogContent className="max-w-2xl p-0 overflow-hidden bg-black border border-white/10 rounded-2xl shadow-2xl">
+          <div className="p-4 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-[#07AC7D]/20 text-[#07AC7D] flex items-center justify-center">
+                <Video className="w-4 h-4" />
+              </div>
+              <h3 className="text-sm sm:text-base font-bold text-white truncate max-w-[380px]">
+                {previewExerciseTitle || "Exercise Workout Video"}
+              </h3>
+            </div>
+            {previewVideoUrl && (
+              <a
+                href={previewVideoUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 transition-colors"
+              >
+                <span>Open in new tab</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            )}
+          </div>
+          <div className="relative aspect-video w-full bg-black flex items-center justify-center">
+            {previewVideoUrl?.includes("youtube.com") || previewVideoUrl?.includes("youtu.be") ? (
+              <iframe
+                src={
+                  previewVideoUrl.includes("watch?v=")
+                    ? previewVideoUrl.replace("watch?v=", "embed/")
+                    : previewVideoUrl.replace("youtu.be/", "www.youtube.com/embed/")
+                }
+                title={previewExerciseTitle}
+                className="w-full h-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            ) : (
+              <video
+                src={previewVideoUrl || ""}
+                controls
+                autoPlay
+                className="w-full h-full max-h-[60vh] object-contain"
+              >
+                Your browser does not support the video tag.
+              </video>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

@@ -42,30 +42,36 @@ export async function findNextSessionForUser(
   referenceDate: Date = new Date()
 ) {
   try {
-    const { data: futureSessions, error } = await supabase
-      .from("sessions")
-      .select("*, session_assignments(client_id, user_id)")
-      .eq("type", "live")
-      .gt("scheduled_at", referenceDate.toISOString())
-      .order("scheduled_at", { ascending: true });
+    const [sessRes, assignRes] = await Promise.all([
+      supabase
+        .from("sessions")
+        .select("*")
+        .order("scheduled_at", { ascending: true }),
+      supabase.from("session_assignments").select("*"),
+    ]);
 
-    if (error || !futureSessions || futureSessions.length === 0) {
-      return null;
-    }
+    const allSessions = (sessRes.data || []).filter((s: any) => {
+      if (s.type === "tutorial") return false;
+      const sched = s.scheduled_at ? new Date(s.scheduled_at) : null;
+      return sched && sched > referenceDate;
+    });
 
-    const userNextSessions = futureSessions.filter((s: any) => {
+    const assignments = assignRes.data || [];
+
+    if (allSessions.length === 0) return null;
+
+    const userNextSessions = allSessions.filter((s: any) => {
       const isMass =
         s.admin_is_mass === true ||
         s.is_mass === true ||
         s.admin_is_mass == null;
       if (isMass) return true;
 
-      if (s.session_assignments && Array.isArray(s.session_assignments)) {
-        return s.session_assignments.some(
-          (a: any) => String(a.client_id || a.user_id) === String(userId)
-        );
-      }
-      return false;
+      return assignments.some(
+        (a: any) =>
+          String(a.session_id) === String(s.id) &&
+          (String(a.client_id) === String(userId) || String(a.user_id) === String(userId))
+      );
     });
 
     if (userNextSessions.length === 0) return null;
@@ -102,29 +108,30 @@ export async function detectAndProcessAllMissedSessions(): Promise<{
     const now = new Date();
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-    // 1. Fetch live sessions in past 30 days (ended at least 15 mins ago)
-    const [sessRes, profilesRes, notifsRes, assignmentsRes] = await Promise.all([
-      supabase
-        .from("sessions")
-        .select("*")
-        .eq("type", "live")
-        .lt("scheduled_at", new Date(now.getTime() - 15 * 60 * 1000).toISOString())
-        .gte("scheduled_at", thirtyDaysAgo.toISOString())
-        .order("scheduled_at", { ascending: false }),
-      supabase.from("profiles").select("user_id, full_name, email"),
-      supabase
-        .from("notifications")
-        .select("user_id, related_id, title, description"),
+    // 1. Fetch sessions, profiles, notifications, assignments
+    const [sessRes, profilesRes, notifsRes, assignmentsRes, attendanceRes] = await Promise.all([
+      supabase.from("sessions").select("*").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("*"),
+      supabase.from("notifications").select("user_id, related_id, title, description"),
       supabase.from("session_assignments").select("*"),
+      supabase.from("session_attendance").select("*").then(res => res, () => ({ data: [] })),
     ]);
 
-    const pastSessions = sessRes.data || [];
+    const allSessions = sessRes.data || [];
     const profiles = profilesRes.data || [];
     const existingNotifs = notifsRes.data || [];
     const assignments = assignmentsRes.data || [];
+    const attendanceLogs = (attendanceRes as any)?.data || [];
+
+    // Filter past sessions
+    const pastSessions = allSessions.filter((s: any) => {
+      if (s.type === "tutorial") return false;
+      const sched = s.scheduled_at ? new Date(s.scheduled_at) : new Date(s.created_at);
+      return sched < new Date(now.getTime() - 15 * 60 * 1000) && sched >= thirtyDaysAgo;
+    });
 
     if (pastSessions.length === 0 || profiles.length === 0) {
-      return { processedCount: 0, summary: "No past sessions to process." };
+      return { processedCount: 0, summary: "No ended sessions found to process." };
     }
 
     const notifiedKeySet = new Set(
@@ -146,37 +153,46 @@ export async function detectAndProcessAllMissedSessions(): Promise<{
         session.is_mass === true ||
         session.admin_is_mass == null;
 
-      // Determine clients who were supposed to attend
       const sessionAssignments = assignments.filter(
         (a: any) => String(a.session_id) === String(session.id)
       );
 
       const targetClients = isMass
         ? profiles
-        : profiles.filter((p: any) =>
-            sessionAssignments.some(
-              (a: any) => String(a.client_id || a.user_id) === String(p.user_id)
-            )
-          );
+        : profiles.filter((p: any) => {
+            const pId = String(p.user_id || p.id);
+            return sessionAssignments.some(
+              (a: any) => String(a.client_id || a.user_id) === pId
+            );
+          });
 
       for (const client of targetClients) {
+        const clientId = String(client.user_id || client.id);
+
         const clientAssignment = sessionAssignments.find(
-          (a: any) =>
-            String(a.client_id || a.user_id) === String(client.user_id)
+          (a: any) => String(a.client_id || a.user_id) === clientId
         );
 
-        // If client attended, skip
-        if (clientAssignment && clientAssignment.status === "attended") {
+        const hasAttended =
+          clientAssignment?.status === "attended" ||
+          attendanceLogs.some(
+            (att: any) =>
+              String(att.session_id) === String(session.id) &&
+              String(att.user_id || att.client_id) === clientId &&
+              att.status === "attended"
+          );
+
+        if (hasAttended) {
           continue;
         }
 
-        const notifyKey = `${client.user_id}_${session.id}`;
+        const notifyKey = `${clientId}_${session.id}`;
         if (notifiedKeySet.has(notifyKey)) {
           continue;
         }
 
         // Determine next session
-        const nextInfo = await findNextSessionForUser(client.user_id, now);
+        const nextInfo = await findNextSessionForUser(clientId, now);
 
         let reminderTitle = "";
         let reminderDesc = "";
@@ -192,9 +208,9 @@ export async function detectAndProcessAllMissedSessions(): Promise<{
           reminderDesc = `We missed you at "${session.title}". Check your studio schedule or contact your coach to book your next workout session!`;
         }
 
-        // 1. Send user notification
+        // 1. Send user notification (website in-app)
         await supabase.from("notifications").insert({
-          user_id: client.user_id,
+          user_id: clientId,
           recipient_type: "user",
           sender_type: "admin",
           is_completed: false,
@@ -205,18 +221,30 @@ export async function detectAndProcessAllMissedSessions(): Promise<{
           related_id: session.id,
         });
 
+        // 1b. Dispatch Email notification directly to client's inbox
+        await triggerMissedSessionEmail({
+          to: client.email,
+          userId: clientId,
+          clientName: client.full_name || client.email?.split("@")[0] || "Client",
+          sessionTitle: session.title,
+          missedDate: session.scheduled_at
+            ? format(new Date(session.scheduled_at), "MMM d, yyyy 'at' h:mm a")
+            : undefined,
+          nextSession: nextInfo,
+        });
+
         // 2. Mark session assignment as missed
         await supabase.from("session_assignments").upsert({
           session_id: session.id,
-          client_id: client.user_id,
-          user_id: client.user_id,
+          client_id: clientId,
+          user_id: clientId,
           status: "missed",
         });
 
         // 3. Log admin activity
         await supabase.from("activities").insert({
           admin_user_name: "Admin System",
-          admin_action_detail: `Missed session reminder sent to ${client.full_name || client.email} for "${session.title}" (${
+          admin_action_detail: `Missed session reminder & email sent to ${client.full_name || client.email || "Client"} for "${session.title}" (${
             nextInfo
               ? nextInfo.isSameMonth
                 ? `Next: ${nextInfo.formattedDate} (This Month)`
@@ -249,19 +277,17 @@ export async function fetchSessionsAttendanceReport(): Promise<SessionAttendance
   try {
     const now = new Date();
 
+    // Query separately for maximum resilience
     const [sessRes, profilesRes, assignmentsRes, notifsRes, attendanceRes] = await Promise.all([
-      supabase
-        .from("sessions")
-        .select("*, session_assignments(client_id, user_id, status, created_at)")
-        .eq("type", "live")
-        .order("scheduled_at", { ascending: false }),
-      supabase.from("profiles").select("user_id, full_name, email"),
+      supabase.from("sessions").select("*").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("*"),
       supabase.from("session_assignments").select("*"),
       supabase.from("notifications").select("user_id, related_id, title, description"),
       supabase.from("session_attendance").select("*").then(res => res, () => ({ data: [] })),
     ]);
 
-    const rawSessions = sessRes.data || [];
+    // Keep all non-tutorial sessions
+    const rawSessions = (sessRes.data || []).filter((s: any) => s.type !== "tutorial");
     const profiles = profilesRes.data || [];
     const assignments = assignmentsRes.data || [];
     const notifs = notifsRes.data || [];
@@ -277,7 +303,7 @@ export async function fetchSessionsAttendanceReport(): Promise<SessionAttendance
     const report: SessionAttendanceReport[] = [];
 
     for (const session of rawSessions) {
-      const scheduledDate = session.scheduled_at ? new Date(session.scheduled_at) : new Date();
+      const scheduledDate = session.scheduled_at ? new Date(session.scheduled_at) : new Date(session.created_at || Date.now());
       const endTime = new Date(scheduledDate.getTime() + 60 * 60 * 1000);
       const isPast = now > endTime;
       const isLive = now >= scheduledDate && now <= endTime;
@@ -292,25 +318,29 @@ export async function fetchSessionsAttendanceReport(): Promise<SessionAttendance
 
       const clientList = isMass
         ? profiles
-        : profiles.filter((p: any) =>
-            sessionAssignments.some(
-              (a: any) => String(a.client_id || a.user_id) === String(p.user_id)
-            )
-          );
+        : profiles.filter((p: any) => {
+            const pId = String(p.user_id || p.id);
+            return sessionAssignments.some(
+              (a: any) => String(a.client_id || a.user_id) === pId
+            );
+          });
 
       let attendedCount = 0;
       let missedCount = 0;
       const clientAttendanceInfos: ClientAttendanceInfo[] = [];
 
       for (const client of clientList) {
+        const clientId = String(client.user_id || client.id);
+
         const assign = sessionAssignments.find(
-          (a: any) => String(a.client_id || a.user_id) === String(client.user_id)
+          (a: any) => String(a.client_id || a.user_id) === clientId
         );
 
         const hasAttendanceRecord = attendanceLogs.some(
           (att: any) =>
             String(att.session_id) === String(session.id) &&
-            String(att.user_id) === String(client.user_id)
+            String(att.user_id || att.client_id) === clientId &&
+            att.status === "attended"
         );
 
         let status: "attended" | "missed" | "upcoming" = "upcoming";
@@ -324,7 +354,7 @@ export async function fetchSessionsAttendanceReport(): Promise<SessionAttendance
           status = "upcoming";
         }
 
-        const notif = notifMap.get(`${client.user_id}_${session.id}`);
+        const notif = notifMap.get(`${clientId}_${session.id}`);
         let reminderStatus: "sent_same_month" | "sent_next_month" | "sent" | "not_sent" = "not_sent";
         if (notif) {
           if (notif.description?.toLowerCase().includes("this month")) {
@@ -337,11 +367,11 @@ export async function fetchSessionsAttendanceReport(): Promise<SessionAttendance
         }
 
         // Get next session for client
-        const nextInfo = await findNextSessionForUser(client.user_id, scheduledDate);
+        const nextInfo = await findNextSessionForUser(clientId, scheduledDate);
 
         clientAttendanceInfos.push({
-          clientId: client.user_id,
-          clientName: client.full_name || "Client",
+          clientId,
+          clientName: client.full_name || client.email?.split("@")[0] || "Client",
           clientEmail: client.email || "",
           status,
           attendedAt: assign?.created_at || null,
@@ -355,7 +385,7 @@ export async function fetchSessionsAttendanceReport(): Promise<SessionAttendance
         title: session.title,
         instructor: session.instructor || "Coach",
         platform: session.platform || "live",
-        scheduledAt: session.scheduled_at,
+        scheduledAt: session.scheduled_at || session.created_at,
         isMass,
         isPast,
         isLive,
@@ -397,7 +427,70 @@ export async function markClientAttendance(
 }
 
 /**
- * Manually sends or re-sends a missed session reminder to a client.
+ * Dispatches an email notification to the client regarding their missed session
+ * and their upcoming scheduled workout date.
+ */
+export async function triggerMissedSessionEmail({
+  to,
+  userId,
+  clientName,
+  sessionTitle,
+  missedDate,
+  nextSession,
+}: {
+  to?: string;
+  userId: string;
+  clientName: string;
+  sessionTitle: string;
+  missedDate?: string;
+  nextSession?: {
+    title?: string;
+    formattedDate: string;
+    formattedTime: string;
+    isSameMonth: boolean;
+    isNextMonth: boolean;
+  } | null;
+}) {
+  if (!to && !userId) return;
+
+  let title = `Missed Workout Session: ${sessionTitle}`;
+  let description = "";
+
+  if (nextSession && nextSession.isSameMonth) {
+    title = `Missed Workout: ${sessionTitle} (Next Session: ${nextSession.formattedDate})`;
+    description = `Hi ${clientName},\n\nWe missed you at "${sessionTitle}"${missedDate ? ` scheduled for ${missedDate}` : ""}.\n\nDon't worry—your next session is scheduled for **${nextSession.formattedDate} at ${nextSession.formattedTime}** (${nextSession.title || "Workout Session"}) this month.\n\nLet's keep your streak alive and crush your fitness goals!`;
+  } else if (nextSession && nextSession.isNextMonth) {
+    title = `Missed Workout: ${sessionTitle} (Next Month Schedule: ${nextSession.formattedDate})`;
+    description = `Hi ${clientName},\n\nWe noticed you missed "${sessionTitle}"${missedDate ? ` scheduled for ${missedDate}` : ""}.\n\nYour next scheduled workout date moves into next month on **${nextSession.formattedDate} at ${nextSession.formattedTime}** (${nextSession.title || "Workout Session"}).\n\nMark your calendar and get ready to stay on track!`;
+  } else {
+    title = `Missed Workout Session Reminder: ${sessionTitle}`;
+    description = `Hi ${clientName},\n\nWe missed you at "${sessionTitle}"${missedDate ? ` scheduled for ${missedDate}` : ""}.\n\nPlease check your studio dashboard or contact your coach to book your next workout session!`;
+  }
+
+  try {
+    const { error } = await supabase.functions.invoke("send-notification-email", {
+      body: {
+        to,
+        email: to,
+        user_id: userId,
+        recipient_type: "user",
+        title,
+        description,
+        action_url: "https://sculptandstrive.com/sessions",
+        action_text: "View My Workout Schedule",
+      },
+    });
+
+    if (error) {
+      console.warn("send-notification-email edge function notice:", error);
+    }
+  } catch (err) {
+    console.warn("Failed to dispatch missed session email via edge function:", err);
+  }
+}
+
+/**
+ * Manually sends or re-sends a missed session reminder & email to a client.
  */
 export async function sendManualMissedReminder(
   sessionId: string,
@@ -407,7 +500,6 @@ export async function sendManualMissedReminder(
 ) {
   try {
     const now = new Date();
-    const refDate = new Date(sessionScheduledAt);
     const nextInfo = await findNextSessionForUser(client.user_id, now);
 
     let reminderTitle = "";
@@ -424,7 +516,7 @@ export async function sendManualMissedReminder(
       reminderDesc = `We missed you at "${sessionTitle}". Check your studio schedule or contact your coach to book your next workout session!`;
     }
 
-    // Insert user notification
+    // 1. Insert user notification (in-app website)
     const { error: notifErr } = await supabase.from("notifications").insert({
       user_id: client.user_id,
       recipient_type: "user",
@@ -439,7 +531,19 @@ export async function sendManualMissedReminder(
 
     if (notifErr) throw notifErr;
 
-    // Mark status as missed in session_assignments
+    // 2. Dispatch Email to client's inbox
+    await triggerMissedSessionEmail({
+      to: client.email,
+      userId: client.user_id,
+      clientName: client.full_name || client.email?.split("@")[0] || "Client",
+      sessionTitle,
+      missedDate: sessionScheduledAt
+        ? format(new Date(sessionScheduledAt), "MMM d, yyyy 'at' h:mm a")
+        : undefined,
+      nextSession: nextInfo,
+    });
+
+    // 3. Mark status as missed in session_assignments
     await supabase.from("session_assignments").upsert({
       session_id: sessionId,
       client_id: client.user_id,
@@ -447,10 +551,10 @@ export async function sendManualMissedReminder(
       status: "missed",
     });
 
-    // Log admin activity
+    // 4. Log admin activity
     await supabase.from("activities").insert({
       admin_user_name: "Admin",
-      admin_action_detail: `Manually dispatched missed session reminder to ${client.full_name || client.email} for "${sessionTitle}"`,
+      admin_action_detail: `Manually dispatched missed session reminder & email to ${client.full_name || client.email || "Client"} for "${sessionTitle}"`,
       admin_activity_type: "session",
       admin_created_at: now.toISOString(),
     });
@@ -461,6 +565,51 @@ export async function sendManualMissedReminder(
     };
   } catch (err) {
     console.error("Error sending manual reminder:", err);
+    throw err;
+  }
+}
+
+/**
+ * Creates a demo live session in the past so the admin can test attendance and missed reminders immediately.
+ */
+export async function createDemoSessionForTesting(): Promise<boolean> {
+  try {
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    // 1. Create a past session (ended)
+    const { data: pastSess, error: err1 } = await supabase
+      .from("sessions")
+      .insert({
+        title: "Morning HIIT & Core (Demo Workout)",
+        instructor: "Coach Alex",
+        platform: "google_meet",
+        type: "live",
+        meeting_link: "https://meet.google.com/abc-defg-hij",
+        scheduled_at: yesterday.toISOString(),
+        admin_is_mass: true,
+        admin_status: "completed",
+      })
+      .select()
+      .single();
+
+    if (err1) throw err1;
+
+    // 2. Create an upcoming session (for next session reminder test)
+    await supabase.from("sessions").insert({
+      title: "Strength & Conditioning (Upcoming Class)",
+      instructor: "Coach Sarah",
+      platform: "google_meet",
+      type: "live",
+      meeting_link: "https://meet.google.com/xyz-uvwx-rst",
+      scheduled_at: tomorrow.toISOString(),
+      admin_is_mass: true,
+      admin_status: "upcoming",
+    });
+
+    return true;
+  } catch (err) {
+    console.error("Error creating demo session:", err);
     throw err;
   }
 }

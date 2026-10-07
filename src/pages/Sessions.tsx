@@ -1597,7 +1597,7 @@ export default function Sessions() {
 
       {/* Tabs Navigation */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="space-y-6">
-        <div className="w-full max-w-[540px]">
+        <div className="w-full max-w-[620px]">
           <SegmentedControl
             options={[
               { label: "Live Sessions", value: "live", icon: <Video className="w-4 h-4" /> },

@@ -16,6 +16,7 @@ import {
   UserCheck,
   UserX,
   Bell,
+  Mail,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -23,6 +24,7 @@ import {
   detectAndProcessAllMissedSessions,
   markClientAttendance,
   sendManualMissedReminder,
+  createDemoSessionForTesting,
   SessionAttendanceReport,
 } from "@/lib/missedSessionService";
 
@@ -30,6 +32,7 @@ export const AttendanceTracker: React.FC = () => {
   const [reports, setReports] = useState<SessionAttendanceReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingAuto, setProcessingAuto] = useState(false);
+  const [creatingDemo, setCreatingDemo] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<"all" | "missed" | "past" | "upcoming">("all");
   const [expandedSessionIds, setExpandedSessionIds] = useState<Set<string>>(new Set());
@@ -84,6 +87,19 @@ export const AttendanceTracker: React.FC = () => {
     }
   };
 
+  const handleCreateDemo = async () => {
+    try {
+      setCreatingDemo(true);
+      await createDemoSessionForTesting();
+      toast.success("Created demo live sessions (past & upcoming)!");
+      await loadData();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to create demo session");
+    } finally {
+      setCreatingDemo(false);
+    }
+  };
+
   const handleSendManualReminder = async (
     sessionId: string,
     client: { clientId: string; clientName: string; clientEmail: string },
@@ -103,7 +119,7 @@ export const AttendanceTracker: React.FC = () => {
         sessionTitle,
         scheduledAt
       );
-      toast.success(`Reminder sent to ${client.clientName}!`);
+      toast.success(`Reminder & email dispatched to ${client.clientName}!`);
       await loadData();
     } catch (err: any) {
       toast.error(err?.message || "Failed to send reminder");
@@ -322,11 +338,38 @@ export const AttendanceTracker: React.FC = () => {
           <RefreshCw className="w-8 h-8 text-[#08A982] animate-spin mx-auto mb-3" />
           <p className="text-sm font-bold text-[#10203B]">Analyzing session attendance & missed schedules...</p>
         </div>
+      ) : reports.length === 0 ? (
+        <div className="bg-white rounded-[22px] p-10 sm:p-14 text-center border border-white/90 shadow-[5px_5px_16px_rgba(150,175,170,0.18)] flex flex-col items-center">
+          <div className="w-14 h-14 rounded-2xl bg-[#E6F7F3] border border-[#BDEADE] flex items-center justify-center text-[#08A982] mb-4">
+            <Users className="w-7 h-7" />
+          </div>
+          <h3 className="text-lg font-black text-[#10203B]">No Live Sessions Found in Database</h3>
+          <p className="text-xs text-[#6F849A] max-w-md mt-1 mb-6 leading-relaxed">
+            Attendance and missed session tracking operate on live workout sessions. You can create a live session via "+ Add Session" or click below to generate demo sessions (past & upcoming) to preview attendance tracking and dynamic month reminders right away.
+          </p>
+          <button
+            onClick={handleCreateDemo}
+            disabled={creatingDemo}
+            className="h-11 px-5 rounded-xl text-xs font-extrabold bg-gradient-to-r from-[#08A982] to-[#0CC194] text-white shadow-[0_3px_10px_rgba(8,169,130,0.3)] hover:brightness-105 active:scale-95 transition-all flex items-center gap-2"
+          >
+            <Sparkles className={`w-4 h-4 ${creatingDemo ? "animate-spin" : ""}`} />
+            <span>{creatingDemo ? "Generating Demo Sessions..." : "Generate Demo Live & Missed Sessions"}</span>
+          </button>
+        </div>
       ) : filteredReports.length === 0 ? (
-        <div className="bg-white rounded-[22px] p-12 text-center border border-white/90 shadow-[5px_5px_16px_rgba(150,175,170,0.18)]">
+        <div className="bg-white rounded-[22px] p-12 text-center border border-white/90 shadow-[5px_5px_16px_rgba(150,175,170,0.18)] flex flex-col items-center">
           <AlertCircle className="w-8 h-8 text-[#6F849A] mx-auto mb-3" />
           <p className="text-base font-bold text-[#10203B]">No sessions matched your criteria</p>
           <p className="text-xs text-[#6F849A] mt-1">Try resetting the search or filter</p>
+          <button
+            onClick={() => {
+              setSearchQuery("");
+              setFilterType("all");
+            }}
+            className="mt-4 px-4 py-2 text-xs font-bold text-[#08A982] bg-[#E6F7F3] rounded-xl hover:bg-[#D5F2EB] transition-all"
+          >
+            Clear Filter & Search
+          </button>
         </div>
       ) : (
         <div className="space-y-4">
@@ -524,16 +567,28 @@ export const AttendanceTracker: React.FC = () => {
                                   {/* Reminder Status */}
                                   <td className="py-3 px-3">
                                     {client.reminderStatus === "sent_same_month" ? (
-                                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                                        Sent (This Month)
+                                      <span
+                                        className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200"
+                                        title={`In-app notification and email dispatched to ${client.clientEmail || "client"}`}
+                                      >
+                                        <Mail className="w-2.5 h-2.5 text-emerald-600" />
+                                        Sent & Emailed (This Month)
                                       </span>
                                     ) : client.reminderStatus === "sent_next_month" ? (
-                                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-50 text-indigo-800 border border-indigo-200">
-                                        Sent (Next Month)
+                                      <span
+                                        className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-50 text-indigo-800 border border-indigo-200"
+                                        title={`In-app notification and email dispatched to ${client.clientEmail || "client"}`}
+                                      >
+                                        <Mail className="w-2.5 h-2.5 text-indigo-600" />
+                                        Sent & Emailed (Next Month)
                                       </span>
                                     ) : client.reminderStatus === "sent" ? (
-                                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">
-                                        Sent
+                                      <span
+                                        className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200"
+                                        title={`In-app notification and email dispatched to ${client.clientEmail || "client"}`}
+                                      >
+                                        <Mail className="w-2.5 h-2.5 text-amber-600" />
+                                        Sent & Emailed
                                       </span>
                                     ) : (
                                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-500">
@@ -556,11 +611,11 @@ export const AttendanceTracker: React.FC = () => {
                                             )
                                           }
                                           disabled={isSending}
-                                          title="Send / Re-send Missed Session Reminder"
-                                          className="px-2.5 py-1.5 rounded-lg bg-amber-500/15 text-amber-900 border border-amber-300/80 hover:bg-amber-500/25 font-bold text-[11px] flex items-center gap-1 transition-all"
+                                          title={`Send in-app reminder and email to ${client.clientEmail || "client"}`}
+                                          className="px-2.5 py-1.5 rounded-lg bg-amber-500/15 text-amber-900 border border-amber-300/80 hover:bg-amber-500/25 font-bold text-[11px] flex items-center gap-1.5 transition-all shadow-sm"
                                         >
-                                          <Send className={`w-3 h-3 ${isSending ? "animate-pulse" : ""}`} />
-                                          <span>{isSending ? "Sending..." : "Send Reminder"}</span>
+                                          <Mail className={`w-3 h-3 ${isSending ? "animate-pulse" : ""}`} />
+                                          <span>{isSending ? "Sending Email..." : "Send Reminder & Email"}</span>
                                         </button>
                                       )}
 
