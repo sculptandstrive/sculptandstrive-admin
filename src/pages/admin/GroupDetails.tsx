@@ -151,13 +151,13 @@ export default function GroupDetails() {
         // Weekly check-ins
         const { data: checkinRows } = await supabase
           .from("weekly_checkins")
-          .select("user_id, weight, created_at")
+          .select("user_id, weight_kg, created_at")
           .in("user_id", memberIds)
           .order("created_at", { ascending: true });
 
         const { data: startingRows } = await supabase
           .from("starting_measurements")
-          .select("user_id, weight")
+          .select("user_id, weight_kg")
           .in("user_id", memberIds);
 
         if (checkinRows && checkinRows.length > 0) {
@@ -166,10 +166,10 @@ export default function GroupDetails() {
         }
 
         if (checkinRows && checkinRows.length > 0 && startingRows && startingRows.length > 0) {
-          const startMap = new Map(startingRows.map((s: any) => [s.user_id, Number(s.weight) || 0]));
+          const startMap = new Map(startingRows.map((s: any) => [s.user_id, Number(s.weight_kg || s.weight) || 0]));
           const latestWeightMap = new Map();
           for (const c of checkinRows) {
-            latestWeightMap.set(c.user_id, Number(c.weight) || 0);
+            latestWeightMap.set(c.user_id, Number(c.weight_kg || c.weight) || 0);
           }
 
           let lossSum = 0;

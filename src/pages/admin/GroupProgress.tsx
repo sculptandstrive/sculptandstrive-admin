@@ -83,12 +83,12 @@ export default function GroupProgress() {
         // Fetch starting measurements and checkins for weight calculation
         const { data: startingData } = await supabase
           .from("starting_measurements")
-          .select("user_id, weight")
+          .select("user_id, weight_kg")
           .in("user_id", memberUserIds);
 
         const { data: checkinData } = await supabase
           .from("weekly_checkins")
-          .select("user_id, weight, created_at")
+          .select("user_id, weight_kg, created_at")
           .in("user_id", memberUserIds)
           .order("created_at", { ascending: true });
 
@@ -112,9 +112,11 @@ export default function GroupProgress() {
           const userCheckins = (checkinData || []).filter((c: any) => c.user_id === uid);
           const latestCheckin = userCheckins.length > 0 ? userCheckins[userCheckins.length - 1] : null;
 
+          const startWeight = Number(startWeightRow?.weight_kg || (startWeightRow as any)?.weight || 0);
+          const currentWeight = Number(latestCheckin?.weight_kg || (latestCheckin as any)?.weight || 0);
           let weightDelta = "0.0";
-          if (startWeightRow && latestCheckin && Number(startWeightRow.weight) > 0) {
-            const diff = Number(latestCheckin.weight) - Number(startWeightRow.weight);
+          if (startWeight > 0 && currentWeight > 0) {
+            const diff = currentWeight - startWeight;
             weightDelta = diff.toFixed(1);
           }
 
