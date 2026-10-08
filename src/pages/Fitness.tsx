@@ -21,6 +21,7 @@ import {
   Upload,
   Sparkles,
   ExternalLink,
+  UserCheck,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { PageHeader } from "@/components/PageHeader";
@@ -76,11 +77,16 @@ export default function Fitness() {
     details: "",
     category_id: "",
     sub_category: "",
-    difficulty: "",
+    difficulty: "Beginner",
     video_url: "",
     thumbnail_url: "",
     instructions: "",
     is_other_exercise: false,
+    assign_to_user: false,
+    assigned_user_id: "",
+    sets: "3",
+    reps: "10",
+    weight_kg: "0",
   });
   const [allExercise, setAllExercise] = useState<any>([]);
   const [isEditExerciseOpen, setIsEditExerciseOpen] = useState(false);
@@ -206,6 +212,15 @@ export default function Fitness() {
       return;
     }
 
+    if (addExercise.assign_to_user && !addExercise.assigned_user_id) {
+      toast({
+        title: "User Selection Required",
+        description: "Please select a user to assign this exercise to, or uncheck the assign option.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const { error } = await supabase.from("exercises_list").insert({
       category_id: addExercise.category_id,
       name: addExercise.name,
@@ -227,19 +242,104 @@ export default function Fitness() {
       return;
     }
 
-    toast({ title: "Exercise Added Successfully" });
+    // If assign_to_user is selected, assign to user & notify them
+    if (addExercise.assign_to_user && addExercise.assigned_user_id) {
+      try {
+        const assignedUser = users.find((u) => u.id === addExercise.assigned_user_id);
+
+        let targetWorkoutId: string | null = null;
+        const { data: userWorkouts } = await supabase
+          .from("workouts")
+          .select("id, name, workout_date")
+          .eq("user_id", addExercise.assigned_user_id)
+          .order("workout_date", { ascending: false })
+          .limit(1);
+
+        if (userWorkouts && userWorkouts.length > 0) {
+          targetWorkoutId = userWorkouts[0].id;
+        } else {
+          const todayStr = new Date().toISOString().split("T")[0];
+          const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+          const dayName = dayNames[new Date().getDay()];
+          const { data: createdWorkout } = await supabase
+            .from("workouts")
+            .insert({
+              name: "General Workout",
+              user_id: addExercise.assigned_user_id,
+              day_name: dayName,
+              order_index: new Date().getDay(),
+              completed: false,
+              workout_date: todayStr,
+            } as any)
+            .select()
+            .maybeSingle();
+
+          if (createdWorkout) {
+            targetWorkoutId = createdWorkout.id;
+          }
+        }
+
+        const setsVal = parseInt(addExercise.sets || "3", 10) || 3;
+        const repsVal = parseInt(addExercise.reps || "10", 10) || 10;
+        let weightKgVal = parseFloat(addExercise.weight_kg || "0") || 0;
+        if (adminWeightUnit === "lbs" && weightKgVal > 0) {
+          weightKgVal = parseFloat((weightKgVal / 2.20462).toFixed(2));
+        }
+
+        await supabase.from("exercises").insert({
+          name: addExercise.name,
+          sets: setsVal,
+          reps: repsVal,
+          weight_kg: weightKgVal,
+          completed: false,
+          user_id: addExercise.assigned_user_id,
+          workout_id: targetWorkoutId,
+        });
+
+        await supabase.from("notifications").insert({
+          user_id: addExercise.assigned_user_id,
+          recipient_type: "user",
+          sender_type: "admin",
+          is_completed: false,
+          title: "New Exercise Assigned 🏋️",
+          description: `Your coach assigned "${addExercise.name}" with instructional video to your workout routine.`,
+          notification_date: new Date().toISOString().split("T")[0],
+          created_at: new Date().toISOString(),
+        });
+
+        toast({
+          title: "Exercise Added & Assigned",
+          description: `Assigned to ${assignedUser?.full_name || "user"} successfully.`,
+        });
+      } catch (assignErr: any) {
+        console.error("Assignment error:", assignErr);
+        toast({
+          title: "Exercise Added",
+          description: "Saved to exercise library, but user assignment encountered an issue.",
+        });
+      }
+    } else {
+      toast({ title: "Exercise Added Successfully" });
+    }
+
     setAddExercise({
       name: "",
       details: "",
       category_id: "",
       sub_category: "",
-      difficulty: "",
+      difficulty: "Beginner",
       video_url: "",
       thumbnail_url: "",
       instructions: "",
       is_other_exercise: false,
+      assign_to_user: false,
+      assigned_user_id: "",
+      sets: "3",
+      reps: "10",
+      weight_kg: "0",
     });
     fetchAllExercises();
+    fetchFitnessData();
     setIsExerciseDialogOpen(false);
   };
 
@@ -865,11 +965,32 @@ export default function Fitness() {
           onOpenChange={setIsExerciseDialogOpen}
         >
           <DialogTrigger asChild>
-            <Button className="gap-1.5 bg-[#07AC7D] hover:bg-[#06966D] text-white h-10 sm:h-11 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition-all shrink-0">
+            <Button
+              className="gap-1.5 bg-[#07AC7D] hover:bg-[#06966D] text-white h-10 sm:h-11 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition-all shrink-0"
+              onClick={() => {
+                setAddExercise({
+                  name: "",
+                  details: "",
+                  category_id: "",
+                  sub_category: "",
+                  difficulty: "Beginner",
+                  video_url: "",
+                  thumbnail_url: "",
+                  instructions: "",
+                  is_other_exercise: false,
+                  assign_to_user: false,
+                  assigned_user_id: "",
+                  sets: "3",
+                  reps: "10",
+                  weight_kg: "0",
+                });
+                setIsExerciseDialogOpen(true);
+              }}
+            >
               <Plus className="w-4 h-4" /> <span>Add Exercise</span>
             </Button>
           </DialogTrigger>
-          <DialogContent className="rounded-2xl border border-border bg-card text-foreground shadow-xl">
+          <DialogContent className="max-w-lg max-h-[88vh] overflow-y-auto rounded-2xl border border-border bg-card text-foreground shadow-xl">
             <DialogHeader>
               <DialogTitle className="text-[18px] font-semibold text-foreground">Add Exercise</DialogTitle>
             </DialogHeader>
@@ -1062,6 +1183,113 @@ export default function Fitness() {
                   }
                   className="w-4 h-4 text-[#07AC7D] rounded border-border focus:ring-[#07AC7D] cursor-pointer"
                 />
+              </div>
+
+              {/* Assign directly to User / Client */}
+              <div className="space-y-3 p-3 bg-muted/40 rounded-xl border border-border/80">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                      <UserCheck className="w-3.5 h-3.5 text-[#07AC7D]" /> Assign to User / Client
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      Assign this exercise and video directly to a specific user's workout routine
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={addExercise.assign_to_user}
+                    onChange={(e) =>
+                      setAddExercise({
+                        ...addExercise,
+                        assign_to_user: e.target.checked,
+                        assigned_user_id: e.target.checked
+                          ? addExercise.assigned_user_id || (users[0]?.id || "")
+                          : "",
+                      })
+                    }
+                    className="w-4 h-4 text-[#07AC7D] rounded border-border focus:ring-[#07AC7D] cursor-pointer"
+                  />
+                </div>
+
+                {addExercise.assign_to_user && (
+                  <div className="space-y-3 pt-2.5 border-t border-border/60">
+                    <div className="space-y-1.5">
+                      <p className="text-xs font-semibold text-foreground">Select User / Client</p>
+                      <Select
+                        value={addExercise.assigned_user_id}
+                        onValueChange={(val) =>
+                          setAddExercise({ ...addExercise, assigned_user_id: val })
+                        }
+                      >
+                        <SelectTrigger className="w-full border-border bg-background text-foreground rounded-[8px] focus:border-[#07AC7D] focus:ring-[3px] focus:ring-[#07AC7D]/[.12]">
+                          <SelectValue placeholder="Select a user from list" />
+                        </SelectTrigger>
+                        <SelectContent position="popper" side="bottom" className="max-h-56">
+                          {users.length === 0 ? (
+                            <SelectItem value="none" disabled className="text-xs">
+                              No registered users found
+                            </SelectItem>
+                          ) : (
+                            users.map((u) => (
+                              <SelectItem
+                                key={u.id}
+                                value={u.id}
+                                className="focus:bg-[#07AC7D] focus:text-white data-[highlighted]:bg-[#07AC7D] data-[highlighted]:text-white data-[state=checked]:bg-[#07AC7D] data-[state=checked]:text-white"
+                              >
+                                <span className="font-medium">{u.full_name}</span>
+                                <span className="ml-1.5 text-xs text-muted-foreground focus:text-white">
+                                  ({u.email})
+                                </span>
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase">Sets</p>
+                        <Input
+                          type="number"
+                          placeholder="3"
+                          value={addExercise.sets}
+                          onChange={(e) =>
+                            setAddExercise({ ...addExercise, sets: e.target.value })
+                          }
+                          className="h-8 text-xs border-border bg-background text-foreground rounded-[8px] focus-visible:border-[#07AC7D]"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase">Reps</p>
+                        <Input
+                          type="number"
+                          placeholder="10"
+                          value={addExercise.reps}
+                          onChange={(e) =>
+                            setAddExercise({ ...addExercise, reps: e.target.value })
+                          }
+                          className="h-8 text-xs border-border bg-background text-foreground rounded-[8px] focus-visible:border-[#07AC7D]"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase">
+                          Weight ({adminWeightUnit})
+                        </p>
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          value={addExercise.weight_kg}
+                          onChange={(e) =>
+                            setAddExercise({ ...addExercise, weight_kg: e.target.value })
+                          }
+                          className="h-8 text-xs border-border bg-background text-foreground rounded-[8px] focus-visible:border-[#07AC7D]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             <DialogFooter>
@@ -2406,7 +2634,31 @@ export default function Fitness() {
                       {ex.full_name}
                     </span>
                   </div>
-                  <div className="flex items-center gap-3 text-right shrink-0">
+                  <div className="flex items-center gap-2.5 sm:gap-3 text-right shrink-0">
+                    {(() => {
+                      const exMeta = allExercise.find(
+                        (a: any) => a.name?.toLowerCase() === ex.name?.toLowerCase()
+                      );
+                      const vidUrl = ex.video_url || exMeta?.video_url;
+                      if (vidUrl) {
+                        return (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setPreviewVideoUrl(vidUrl);
+                              setPreviewExerciseTitle(ex.name);
+                            }}
+                            className="h-8 text-xs font-semibold text-[#07AC7D] hover:bg-[#07AC7D]/10 px-2 sm:px-2.5 rounded-xl flex items-center gap-1 border border-[#07AC7D]/20"
+                            title="Watch Exercise Video"
+                          >
+                            <Video className="w-3.5 h-3.5 text-[#07AC7D]" />
+                            <span className="hidden sm:inline">Video</span>
+                          </Button>
+                        );
+                      }
+                      return null;
+                    })()}
                     <div className="bg-[#E2ECE9] shadow-[inset_1.5px_1.5px_3px_rgba(165,185,180,0.4),inset_-1.5px_-1.5px_3px_rgba(255,255,255,0.8)] border border-white/60 px-2.5 sm:px-3 py-1 rounded-xl text-center min-w-[65px] sm:min-w-[70px]">
                       <p className="text-xs font-extrabold text-[#08B594]">{ex.reps} reps</p>
                       <p className="text-[10px] font-semibold text-[#7186A0]">
